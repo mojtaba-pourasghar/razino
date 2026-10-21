@@ -1,0 +1,25 @@
+# Godot engine cache and import artifacts.
+.godot/
+*.import.bak
+
+# Android build template, pulled in by the editor when needed.
+android/
+
+# Build output. The APK and the web build are rebuilt from source.
+export/
+
+# Packed content packages are build output too: rebuilt from content/ by
+# content_tools/pack_chapter.py and signed with a key that is never in here.
+dist/
+
+# Secrets. The PUBLIC content-signing key is committed on purpose at
+# resources/shared_assets/content_signing_public.key; the private half, the
+# Android keystore and the real .env must never be.
+.env
+*.keystore
+*.jks
+*.key.private
+
+# OS noise.
+.DS_Store
+Thumbs.db
