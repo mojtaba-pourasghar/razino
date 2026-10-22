@@ -31,8 +31,14 @@ func test_every_screen_id_resolves_to_a_real_scene():
 		var path: String = Router.SCREENS[ui_id]
 		ok(ResourceLoader.exists(path), "%s -> %s exists" % [ui_id, path])
 
-func test_all_sixteen_screens_are_registered():
-	eq(Router.SCREENS.size(), 16, "all sixteen GDD screens are routed")
+func test_every_gdd_screen_is_registered():
+	# The GDD fixes these sixteen. Later screens (profile, notifications,
+	# inventory) are additions from the approved UI sheets, so this asserts
+	# that none of the sixteen is missing rather than pinning a total that
+	# any new screen would break.
+	for n in range(1, 17):
+		var ui_id := "UI-%02d" % n
+		ok(Router.SCREENS.has(ui_id), "%s is routed" % ui_id)
 
 func test_every_screen_builds_without_error():
 	for ui_id in Router.SCREENS.keys():
@@ -54,8 +60,12 @@ func test_screens_lay_out_right_to_left():
 
 func test_home_offers_a_way_into_the_story():
 	var home := await _instantiate("UI-04")
-	ok(_find_button_containing(home, "ماجرا") != null,
-		"the home screen has a continue/start button")
+	# The wording follows the approved sheet; what matters is that a child
+	# can get into the story from the first screen without reading a menu.
+	var way_in := _find_button_containing(home, "بازی")
+	if way_in == null:
+		way_in = _find_button_containing(home, "ماجرا")
+	ok(way_in != null, "the home screen has a continue/start button")
 	home.queue_free()
 
 func test_store_refuses_to_buy_without_parental_consent():

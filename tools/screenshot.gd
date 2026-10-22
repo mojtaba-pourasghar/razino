@@ -20,6 +20,9 @@ const SHOTS := [
 	{"ui": "UI-14", "name": "14_parent_zone"},
 	{"ui": "UI-15", "name": "15_downloads"},
 	{"ui": "UI-16", "name": "16_error", "payload": {"reason": "chapter_missing"}},
+	{"ui": "UI-17", "name": "17_profile"},
+	{"ui": "UI-18", "name": "18_notifications"},
+	{"ui": "UI-19", "name": "19_inventory"},
 ]
 
 const OUT_DIR := "user://shots"
@@ -33,8 +36,14 @@ func _ready() -> void:
 	GameState.add_clue("CLUE_S01_MAP_PIECE")
 	GameState.add_clue("CLUE_S01_NOTICE")
 	GameState.add_clue("CLUE_S01_DUST")
-	GameState.coins = 1240
-	GameState.gems = 36
+	GameState.add_item("ITEM_MAP_PIECE")
+	GameState.add_item("ITEM_NOTEBOOK")
+	GameState.add_item("ITEM_BRASS_KEY")
+	GameState.coins = 2840
+	GameState.gems = 125
+	GameState.level = 5
+	GameState.xp = 320
+
 	AvatarManager.set_part("outfit", 0)
 	AvatarManager.set_part("accessory", 3)
 	ClueJournal.load_chapter_clues(ContentManager.load_chapter_story("season_01"))

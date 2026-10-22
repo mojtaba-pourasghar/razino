@@ -10,6 +10,9 @@ signal clue_discovered(clue_id: String)
 signal item_collected(item_id: String)
 signal chapter_completed(chapter_id: String)
 signal progress_reset()
+## Emitted when the level or experience changes, so a screen showing the
+## player capsule can refresh without polling.
+signal level_changed(level: int)
 
 ## Bumped whenever the shape of the save dictionary changes. SaveManager
 ## migrates old files forward rather than discarding them (GDD §9).
@@ -41,6 +44,30 @@ var unlocked_chapters: Dictionary = {"season_01": true}
 var coins: int = 0
 var gems: int = 0
 
+## Level and experience, shown on the player capsule and the profile screen
+## (docs/UI_SPEC.md §3.2, §3.10). Experience comes from scenes seen, puzzles
+## solved and chapters finished; the curve is deliberately gentle, because
+## this is a story game and the level is a keepsake, not a gate.
+var level: int = 1
+var xp: int = 0
+
+const XP_BASE := 500
+
+## How much experience the current level needs in total.
+func xp_for_next_level() -> int:
+	return XP_BASE + (level - 1) * 250
+
+## Adds experience and carries the player up as many levels as it earns.
+func add_xp(amount: int) -> void:
+	if amount <= 0:
+		return
+	xp += amount
+	while xp >= xp_for_next_level():
+		xp -= xp_for_next_level()
+		level += 1
+		Log.info("GameState", "level %d reached" % level)
+	level_changed.emit(level)
+
 func reset() -> void:
 	player_name = ""
 	avatar_id = ""
@@ -56,6 +83,8 @@ func reset() -> void:
 	unlocked_chapters = {"season_01": true}
 	coins = 0
 	gems = 0
+	level = 1
+	xp = 0
 	progress_reset.emit()
 	Log.info("GameState", "progress reset")
 
@@ -161,6 +190,8 @@ func to_dict() -> Dictionary:
 		"unlocked_chapters": unlocked_chapters.duplicate(),
 		"coins": coins,
 		"gems": gems,
+		"level": level,
+		"xp": xp,
 	}
 
 func from_dict(d: Dictionary) -> void:
@@ -178,5 +209,7 @@ func from_dict(d: Dictionary) -> void:
 	unlocked_chapters = d.get("unlocked_chapters", {"season_01": true})
 	coins = int(d.get("coins", 0))
 	gems = int(d.get("gems", 0))
+	level = maxi(1, int(d.get("level", 1)))
+	xp = int(d.get("xp", 0))
 	# A save that predates a chapter being free must still get it free.
 	unlocked_chapters["season_01"] = true

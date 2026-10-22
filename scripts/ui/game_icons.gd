@@ -34,6 +34,14 @@ static func draw(ci: RID, name: String, centre: Vector2, radius: float,
 		"check":     _check(ci, centre, r, colour)
 		"download":  _download(ci, centre, r, colour)
 		"shield":    _shield(ci, centre, r, colour)
+		"music":     _music(ci, centre, r, colour)
+		"speaker":   _speaker(ci, centre, r, colour)
+		"globe":     _globe(ci, centre, r, colour)
+		"bell":      _bell(ci, centre, r, colour)
+		"backpack":  _backpack(ci, centre, r, colour)
+		"compass":   _compass(ci, centre, r, colour)
+		"pencil":    _pencil(ci, centre, r, colour)
+		"trophy":    _trophy(ci, centre, r, colour)
 		_:           _star(ci, centre, r, colour, 4)
 
 # — currency ——————————————————————————————————————————————
@@ -199,3 +207,94 @@ static func _shield(ci: RID, p: Vector2, r: float, col: Color) -> void:
 		p + Vector2(-r * 0.8, -r * 0.8), p + Vector2(r * 0.8, -r * 0.8),
 		p + Vector2(r * 0.65, r * 0.3), p + Vector2(0, r), p + Vector2(-r * 0.65, r * 0.3),
 	]), col)
+
+
+# — the sheets' own icon set ——————————————————————————————
+
+static func _music(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	var w := maxf(r * 0.16, 1.5)
+	CI.line(ci, p + Vector2(-r * 0.1, r * 0.5), p + Vector2(-r * 0.1, -r * 0.85), col, w)
+	CI.line(ci, p + Vector2(r * 0.72, r * 0.26), p + Vector2(r * 0.72, -r * 0.62), col, w)
+	CI.poly(ci, PackedVector2Array([
+		p + Vector2(-r * 0.1, -r * 0.85), p + Vector2(r * 0.72, -r * 0.62),
+		p + Vector2(r * 0.72, -r * 0.3), p + Vector2(-r * 0.1, -r * 0.53),
+	]), col)
+	CI.circle(ci, p + Vector2(-r * 0.42, r * 0.5), r * 0.33, col)
+	CI.circle(ci, p + Vector2(r * 0.4, r * 0.26), r * 0.33, col)
+
+static func _speaker(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	CI.poly(ci, PackedVector2Array([
+		p + Vector2(-r * 0.85, -r * 0.3), p + Vector2(-r * 0.4, -r * 0.3),
+		p + Vector2(0.0, -r * 0.8), p + Vector2(0.0, r * 0.8),
+		p + Vector2(-r * 0.4, r * 0.3), p + Vector2(-r * 0.85, r * 0.3),
+	]), col)
+	var w := maxf(r * 0.14, 1.5)
+	CI.arc(ci, p + Vector2(-r * 0.05, 0), r * 0.52, -PI * 0.42, PI * 0.42, col, w, 14)
+	CI.arc(ci, p + Vector2(-r * 0.05, 0), r * 0.82, -PI * 0.42, PI * 0.42, col, w, 16)
+
+static func _globe(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	var w := maxf(r * 0.13, 1.5)
+	CI.arc(ci, p, r * 0.9, 0, TAU, col, w, 28)
+	CI.line(ci, p + Vector2(-r * 0.9, 0), p + Vector2(r * 0.9, 0), col, w)
+	# Two meridians, drawn as flattened circles.
+	for squash in [0.4, 0.75]:
+		var pts := PackedVector2Array()
+		for i in 25:
+			var a := TAU * float(i) / 24.0
+			pts.push_back(p + Vector2(cos(a) * r * 0.9 * squash, sin(a) * r * 0.9))
+		CI.polyline(ci, pts, col, w * 0.8)
+
+static func _bell(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	CI.poly(ci, PackedVector2Array([
+		p + Vector2(-r * 0.78, r * 0.45), p + Vector2(-r * 0.52, -r * 0.2),
+		p + Vector2(-r * 0.3, -r * 0.72), p + Vector2(r * 0.3, -r * 0.72),
+		p + Vector2(r * 0.52, -r * 0.2), p + Vector2(r * 0.78, r * 0.45),
+	]), col)
+	CI.circle(ci, p + Vector2(0, -r * 0.82), r * 0.18, col)
+	CI.circle(ci, p + Vector2(0, r * 0.66), r * 0.2, col)
+
+static func _backpack(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	var w := maxf(r * 0.12, 1.2)
+	# The grab loop, kept small so it does not read as a padlock shackle.
+	CI.arc(ci, p + Vector2(0, -r * 0.62), r * 0.2, PI, TAU, col, w, 12)
+	# Body, with the shoulders rounded off.
+	CI.rect(ci, Rect2(p + Vector2(-r * 0.68, -r * 0.5), Vector2(r * 1.36, r * 1.38)), col)
+	CI.circle(ci, p + Vector2(-r * 0.68, -r * 0.3), r * 0.2, col)
+	CI.circle(ci, p + Vector2(r * 0.68, -r * 0.3), r * 0.2, col)
+	# The lid flap across the top third, then the buckle on it.
+	CI.rect(ci, Rect2(p + Vector2(-r * 0.68, r * 0.0), Vector2(r * 1.36, r * 0.14)),
+		Palette.PANEL_DEEP)
+	CI.rect(ci, Rect2(p + Vector2(-r * 0.16, -r * 0.12), Vector2(r * 0.32, r * 0.38)),
+		Palette.PANEL_DEEP)
+	# A front pocket along the bottom.
+	CI.rect(ci, Rect2(p + Vector2(-r * 0.42, r * 0.46), Vector2(r * 0.84, r * 0.3)),
+		Palette.PANEL_DEEP)
+
+static func _compass(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	var w := maxf(r * 0.12, 1.5)
+	CI.arc(ci, p, r * 0.92, 0, TAU, col, w, 28)
+	# The needle: two opposed triangles, lit half and shadow half.
+	CI.poly(ci, PackedVector2Array([
+		p + Vector2(0, -r * 0.7), p + Vector2(r * 0.26, 0), p + Vector2(-r * 0.26, 0),
+	]), col)
+	CI.poly(ci, PackedVector2Array([
+		p + Vector2(0, r * 0.7), p + Vector2(r * 0.26, 0), p + Vector2(-r * 0.26, 0),
+	]), Palette.PANEL_DEEP)
+
+static func _pencil(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	CI.poly(ci, PackedVector2Array([
+		p + Vector2(-r * 0.8, r * 0.8), p + Vector2(-r * 0.6, r * 0.2),
+		p + Vector2(r * 0.6, -r * 0.95), p + Vector2(r * 0.85, -r * 0.5),
+		p + Vector2(-r * 0.25, r * 0.6),
+	]), col)
+
+static func _trophy(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	CI.poly(ci, PackedVector2Array([
+		p + Vector2(-r * 0.55, -r * 0.8), p + Vector2(r * 0.55, -r * 0.8),
+		p + Vector2(r * 0.34, r * 0.14), p + Vector2(-r * 0.34, r * 0.14),
+	]), col)
+	var w := maxf(r * 0.14, 1.5)
+	CI.arc(ci, p + Vector2(-r * 0.62, -r * 0.46), r * 0.3, PI * 0.5, PI * 1.5, col, w, 12)
+	CI.arc(ci, p + Vector2(r * 0.62, -r * 0.46), r * 0.3, -PI * 0.5, PI * 0.5, col, w, 12)
+	CI.rect(ci, Rect2(p + Vector2(-r * 0.12, r * 0.14), Vector2(r * 0.24, r * 0.5)), col)
+	CI.rect(ci, Rect2(p + Vector2(-r * 0.5, r * 0.62), Vector2(r * 1.0, r * 0.26)), col)

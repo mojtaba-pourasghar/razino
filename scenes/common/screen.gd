@@ -2,11 +2,15 @@ class_name RazinoScreen
 extends Control
 ## Base for every screen in GDD §7.1.
 ##
-## Gives each screen the same bones: a painted backdrop seen through a gilded
-## frame, a safe-area margin that keeps content off notches and rounded
-## corners, a title plaque with an optional back medallion and the player's
-## purse, and a content column built right to left. Screens override
-## `build_content()` and nothing else.
+## Gives each screen the same bones from docs/UI_SPEC.md: a painted backdrop
+## seen through a gilded frame, a safe-area margin that keeps content off
+## notches and rounded corners, and a top bar of a back medallion, a CORNER
+## title plaque and the player's purse. Screens override `build_content()`
+## and nothing else.
+##
+## The plaque is deliberately small and set into the corner. An earlier pass
+## gave every screen a full-width gold banner; the approved mockup does not,
+## and the banner was eating the top sixth of every screen.
 
 var header: HBoxContainer
 var content: VBoxContainer
@@ -83,6 +87,10 @@ func _build_shell() -> void:
 
 	header = HBoxContainer.new()
 	header.add_theme_constant_override("separation", Palette.PAD_SM)
+	# The mockup fixes the top bar: back and player on the left, purse and
+	# gear on the right. That order is part of the design, not a consequence
+	# of reading direction, so this row is not mirrored.
+	header.layout_direction = Control.LAYOUT_DIRECTION_LTR
 	column.add_child(header)
 	_build_header()
 
@@ -130,40 +138,36 @@ func _build_backdrop() -> void:
 	add_child(screen_edge)
 
 func _build_header() -> void:
+	# Left corner: the way out.
 	if not _back_target.is_empty():
-		var back := Button.new()
-		back.custom_minimum_size = Vector2(Palette.TOUCH_MIN, Palette.TOUCH_MIN)
+		var back := Medallion.new("play", Palette.MEDALLION)
 		back.tooltip_text = "بازگشت"
-		back.focus_mode = Control.FOCUS_ALL
-		var faces := Style.button_faces(Palette.PANEL_LIGHT, Palette.PANEL_DEEP, Palette.TOUCH_MIN * 0.5)
-		for state in faces:
-			back.add_theme_stylebox_override(state, faces[state])
-		var glyph := IconRect.new("play", 30.0, Palette.GOLD_BRIGHT)
-		glyph.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		# RTL: the play triangle already points the way back.
-		back.add_child(glyph)
 		back.pressed.connect(func(): Router.go(_back_target))
 		header.add_child(back)
 
-	if _title_text.is_empty():
-		# Home and the story screens carry no plaque; the purse still needs
-		# pushing to the far side, so a spacer takes the plaque's place.
-		var spacer := Control.new()
-		spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		header.add_child(spacer)
-	else:
-		var plaque := Style.make_plaque(_title_text, Palette.FS_TITLE)
-		plaque.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		header.add_child(plaque)
+	var left_gap := Control.new()
+	left_gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left_gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	header.add_child(left_gap)
 
+	# Centre: the title plaque, as every sheet draws it.
+	if not _title_text.is_empty():
+		header.add_child(Style.make_corner_plaque(_title_text))
+
+	var right_gap := Control.new()
+	right_gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	header.add_child(right_gap)
+
+	# Right corner: what the player owns, then the gear.
 	if _show_purse:
-		var purse := HBoxContainer.new()
-		purse.add_theme_constant_override("separation", Palette.PAD_SM)
-		purse.alignment = BoxContainer.ALIGNMENT_CENTER
-		purse.add_child(Style.make_chip("coin", GameState.coins, Palette.GOLD_BRIGHT))
-		purse.add_child(Style.make_chip("gem", GameState.gems, Palette.TEAL_LIGHT))
-		header.add_child(purse)
+		header.add_child(Style.make_chip("coin", GameState.coins, Palette.ORANGE))
+		header.add_child(Style.make_chip("gem", GameState.gems, Palette.BLUE))
+	var gear := Medallion.new("gear", Palette.MEDALLION)
+	gear.tooltip_text = "تنظیمات"
+	gear.pressed.connect(func(): Router.go("UI-13"))
+	header.add_child(gear)
 
 ## A scrollable area for screens with more content than fits.
 func make_scroll() -> VBoxContainer:

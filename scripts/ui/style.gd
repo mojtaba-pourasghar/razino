@@ -93,17 +93,16 @@ func button_faces(top: Color, bottom: Color, radius: float = Palette.R_MD) -> Di
 	}
 
 func _style_buttons() -> void:
-	# Primary action — gold, the metal the whole frame is made of.
-	var gold := button_faces(Palette.GOLD_BRIGHT, Palette.GOLD_DEEP)
-	for state in gold:
-		theme.set_stylebox(state, "Button", gold[state])
+	# Primary action — petrol blue with a gold edge. Gold is reserved for
+	# frames and plaques, per docs/UI_SPEC.md.
+	var primary := button_faces(Palette.ACTION_LIGHT, Palette.ACTION_DEEP)
+	for state in primary:
+		theme.set_stylebox(state, "Button", primary[state])
 	theme.set_stylebox("focus", "Button", _box(OrnateBox.Kind.WELL,
 		Color(1, 1, 1, 0.10), Color(1, 1, 1, 0.04), Palette.R_MD, 2.0))
-	theme.set_color("font_color", "Button", Palette.INK)
-	theme.set_color("font_hover_color", "Button", Palette.INK)
-	theme.set_color("font_pressed_color", "Button", Palette.INK)
-	theme.set_color("font_focus_color", "Button", Palette.INK)
-	theme.set_color("font_disabled_color", "Button", Palette.PANEL_DEEP)
+	for key in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		theme.set_color(key, "Button", Palette.GOLD_LIGHT)
+	theme.set_color("font_disabled_color", "Button", Palette.LOCKED)
 	theme.set_font_size("font_size", "Button", scaled(Palette.FS_LABEL))
 	if font_bold != null:
 		theme.set_font("font", "Button", font_bold)
@@ -237,11 +236,16 @@ func make_button(text: String, variant: String = "primary", icon: String = "") -
 	b.custom_minimum_size = Vector2(130, Palette.TOUCH_MIN)
 	b.focus_mode = Control.FOCUS_ALL
 	var faces := {}
+	var ink := false
 	match variant:
+		"gold":
+			# The one gold button in the mockup: "continue" on the home screen.
+			faces = button_faces(Palette.GOLD, Palette.GOLD_DEEP)
+			ink = true
 		"secondary":
-			faces = button_faces(Palette.TEAL_LIGHT, Palette.TEAL_DEEP)
+			faces = button_faces(Palette.TEAL, Palette.TEAL_DEEP)
 		"quiet":
-			faces = button_faces(Palette.PANEL_LIGHT, Palette.PANEL_DEEP)
+			faces = button_faces(Palette.PANEL, Palette.PANEL_DEEP)
 		"danger":
 			faces = button_faces(Palette.RUBY_LIGHT, Palette.RUBY.darkened(0.35))
 		_:
@@ -249,9 +253,9 @@ func make_button(text: String, variant: String = "primary", icon: String = "") -
 	for state in faces:
 		b.add_theme_stylebox_override(state, faces[state])
 	if not faces.is_empty():
-		# Gold carries ink; the darker faces carry snow.
+		var label_colour := Palette.INK if ink else Palette.SNOW
 		for key in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-			b.add_theme_color_override(key, Palette.SNOW)
+			b.add_theme_color_override(key, label_colour)
 	if not icon.is_empty():
 		var badge := IconRect.new(icon, 30.0, Palette.GOLD_BRIGHT)
 		badge.medallion = true
@@ -297,19 +301,6 @@ func make_plaque(text: String, size: int = Palette.FS_HEADING) -> PanelContainer
 	p.add_child(l)
 	return p
 
-## A currency chip: medallion plus count, as seen top-right on every screen.
-func make_chip(icon: String, amount: int, colour: Color = Palette.GOLD_BRIGHT) -> PanelContainer:
-	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.WELL,
-		Palette.PANEL_DEEP, Palette.NIGHT, Palette.R_LG, 2.0, Palette.PAD_MD, Palette.PAD_XS))
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", Palette.PAD_XS)
-	row.add_child(IconRect.new(icon, 32.0, colour))
-	var count := make_body(Fa.num(amount), Palette.FS_LABEL, Palette.SNOW, false)
-	count.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	row.add_child(count)
-	p.add_child(row)
-	return p
 
 ## A small framed tile carrying a motif — the stand-in for art that is not
 ## painted yet, and the frame real art will sit in once it is.
@@ -373,3 +364,377 @@ func make_banner(art_id: String, height: float) -> Control:
 	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	frame.add_child(art)
 	return frame
+
+# — the mockup's component set (docs/UI_SPEC.md §2) ————————
+
+## A dark pill with a gold edge: the base of chips, menu buttons and the
+## player capsule.
+func make_pill(h_pad: int = Palette.PAD_MD, v_pad: int = Palette.PAD_XS) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.WELL,
+		Palette.PANEL, Palette.PANEL_DEEP, Palette.R_PILL, 2.0, h_pad, v_pad))
+	return p
+
+## A corner title plaque. Small and set into a corner, never full width —
+## the wide centred banner was the previous design and is gone.
+func make_corner_plaque(text: String, size: int = Palette.FS_TITLE) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.PLAQUE,
+		Palette.PANEL, Palette.PANEL_DEEP, Palette.R_MD, Palette.FRAME_W,
+		Palette.PAD_LG, Palette.PAD_XS))
+	var l := make_title(text, size, Palette.GOLD_LIGHT)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	p.add_child(l)
+	p.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return p
+
+## The currency chip from the top right of the mockup: medallion, then count.
+func make_chip(icon: String, amount: int, colour: Color = Palette.ORANGE) -> PanelContainer:
+	var p := make_pill(Palette.PAD_MD, 4)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", Palette.PAD_SM)
+	row.add_child(Medallion.new(icon, 38.0, false))
+	(row.get_child(0) as Medallion).icon_colour = colour
+	var count := make_body(Fa.num(amount), Palette.FS_LABEL, Palette.SNOW, false)
+	count.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(count)
+	p.add_child(row)
+	return p
+
+## A two-line plaque: a small line over a larger one, as the home screen's
+## chapter plate and every chapter card use.
+func make_two_line_plaque(small: String, large: String,
+		parchment: bool = false) -> PanelContainer:
+	var p := PanelContainer.new()
+	if parchment:
+		p.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.PARCHMENT,
+			Palette.PARCHMENT, Palette.PARCHMENT_DIM, Palette.R_MD, 2.5,
+			Palette.PAD_MD, Palette.PAD_XS))
+	else:
+		p.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.PLAQUE,
+			Palette.PANEL, Palette.PANEL_DEEP, Palette.R_MD, Palette.FRAME_W,
+			Palette.PAD_LG, Palette.PAD_SM))
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 0)
+	var top := make_body(small, Palette.FS_CAPTION,
+		Palette.INK_SOFT if parchment else Palette.SNOW_SOFT, false)
+	top.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(top)
+	var bottom := make_title(large, Palette.FS_HEADING,
+		Palette.INK if parchment else Palette.GOLD_LIGHT)
+	bottom.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(bottom)
+	p.add_child(col)
+	return p
+
+## A home-screen menu entry: a pill whose icon medallion overhangs its end.
+func make_menu_button(text: String, icon: String) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.custom_minimum_size = Vector2(250, Palette.TOUCH_MIN)
+	b.focus_mode = Control.FOCUS_ALL
+	var faces := button_faces(Palette.PANEL, Palette.PANEL_DEEP, Palette.R_PILL)
+	for state in faces:
+		b.add_theme_stylebox_override(state, faces[state])
+	for key in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		b.add_theme_color_override(key, Palette.SNOW)
+	# The medallion sits on the leading edge and overhangs it, which is what
+	# gives the row its silhouette in the reference sheet.
+	var badge := Medallion.new(icon, Palette.MEDALLION, false)
+	badge.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT)
+	badge.offset_left = -10
+	badge.offset_right = -10 + Palette.MEDALLION
+	badge.offset_top = -Palette.MEDALLION * 0.5
+	badge.offset_bottom = Palette.MEDALLION * 0.5
+	b.add_child(badge)
+	# Keep the label clear of the medallion.
+	b.add_theme_constant_override("h_separation", 0)
+	var pad := int(Palette.MEDALLION)
+	for state in faces:
+		(faces[state] as OrnateBox).content_margin_left = pad
+	return b
+
+## The player capsule: avatar medallion, name, level and experience bar.
+func make_player_badge(player_name: String, level: int, xp: int, xp_max: int) -> Control:
+	# Built as a plain row rather than an anchored overlay: the overhanging
+	# avatar looked right but sized the text column to nothing, so the name
+	# and the level were clipped to a couple of glyphs.
+	var pill := make_pill(Palette.PAD_SM, Palette.PAD_XS)
+	pill.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	var row := HBoxContainer.new()
+	row.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	row.add_theme_constant_override("separation", Palette.PAD_SM)
+	pill.add_child(row)
+
+	var badge := Medallion.new("friend", 60.0, false)
+	badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(badge)
+
+	var col := VBoxContainer.new()
+	col.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	col.add_theme_constant_override("separation", 1)
+	row.add_child(col)
+
+	var shown := player_name if not player_name.is_empty() else "بازیکن"
+	var name_label := make_title(shown, Palette.FS_LABEL, Palette.SNOW)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	name_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	name_label.custom_minimum_size.x = 170
+	col.add_child(name_label)
+
+	var lvl := make_body("سطح %s" % Fa.num(level), Palette.FS_CAPTION, Palette.SNOW_SOFT, false)
+	lvl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	col.add_child(lvl)
+
+	col.add_child(make_meter(float(xp) / maxf(float(xp_max), 1.0), 170.0))
+	return pill
+
+## A thin gold-edged meter — experience, chapter progress, downloads.
+func make_meter(ratio: float, width: float = 180.0,
+		fill: Color = Palette.TEAL) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.custom_minimum_size = Vector2(width, 14)
+	bar.show_percentage = false
+	bar.min_value = 0.0
+	bar.max_value = 1.0
+	bar.value = clampf(ratio, 0.0, 1.0)
+	bar.add_theme_stylebox_override("background", _box(OrnateBox.Kind.WELL,
+		Palette.NIGHT, Palette.PANEL_DEEP, Palette.R_PILL, 2.0, 0, 0))
+	bar.add_theme_stylebox_override("fill", _box(OrnateBox.Kind.BARE,
+		fill, fill.darkened(0.3), Palette.R_PILL, 0.0, 0, 0))
+	return bar
+
+## A row of tabs, as the inventory and profile screens use. Returns the
+## buttons so the caller can connect them.
+func make_tabs(labels: Array, active: int = 0) -> Array:
+	var out: Array[Button] = []
+	for i in labels.size():
+		var b := Button.new()
+		b.text = String(labels[i])
+		b.custom_minimum_size = Vector2(120, 48)
+		b.focus_mode = Control.FOCUS_ALL
+		var on := i == active
+		var faces := button_faces(
+			Palette.BLUE if on else Palette.PANEL,
+			Palette.BLUE.darkened(0.35) if on else Palette.PANEL_DEEP,
+			Palette.R_MD)
+		for state in faces:
+			b.add_theme_stylebox_override(state, faces[state])
+		for key in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+			b.add_theme_color_override(key, Palette.SNOW if on else Palette.SNOW_SOFT)
+		out.append(b)
+	return out
+
+## A stat tile: gold icon, label, number — the profile screen's bottom row.
+func make_stat_tile(icon: String, label: String, value: int) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.WELL,
+		Palette.PANEL, Palette.PANEL_DEEP, Palette.R_MD, 2.0,
+		Palette.PAD_MD, Palette.PAD_SM))
+	var col := VBoxContainer.new()
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_theme_constant_override("separation", 2)
+	var badge := IconRect.new(icon, 34.0, Palette.GOLD_BRIGHT)
+	badge.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(badge)
+	var l := make_body(label, Palette.FS_CAPTION, Palette.SNOW_SOFT, false)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(l)
+	var v := make_title(Fa.num(value), Palette.FS_HEADING, Palette.SNOW)
+	v.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(v)
+	p.add_child(col)
+	return p
+
+# — the sheets' panel vocabulary (docs/UI_SPEC.md) ————————
+
+## A framed section with its own small plaque, as every panel in the sheets
+## has. Returns the panel; `body` on it is where content goes.
+func make_section(title: String = "") -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.PANEL,
+		Palette.PANEL_DEEP, Palette.NIGHT, Palette.R_LG, Palette.FRAME_W,
+		Palette.PAD_MD, Palette.PAD_MD))
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", Palette.PAD_SM)
+	p.add_child(col)
+	if not title.is_empty():
+		var plate := make_corner_plaque(title, Palette.FS_HEADING)
+		plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		col.add_child(plate)
+	var body := VBoxContainer.new()
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", Palette.PAD_SM)
+	col.add_child(body)
+	p.set_meta("body", body)
+	return p
+
+## Where a section's content goes.
+func section_body(section: PanelContainer) -> VBoxContainer:
+	return section.get_meta("body") as VBoxContainer
+
+## One row of a stat list: gold medallion, Persian label, value on the far
+## side, over a hairline rule. The profile and the hero panels are built of
+## nothing else.
+func make_stat_row(icon: String, label: String, value: String,
+		value_colour: Color = Palette.SNOW) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.WELL,
+		Palette.PANEL, Palette.NIGHT, Palette.R_SM, 1.5,
+		Palette.PAD_SM, Palette.PAD_XS))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", Palette.PAD_SM)
+	row.add_child(IconRect.new(icon, 30.0, Palette.GOLD_BRIGHT))
+	var l := make_body(label, Palette.FS_LABEL, Palette.SNOW, false)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(l)
+	var v := make_title(value, Palette.FS_LABEL, value_colour)
+	v.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	v.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	v.autowrap_mode = TextServer.AUTOWRAP_OFF
+	v.custom_minimum_size.x = 64
+	row.add_child(v)
+	p.add_child(row)
+	return p
+
+## A row with a control on the end — the settings screen's shape.
+func make_control_row(icon: String, label: String, control: Control) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.WELL,
+		Palette.PANEL, Palette.NIGHT, Palette.R_SM, 1.5,
+		Palette.PAD_SM, Palette.PAD_XS))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", Palette.PAD_MD)
+	row.add_child(IconRect.new(icon, 30.0, Palette.GOLD_BRIGHT))
+	var l := make_body(label, Palette.FS_LABEL, Palette.SNOW, false)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(l)
+	control.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(control)
+	p.add_child(row)
+	return p
+
+## An entry in a left-hand navigation list. The chosen one is filled teal,
+## the rest are flat — the settings sheet's left column.
+func make_nav_item(icon: String, label: String, active: bool = false) -> Button:
+	var b := Button.new()
+	b.text = label
+	b.custom_minimum_size = Vector2(230, Palette.TOUCH_MIN)
+	b.focus_mode = Control.FOCUS_ALL
+	b.alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	var faces := button_faces(
+		Palette.ACTION if active else Palette.PANEL,
+		Palette.ACTION_DEEP if active else Palette.NIGHT, Palette.R_MD)
+	for state in faces:
+		b.add_theme_stylebox_override(state, faces[state])
+	for key in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		b.add_theme_color_override(key, Palette.GOLD_LIGHT if active else Palette.SNOW_SOFT)
+	var badge := IconRect.new(icon, 30.0,
+		Palette.GOLD_BRIGHT if active else Palette.SNOW_SOFT)
+	badge.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
+	badge.offset_left = -46
+	badge.offset_right = -16
+	badge.offset_top = -15
+	badge.offset_bottom = 15
+	b.add_child(badge)
+	for state in faces:
+		(faces[state] as OrnateBox).content_margin_right = 56
+	return b
+
+## A parchment list card: medallion, a title over a subtitle, a time on the
+## end. The notifications, friends and mission lists are all this card.
+func make_list_card(icon: String, title: String, subtitle: String,
+		trailing: String = "", badge: int = 0) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.PARCHMENT,
+		Palette.PARCHMENT, Palette.PARCHMENT_DIM, Palette.R_MD, 2.0,
+		Palette.PAD_MD, Palette.PAD_SM))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", Palette.PAD_MD)
+	var medal := Medallion.new(icon, 46.0, false)
+	medal.icon_colour = Palette.GOLD_BRIGHT
+	row.add_child(medal)
+
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_theme_constant_override("separation", 0)
+	var t := make_title(title, Palette.FS_LABEL, Palette.INK)
+	col.add_child(t)
+	var sub := make_body(subtitle, Palette.FS_CAPTION, Palette.INK_SOFT)
+	col.add_child(sub)
+	row.add_child(col)
+
+	if not trailing.is_empty():
+		var tr := make_body(trailing, Palette.FS_CAPTION, Palette.INK_SOFT, false)
+		tr.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		row.add_child(tr)
+	if badge > 0:
+		# An unread count, drawn as the sheets draw it: a small ruby disc.
+		var count := make_title(Fa.num(badge), Palette.FS_CAPTION, Palette.SNOW)
+		count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var dot := PanelContainer.new()
+		dot.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.BARE,
+			Palette.RUBY_LIGHT, Palette.RUBY, Palette.R_PILL, 0.0, 8, 2))
+		dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		dot.add_child(count)
+		row.add_child(dot)
+	p.add_child(row)
+	return p
+
+## One square of an item grid: a parchment tile with a gold edge, an icon,
+## and an optional count in the corner.
+func make_item_slot(icon: String, count: int = 0, side: float = 72.0) -> Control:
+	var p := PanelContainer.new()
+	p.custom_minimum_size = Vector2(side, side)
+	var empty := icon.is_empty()
+	p.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.PARCHMENT,
+		Palette.PARCHMENT if not empty else Palette.PARCHMENT_DIM.darkened(0.1),
+		Palette.PARCHMENT_DIM, Palette.R_SM, 2.0, 4, 4))
+	if not empty:
+		var badge := IconRect.new(icon, side * 0.56, Palette.INK)
+		badge.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		p.add_child(badge)
+	if count > 0:
+		var n := make_body(Fa.num(count), Palette.FS_CAPTION, Palette.INK, false)
+		n.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+		n.offset_left = -26
+		n.offset_top = -22
+		p.add_child(n)
+	return p
+
+## A reward chip: a medallion over its amount, as the daily-reward and
+## notification panels show.
+func make_reward(icon: String, amount: int, colour: Color) -> VBoxContainer:
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 2)
+	var medal := Medallion.new(icon, 54.0, false)
+	medal.icon_colour = colour
+	medal.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(medal)
+	var n := make_title(Fa.num(amount), Palette.FS_LABEL, Palette.GOLD_LIGHT)
+	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(n)
+	return col
+
+## The toggle used in settings: a teal pill with a pale knob.
+func make_toggle(on: bool) -> CheckButton:
+	var c := CheckButton.new()
+	c.button_pressed = on
+	c.focus_mode = Control.FOCUS_ALL
+	return c
+
+## A quote or hint on parchment, as the profile sheet shows under the items.
+func make_quote(text: String) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.PARCHMENT,
+		Palette.PARCHMENT, Palette.PARCHMENT_DIM, Palette.R_MD, 2.0,
+		Palette.PAD_MD, Palette.PAD_SM))
+	p.add_child(make_body(text, Palette.FS_BODY, Palette.INK))
+	return p

@@ -42,6 +42,11 @@ static func draw_corner_studs(ci: RID, rect: Rect2, radius: float) -> void:
 ## A vertical sheen across a filled shape, so panels are never flat colour.
 static func draw_panel_fill(ci: RID, rect: Rect2, radius: float,
 		top: Color, bottom: Color) -> void:
+	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
+		return
+	# A pill passes a radius bigger than the shape; clamp before using it to
+	# inset the end bands, or the fill is drawn with negative width.
+	radius = clampf(radius, 0.0, minf(rect.size.x, rect.size.y) * 0.5)
 	var steps := 24
 	for i in steps:
 		var t := float(i) / float(steps - 1)
@@ -81,6 +86,8 @@ static func _rounded_outline(ci: RID, rect: Rect2, radius: float,
 static func _arc_band(ci: RID, rect: Rect2, radius: float, from: float, to: float,
 		colour: Color, width: float, offset: float) -> void:
 	var r := rect.grow(-offset)
+	if r.size.x <= 0.0 or r.size.y <= 0.0:
+		return
 	radius = clampf(radius - offset, 0.0, minf(r.size.x, r.size.y) * 0.5)
 	var centre := r.position + r.size * 0.5
 	var pts := PackedVector2Array()

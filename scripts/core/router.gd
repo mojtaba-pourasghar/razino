@@ -22,6 +22,10 @@ const SCREENS := {
 	"UI-14": "res://scenes/menus/parent_zone.tscn",
 	"UI-15": "res://scenes/menus/downloads.tscn",
 	"UI-16": "res://scenes/menus/error_recovery.tscn",
+	# Screens the approved sheets add (docs/UI_SPEC.md §5).
+	"UI-17": "res://scenes/menus/profile.tscn",
+	"UI-18": "res://scenes/menus/notifications.tscn",
+	"UI-19": "res://scenes/menus/inventory.tscn",
 }
 
 const FADE_SECONDS := 0.22
