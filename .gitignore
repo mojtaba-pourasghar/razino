@@ -23,3 +23,7 @@ dist/
 # OS noise.
 .DS_Store
 Thumbs.db
+
+# Cloudflare credentials for the art pipeline live outside the repository
+# (see docs/ART_PIPELINE.md); this only guards against a stray copy.
+cf_accounts.json

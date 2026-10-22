@@ -29,11 +29,7 @@ func build_content() -> void:
 	col.add_theme_constant_override("separation", Palette.PAD_MD)
 	card.add_child(col)
 
-	var art := PlaceholderArt.new()
-	art.background_id = "BG_INTRO_RAZINO"
-	art.custom_minimum_size = Vector2(0, 220)
-	art.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	col.add_child(art)
+	col.add_child(Style.make_banner("BG_INTRO_RAZINO", 220))
 
 	_title = Style.make_title("", Palette.FS_HEADING, Palette.INK)
 	col.add_child(_title)

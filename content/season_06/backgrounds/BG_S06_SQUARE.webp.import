@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bsmayngjs6dw2"
-path="res://.godot/imported/ui_worldmap.webp-0434a51a50cc98c87d01cac52fd2f566.ctex"
+uid="uid://67pigscnu58v"
+path="res://.godot/imported/BG_S06_SQUARE.webp-5fcb3b87f5ce3bab80db3e381c9407f4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/backgrounds/ui_worldmap.webp"
-dest_files=["res://.godot/imported/ui_worldmap.webp-0434a51a50cc98c87d01cac52fd2f566.ctex"]
+source_file="res://content/season_06/backgrounds/BG_S06_SQUARE.webp"
+dest_files=["res://.godot/imported/BG_S06_SQUARE.webp-5fcb3b87f5ce3bab80db3e381c9407f4.ctex"]
 
 [params]
 

@@ -18,10 +18,7 @@ func _ready() -> void:
 	super._ready()
 
 func build_content() -> void:
-	var art := PlaceholderArt.new()
-	art.background_id = "BG_WORLD_MAP"
-	art.custom_minimum_size = Vector2(0, 200)
-	content.add_child(art)
+	content.add_child(Style.make_banner("BG_WORLD_MAP", 200))
 
 	var list := make_scroll()
 	for region in REGIONS:
@@ -38,7 +35,8 @@ func _region_card(region: Dictionary) -> Control:
 	row.add_theme_constant_override("separation", Palette.PAD_MD)
 	card.add_child(row)
 
-	row.add_child(Style.make_art_tile(String(region.get("icon", "map")), Vector2(96, 96), open))
+	row.add_child(Style.make_art_frame("region_%s" % String(region["id"]),
+		String(region.get("icon", "map")), Vector2(150, 96), open))
 
 	var col := VBoxContainer.new()
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL

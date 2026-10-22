@@ -64,11 +64,7 @@ func _product_card(entry: Dictionary) -> Control:
 	row.add_theme_constant_override("separation", Palette.PAD_MD)
 	card.add_child(row)
 
-	var thumb := PlaceholderArt.new()
-	thumb.background_id = cid
-	thumb.show_badge = false
-	thumb.custom_minimum_size = Vector2(130, 90)
-	row.add_child(thumb)
+	row.add_child(Style.make_art_frame(cid, "book", Vector2(130, 90)))
 
 	var col := VBoxContainer.new()
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL

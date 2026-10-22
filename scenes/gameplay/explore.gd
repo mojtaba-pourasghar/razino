@@ -32,6 +32,7 @@ func build_content() -> void:
 	# border is a separate node and stays.
 	background.visible = false
 	_stage = SceneStage.new()
+	_stage.chapter_id = _chapter_id
 	add_child(_stage)
 	move_child(_stage, 0)
 

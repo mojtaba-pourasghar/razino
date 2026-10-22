@@ -26,6 +26,7 @@ func build_content() -> void:
 
 	var scene_id := String(payload.get("scene_id", ""))
 	var chapter_id := String(payload.get("chapter_id", GameState.current_chapter))
+	stage.chapter_id = chapter_id
 	if chapter_id.is_empty() or scene_id.is_empty():
 		_panel.show_line({"text": "گفت‌وگویی برای نمایش انتخاب نشده است."}, "")
 		return

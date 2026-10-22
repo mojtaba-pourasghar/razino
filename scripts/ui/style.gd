@@ -326,3 +326,50 @@ func make_art_tile(icon: String, side: Vector2, lit: bool = true) -> PanelContai
 	badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	p.add_child(badge)
 	return p
+
+## A framed tile showing a painting, falling back to the motif tile when that
+## art has not been painted yet.
+func make_art_frame(art_id: String, icon: String, side: Vector2,
+		lit: bool = true, chapter_id: String = "") -> Control:
+	var painted := SceneArt.load_texture(art_id, chapter_id)
+	if painted == null:
+		return make_art_tile(icon, side, lit)
+	var frame := PanelContainer.new()
+	frame.custom_minimum_size = side
+	frame.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.PARCHMENT,
+		Palette.PANEL_LIGHT, Palette.PANEL_DEEP, Palette.R_MD, 2.5, 3, 3))
+	frame.clip_contents = true
+	var art := TextureRect.new()
+	art.texture = painted
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# A locked place is shown drained rather than hidden, so the player can
+	# see there is somewhere to go.
+	if not lit:
+		art.modulate = Color(0.45, 0.5, 0.58, 1.0)
+	frame.add_child(art)
+	return frame
+
+## A wide banner at the head of a screen.
+func make_banner(art_id: String, height: float) -> Control:
+	var painted := SceneArt.load_texture(art_id)
+	if painted == null:
+		var stand_in := PlaceholderArt.new()
+		stand_in.background_id = art_id
+		stand_in.custom_minimum_size = Vector2(0, height)
+		stand_in.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		return stand_in
+	var frame := PanelContainer.new()
+	frame.custom_minimum_size = Vector2(0, height)
+	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	frame.clip_contents = true
+	frame.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.PARCHMENT,
+		Palette.PANEL_LIGHT, Palette.PANEL_DEEP, Palette.R_MD, 3.0, 4, 4))
+	var art := TextureRect.new()
+	art.texture = painted
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_child(art)
+	return frame

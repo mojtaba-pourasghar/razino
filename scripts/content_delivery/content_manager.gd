@@ -149,6 +149,19 @@ func resolve_external_audio(res_path: String) -> String:
 			return candidate
 	return ""
 
+## SceneArt asks here when a res:// lookup fails, so downloaded chapters can
+## supply their own paintings — the twin of resolve_external_audio above.
+func resolve_external_background(art_id: String) -> String:
+	for chapter_id in installed.keys():
+		var root := chapter_root(chapter_id)
+		if root.is_empty():
+			continue
+		for ext in ["webp", "png"]:
+			var candidate := "%s/backgrounds/%s.%s" % [root, art_id, ext]
+			if FileAccess.file_exists(candidate):
+				return candidate
+	return ""
+
 # — download —————————————————————————————————————————————
 
 ## Fetches, validates and activates a chapter. Returns true on success.
@@ -301,6 +314,7 @@ func _activate(chapter_id: String, staging: String, version: int) -> bool:
 	_wipe_dir(retired)
 	installed[chapter_id] = {"version": version, "path": final_dir}
 	_save_installed_index()
+	SceneArt.forget()
 	content_activated.emit(chapter_id, version)
 	return true
 
