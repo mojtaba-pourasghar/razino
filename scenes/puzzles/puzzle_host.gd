@@ -29,7 +29,7 @@ func build_content() -> void:
 					puzzle = (s as Dictionary).get("puzzle", {})
 					break
 	if puzzle.is_empty():
-		scroll.add_child(make_notice("معمایی برای نمایش انتخاب نشده است.", Palette.BRASS))
+		scroll.add_child(make_notice("معمایی برای نمایش انتخاب نشده است.", Palette.GOLD))
 		return
 
 	_panel.load_puzzle(puzzle)

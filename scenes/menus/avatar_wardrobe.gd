@@ -8,7 +8,7 @@ extends RazinoScreen
 var _portrait: AvatarPortrait
 
 func _ready() -> void:
-	configure("لباس‌ها و ظاهر", "UI-04")
+	configure("لباس‌ها و ظاهر", "UI-04", "town", true)
 	super._ready()
 
 func build_content() -> void:
@@ -48,7 +48,7 @@ func _picker(label: String, key: String, values: Array, names: Array) -> Control
 	var card := Style.make_night_card()
 	var col := VBoxContainer.new()
 	card.add_child(col)
-	col.add_child(Style.make_title(label, Palette.FS_LABEL, Palette.BRASS))
+	col.add_child(Style.make_title(label, Palette.FS_LABEL, Palette.GOLD))
 	var flow := HFlowContainer.new()
 	flow.add_theme_constant_override("h_separation", Palette.PAD_SM)
 	flow.add_theme_constant_override("v_separation", Palette.PAD_SM)

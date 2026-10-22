@@ -18,7 +18,7 @@ var _name_field: LineEdit
 var _portrait: AvatarPortrait
 
 func _ready() -> void:
-	configure("شخصیتت را بساز")
+	configure("شخصیتت را بساز", "", "splash")
 	super._ready()
 
 func build_content() -> void:
@@ -104,11 +104,11 @@ func _photo_section() -> Control:
 	var card := Style.make_night_card()
 	var col := VBoxContainer.new()
 	card.add_child(col)
-	col.add_child(Style.make_title("ساخت از روی عکس", Palette.FS_LABEL, Palette.BRASS))
+	col.add_child(Style.make_title("ساخت از روی عکس", Palette.FS_LABEL, Palette.GOLD))
 	col.add_child(Style.make_body(
 		"عکس فقط روی همین دستگاه بررسی می‌شود تا رنگ پوست و مو حدس زده شود، و بلافاصله پاک می‌شود. هیچ عکسی ذخیره یا ارسال نمی‌شود و بازی چهرهٔ کسی را نمی‌شناسد.",
 		Palette.FS_CAPTION, Palette.SNOW_SOFT))
-	var note := Style.make_body("", Palette.FS_CAPTION, Palette.ROSE)
+	var note := Style.make_body("", Palette.FS_CAPTION, Palette.RUBY)
 	col.add_child(note)
 	AvatarManager.photo_processing_failed.connect(func(reason): note.text = reason)
 

@@ -6,15 +6,15 @@ extends RazinoScreen
 ## same map. The regions below are the five from the GDD's world map.
 
 const REGIONS := [
-	{"id": "centre", "name": "منطقهٔ مرکزی شهر", "desc": "مدرسه، میدان ساعت، کتابخانه و خانهٔ شخصیت‌ها. نقطهٔ شروع و بازگشت.", "opens_with": "season_01"},
-	{"id": "nature", "name": "منطقهٔ طبیعت", "desc": "جنگل نشانه‌ها، آبشار، رودخانه و مسیرهای کوهستانی.", "opens_with": "season_03"},
-	{"id": "invent", "name": "منطقهٔ اختراع‌ها", "desc": "کارگاه مانی، آزمایشگاه علمی و انبار قطعه‌ها.", "opens_with": "season_04"},
-	{"id": "far", "name": "منطقهٔ دوردست", "desc": "رصدخانه، دریاچه و ایستگاه پژوهشی.", "opens_with": "season_05"},
-	{"id": "under", "name": "منطقهٔ زیرزمینی", "desc": "مسیرهای مخفی، تالار نمادها و دستگاه مرکزی.", "opens_with": "season_08"},
+	{"id": "centre", "icon": "clock", "name": "منطقهٔ مرکزی شهر", "desc": "مدرسه، میدان ساعت، کتابخانه و خانهٔ شخصیت‌ها. نقطهٔ شروع و بازگشت.", "opens_with": "season_01"},
+	{"id": "nature", "icon": "map", "name": "منطقهٔ طبیعت", "desc": "جنگل نشانه‌ها، آبشار، رودخانه و مسیرهای کوهستانی.", "opens_with": "season_03"},
+	{"id": "invent", "icon": "gear", "name": "منطقهٔ اختراع‌ها", "desc": "کارگاه مانی، آزمایشگاه علمی و انبار قطعه‌ها.", "opens_with": "season_04"},
+	{"id": "far", "icon": "star", "name": "منطقهٔ دوردست", "desc": "رصدخانه، دریاچه و ایستگاه پژوهشی.", "opens_with": "season_05"},
+	{"id": "under", "icon": "key", "name": "منطقهٔ زیرزمینی", "desc": "مسیرهای مخفی، تالار نمادها و دستگاه مرکزی.", "opens_with": "season_08"},
 ]
 
 func _ready() -> void:
-	configure("نقشهٔ جهان", "UI-04")
+	configure("نقشهٔ جهان", "UI-04", "worldmap", true)
 	super._ready()
 
 func build_content() -> void:
@@ -38,10 +38,7 @@ func _region_card(region: Dictionary) -> Control:
 	row.add_theme_constant_override("separation", Palette.PAD_MD)
 	card.add_child(row)
 
-	var swatch := ColorRect.new()
-	swatch.custom_minimum_size = Vector2(90, 90)
-	swatch.color = Palette.TEAL if open else Palette.LOCKED
-	row.add_child(swatch)
+	row.add_child(Style.make_art_tile(String(region.get("icon", "map")), Vector2(96, 96), open))
 
 	var col := VBoxContainer.new()
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL

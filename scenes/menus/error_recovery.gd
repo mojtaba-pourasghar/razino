@@ -55,7 +55,7 @@ func build_content() -> void:
 
 	col.add_child(Style.make_title(String(info["title"]), Palette.FS_TITLE, Palette.INK))
 	col.add_child(Style.make_body(String(info["body"]), Palette.FS_BODY, Palette.INK_SOFT))
-	col.add_child(Style.make_title("چه کار کنیم؟", Palette.FS_LABEL, Palette.BRASS_DEEP))
+	col.add_child(Style.make_title("چه کار کنیم؟", Palette.FS_LABEL, Palette.GOLD_DEEP))
 	col.add_child(Style.make_body(String(info["fix"]), Palette.FS_BODY, Palette.INK_SOFT))
 
 	var detail := String(payload.get("message", ""))

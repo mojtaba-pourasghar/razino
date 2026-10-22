@@ -107,7 +107,7 @@ func _draw_hair(cx: float, cy: float, r: float, hair: Color) -> void:
 		"cap":
 			draw_arc(Vector2(cx, cy), r * 0.98, PI, TAU, 28, hair.darkened(0.3), r * 0.42, true)
 			# peak
-			draw_rect(Rect2(cx - r * 1.25, cy - r * 0.42, r * 1.3, r * 0.26), Palette.BRASS)
+			draw_rect(Rect2(cx - r * 1.25, cy - r * 0.42, r * 1.3, r * 0.26), Palette.GOLD)
 
 func _draw_eyes(cx: float, cy: float, r: float) -> void:
 	var eye_y := cy - r * 0.05
@@ -139,22 +139,22 @@ func _draw_eyes(cx: float, cy: float, r: float) -> void:
 func _draw_accessory(cx: float, head_y: float, head_r: float, torso_top: float, torso_w: float, unit: float) -> void:
 	match AvatarManager.accessory():
 		"glasses":
-			var c := Palette.BRASS
+			var c := Palette.GOLD
 			for s in [-1.0, 1.0]:
 				draw_arc(Vector2(cx + head_r * 0.38 * s, head_y - head_r * 0.05), head_r * 0.26, 0, TAU, 20, c, head_r * 0.055)
 			draw_line(Vector2(cx - head_r * 0.12, head_y - head_r * 0.05),
 				Vector2(cx + head_r * 0.12, head_y - head_r * 0.05), c, head_r * 0.05)
 		"scarf":
-			_rounded(Rect2(cx - unit * 0.95, torso_top - unit * 0.12, unit * 1.9, unit * 0.52), unit * 0.22, Palette.ROSE)
-			_rounded(Rect2(cx + unit * 0.45, torso_top + unit * 0.3, unit * 0.42, unit * 1.2), unit * 0.18, Palette.ROSE.darkened(0.1))
+			_rounded(Rect2(cx - unit * 0.95, torso_top - unit * 0.12, unit * 1.9, unit * 0.52), unit * 0.22, Palette.RUBY)
+			_rounded(Rect2(cx + unit * 0.45, torso_top + unit * 0.3, unit * 0.42, unit * 1.2), unit * 0.18, Palette.RUBY.darkened(0.1))
 		"satchel":
 			draw_line(Vector2(cx - torso_w * 0.45, torso_top + unit * 0.1),
-				Vector2(cx + torso_w * 0.42, torso_top + unit * 1.6), Palette.BRASS_DEEP, unit * 0.22)
-			_rounded(Rect2(cx + torso_w * 0.26, torso_top + unit * 1.45, unit * 1.0, unit * 0.85), unit * 0.18, Palette.BRASS_DEEP)
+				Vector2(cx + torso_w * 0.42, torso_top + unit * 1.6), Palette.GOLD_DEEP, unit * 0.22)
+			_rounded(Rect2(cx + torso_w * 0.26, torso_top + unit * 1.45, unit * 1.0, unit * 0.85), unit * 0.18, Palette.GOLD_DEEP)
 		"pocket_watch":
 			draw_line(Vector2(cx + unit * 0.2, torso_top + unit * 0.5),
-				Vector2(cx + unit * 0.75, torso_top + unit * 1.3), Palette.BRASS, unit * 0.09)
-			draw_circle(Vector2(cx + unit * 0.78, torso_top + unit * 1.48), unit * 0.3, Palette.BRASS)
+				Vector2(cx + unit * 0.75, torso_top + unit * 1.3), Palette.GOLD, unit * 0.09)
+			draw_circle(Vector2(cx + unit * 0.78, torso_top + unit * 1.48), unit * 0.3, Palette.GOLD)
 			draw_circle(Vector2(cx + unit * 0.78, torso_top + unit * 1.48), unit * 0.22, Palette.PARCHMENT)
 
 func _outfit_colour() -> Color:

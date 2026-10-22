@@ -30,17 +30,9 @@ var _current_audio: String = ""
 
 func _ready() -> void:
 	Style.attach(self)
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Palette.PARCHMENT
-	sb.set_corner_radius_all(int(Palette.R_LG))
-	sb.content_margin_left = Palette.PAD_LG
-	sb.content_margin_right = Palette.PAD_LG
-	sb.content_margin_top = Palette.PAD_MD
-	sb.content_margin_bottom = Palette.PAD_MD
-	sb.shadow_color = Color(0, 0, 0, 0.45)
-	sb.shadow_size = 14
-	sb.shadow_offset = Vector2(0, 6)
-	add_theme_stylebox_override("panel", sb)
+	add_theme_stylebox_override("panel", OrnateBox.make(
+		OrnateBox.Kind.PARCHMENT, Color("FBF1DA"), Palette.PARCHMENT_DIM,
+		Palette.R_LG, 3.0).with_margins(Palette.PAD_LG, Palette.PAD_MD))
 
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", Palette.PAD_SM)
@@ -48,7 +40,7 @@ func _ready() -> void:
 
 	var top := HBoxContainer.new()
 	col.add_child(top)
-	_speaker = Style.make_title("", Palette.FS_LABEL, Palette.BRASS_DEEP)
+	_speaker = Style.make_title("", Palette.FS_HEADING, Palette.GOLD_DEEP)
 	_speaker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(_speaker)
 
@@ -60,7 +52,7 @@ func _ready() -> void:
 	_text = RichTextLabel.new()
 	_text.bbcode_enabled = false
 	_text.fit_content = true
-	_text.custom_minimum_size.y = 84
+	_text.custom_minimum_size.y = 54
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_text.add_theme_color_override("default_color", Palette.INK)
 	_text.add_theme_font_size_override("normal_font_size", Style.scaled(Palette.FS_BODY))
@@ -72,7 +64,10 @@ func _ready() -> void:
 	_text.text_direction = Control.TEXT_DIRECTION_RTL
 	col.add_child(_text)
 
-	_missing_vo = Style.make_body("", Palette.FS_CAPTION, Palette.ROSE)
+	_missing_vo = Style.make_body("", Palette.FS_CAPTION, Palette.RUBY)
+	# An empty warning should take no room at all, or every line of dialogue
+	# carries a blank strip under it.
+	_missing_vo.visible = false
 	col.add_child(_missing_vo)
 
 	_choices = VBoxContainer.new()
@@ -107,6 +102,7 @@ func show_line(line: Dictionary, speaker_name: String) -> void:
 	var has_clip := AudioManager.missing_audio.has(_current_audio) == false and not _current_audio.is_empty()
 	_replay.visible = not _current_audio.is_empty()
 	_missing_vo.text = "" if has_clip else "صدای این خط هنوز ضبط نشده است."
+	_missing_vo.visible = not has_clip
 
 	if Settings.subtitles_enabled:
 		_revealed = 0.0

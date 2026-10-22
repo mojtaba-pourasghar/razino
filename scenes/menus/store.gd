@@ -10,16 +10,16 @@ extends RazinoScreen
 var _status: Label
 
 func _ready() -> void:
-	configure("فروشگاه", "UI-04")
+	configure("فروشگاه", "UI-04", "town", true)
 	super._ready()
 
 func build_content() -> void:
 	if not PurchaseManager.is_live():
 		content.add_child(make_notice(
 			"حالت آزمایشی: اتصال به فروشگاه هنوز انجام نشده و هیچ پرداخت واقعی‌ای ممکن نیست. آنچه اینجا «خریده» می‌شود فقط برای آزمایش است.",
-			Palette.BRASS))
+			Palette.GOLD))
 	if not ParentalSettings.allow_purchases:
-		var notice := make_notice("خرید در بخش والدین فعال نشده است.", Palette.ROSE)
+		var notice := make_notice("خرید در بخش والدین فعال نشده است.", Palette.RUBY)
 		content.add_child(notice)
 		var go := Style.make_button("رفتن به بخش والدین", "quiet")
 		go.pressed.connect(func(): Router.go("UI-14"))
@@ -86,7 +86,7 @@ func _product_card(entry: Dictionary) -> Control:
 	row.add_child(actions)
 
 	if owned:
-		actions.add_child(Style.make_body("تهیه شده", Palette.FS_LABEL, Palette.OK))
+		actions.add_child(Style.make_body("تهیه شده", Palette.FS_LABEL, Palette.EMERALD))
 		var go := Style.make_button("رفتن به دانلودها", "quiet")
 		go.pressed.connect(func(): Router.go("UI-15", {"chapter_id": cid}))
 		actions.add_child(go)
@@ -96,7 +96,7 @@ func _product_card(entry: Dictionary) -> Control:
 	# adjusted without a store release (GDD §6). Until that endpoint exists we
 	# say so rather than showing an invented number.
 	actions.add_child(Style.make_body("قیمت از سرور خوانده می‌شود", Palette.FS_CAPTION, Palette.SNOW_SOFT))
-	actions.add_child(Style.make_body("هنوز تنظیم نشده", Palette.FS_LABEL, Palette.BRASS))
+	actions.add_child(Style.make_body("هنوز تنظیم نشده", Palette.FS_LABEL, Palette.GOLD))
 
 	var buy := Style.make_button("تهیهٔ این فصل")
 	buy.disabled = not ParentalSettings.allow_purchases

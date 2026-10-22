@@ -131,7 +131,7 @@ func _draw() -> void:
 
 	if _speaking:
 		# A soft ring so a child always knows who is talking.
-		draw_arc(Vector2(cx + lean, head_y), head_r * 1.35, 0, TAU, 32, Palette.BRASS, 3.0)
+		draw_arc(Vector2(cx + lean, head_y), head_r * 1.35, 0, TAU, 32, Palette.GOLD, 3.0)
 
 func _draw_fennec() -> void:
 	## فندق — the group's fennec guide. Large ears, small body, warm sand
@@ -171,7 +171,7 @@ func _draw_fennec() -> void:
 		draw_circle(head_c + Vector2(s * head_r * 0.36 + head_r * 0.05, -head_r * 0.13), head_r * 0.05, Color.WHITE)
 	draw_circle(head_c + Vector2(0, head_r * 0.42), head_r * 0.12, Palette.INK)
 	if _speaking:
-		draw_arc(head_c, head_r * 1.5, 0, TAU, 32, Palette.BRASS, 3.0)
+		draw_arc(head_c, head_r * 1.5, 0, TAU, 32, Palette.GOLD, 3.0)
 
 func _rounded(rect: Rect2, radius: float, colour: Color) -> void:
 	radius = minf(radius, minf(rect.size.x, rect.size.y) * 0.5)

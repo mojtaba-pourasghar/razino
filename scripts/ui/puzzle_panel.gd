@@ -36,14 +36,9 @@ var _picked: Dictionary = {}
 
 func _ready() -> void:
 	Style.attach(self)
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Palette.NIGHT_SOFT
-	sb.set_corner_radius_all(int(Palette.R_LG))
-	sb.set_border_width_all(2)
-	sb.border_color = Palette.BRASS
-	for side in ["left", "right", "top", "bottom"]:
-		sb.set("content_margin_" + side, Palette.PAD_LG)
-	add_theme_stylebox_override("panel", sb)
+	add_theme_stylebox_override("panel", OrnateBox.make(
+		OrnateBox.Kind.PANEL, Palette.PANEL_LIGHT, Palette.PANEL_DEEP,
+		Palette.R_LG, Palette.FRAME_W).with_margins(Palette.PAD_LG, Palette.PAD_LG))
 
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", Palette.PAD_MD)
@@ -56,7 +51,7 @@ func _ready() -> void:
 	_work_area.add_theme_constant_override("separation", Palette.PAD_SM)
 	col.add_child(_work_area)
 
-	_feedback = Style.make_body("", Palette.FS_LABEL, Palette.BRASS)
+	_feedback = Style.make_body("", Palette.FS_LABEL, Palette.GOLD)
 	col.add_child(_feedback)
 	_hint_label = Style.make_body("", Palette.FS_CAPTION, Palette.TEAL)
 	col.add_child(_hint_label)
@@ -111,7 +106,7 @@ func _rebuild() -> void:
 		"spot_contradiction":
 			_build_picking()
 		_:
-			_work_area.add_child(Style.make_body("این معما را نمی‌شناسم.", Palette.FS_LABEL, Palette.ROSE))
+			_work_area.add_child(Style.make_body("این معما را نمی‌شناسم.", Palette.FS_LABEL, Palette.RUBY))
 
 # — ordering (order_symbols / route_path / assemble_parts) ————
 
@@ -121,7 +116,7 @@ func _build_ordering() -> void:
 	_work_area.add_child(Style.make_body("ترتیب تو:", Palette.FS_CAPTION, Palette.SNOW_SOFT))
 	_work_area.add_child(chosen)
 	for i in _ordered.size():
-		chosen.add_child(_token(String(_label_for(_ordered[i])), Palette.BRASS, Palette.INK))
+		chosen.add_child(_token(String(_label_for(_ordered[i])), Palette.GOLD, Palette.INK))
 	if _ordered.is_empty():
 		chosen.add_child(Style.make_body("— هنوز چیزی نچیده‌ای —", Palette.FS_CAPTION, Palette.LOCKED, false))
 
@@ -189,7 +184,7 @@ func _build_pairs() -> void:
 		for pair in _pairs_done:
 			_work_area.add_child(Style.make_body(
 				"%s  ↔  %s" % [_label_for(pair[0]), _label_for(pair[1])],
-				Palette.FS_CAPTION, Palette.OK))
+				Palette.FS_CAPTION, Palette.EMERALD))
 
 	var pool := _flow()
 	for item in _puzzle.get("items", []):
@@ -345,13 +340,8 @@ func _label_for(id: Variant) -> String:
 
 func _token(text: String, bg: Color, fg: Color) -> Control:
 	var p := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = bg
-	sb.set_corner_radius_all(int(Palette.R_SM))
-	sb.content_margin_left = Palette.PAD_MD
-	sb.content_margin_right = Palette.PAD_MD
-	sb.content_margin_top = Palette.PAD_XS
-	sb.content_margin_bottom = Palette.PAD_XS
-	p.add_theme_stylebox_override("panel", sb)
+	p.add_theme_stylebox_override("panel", OrnateBox.make(
+		OrnateBox.Kind.BUTTON, bg.lightened(0.12), bg.darkened(0.2),
+		Palette.R_SM, 2.0).with_margins(Palette.PAD_MD, Palette.PAD_XS))
 	p.add_child(Style.make_body(text, Palette.FS_LABEL, fg, false))
 	return p

@@ -78,7 +78,7 @@ func _questions_card() -> Control:
 	var card := Style.make_night_card()
 	var col := VBoxContainer.new()
 	card.add_child(col)
-	col.add_child(Style.make_title("هنوز نمی‌دانیم", Palette.FS_LABEL, Palette.BRASS))
+	col.add_child(Style.make_title("هنوز نمی‌دانیم", Palette.FS_LABEL, Palette.GOLD))
 	var open := ClueJournal.open_questions()
 	if open.is_empty():
 		col.add_child(Style.make_body("فعلاً سؤال بازی نداری.", Palette.FS_CAPTION, Palette.SNOW_SOFT))
@@ -97,22 +97,19 @@ func _refresh() -> void:
 			Palette.FS_BODY, Palette.SNOW_SOFT))
 		return
 	for category in ClueJournal.categories():
-		_grid.add_child(Style.make_title(_category_name(category), Palette.FS_LABEL, Palette.BRASS))
+		_grid.add_child(Style.make_title(_category_name(category), Palette.FS_LABEL, Palette.GOLD))
 		for clue_id in ClueJournal.discovered_in_category(category):
 			_grid.add_child(_clue_card(clue_id))
 
 func _clue_card(clue_id: String) -> Control:
 	var chosen := _selected.has(clue_id)
 	var card := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Palette.PARCHMENT if not chosen else Palette.BRASS
-	sb.set_corner_radius_all(int(Palette.R_MD))
-	for side in ["left", "right", "top", "bottom"]:
-		sb.set("content_margin_" + side, Palette.PAD_MD)
-	if chosen:
-		sb.set_border_width_all(3)
-		sb.border_color = Palette.TEAL
-	card.add_theme_stylebox_override("panel", sb)
+	# A chosen clue lifts to lit gold; the rest stay parchment.
+	var top := Palette.GOLD_BRIGHT if chosen else Color("FBF1DA")
+	var bottom := Palette.GOLD if chosen else Palette.PARCHMENT_DIM
+	card.add_theme_stylebox_override("panel", OrnateBox.make(
+		OrnateBox.Kind.PARCHMENT, top, bottom, Palette.R_MD, 3.0
+	).with_margins(Palette.PAD_MD, Palette.PAD_MD))
 
 	# The card must grow with its text, so the content is a normal child of the
 	# panel and the whole card takes the tap — anchoring the text inside a

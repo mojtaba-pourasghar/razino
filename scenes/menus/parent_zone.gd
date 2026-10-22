@@ -46,7 +46,7 @@ func _show_gate() -> void:
 	_pin_field.custom_minimum_size.y = Palette.TOUCH_MIN
 	col.add_child(_pin_field)
 
-	_message = Style.make_body("", Palette.FS_CAPTION, Palette.ROSE)
+	_message = Style.make_body("", Palette.FS_CAPTION, Palette.RUBY)
 	col.add_child(_message)
 
 	var go := Style.make_button("ورود" if not first_time else "ثبت رمز")
@@ -104,7 +104,7 @@ func _consent_card() -> Control:
 	col.add_child(server_row)
 	col.add_child(Style.make_body(
 		"پردازش سروری فعلاً پیاده‌سازی نشده است؛ تمام ساخت آواتار روی همین دستگاه انجام می‌شود و هیچ عکسی ارسال نمی‌شود.",
-		Palette.FS_CAPTION, Palette.BRASS))
+		Palette.FS_CAPTION, Palette.GOLD))
 	col.add_child(_consent_row("اجازهٔ دانلود با اینترنت همراه", "allow_content_download_on_cellular", ParentalSettings.allow_content_download_on_cellular))
 	return card
 
@@ -126,7 +126,7 @@ func _purchases_card() -> Control:
 	var mode_text := "حالت آزمایشی — هیچ پرداخت واقعی‌ای انجام نمی‌شود." if not PurchaseManager.is_live() \
 		else "متصل به فروشگاه."
 	col.add_child(Style.make_body(mode_text, Palette.FS_CAPTION,
-		Palette.BRASS if not PurchaseManager.is_live() else Palette.OK))
+		Palette.GOLD if not PurchaseManager.is_live() else Palette.EMERALD))
 
 	var owned := 0
 	for entry in ContentManager.catalog:
@@ -178,7 +178,7 @@ func _data_card() -> Control:
 	var col := VBoxContainer.new()
 	card.add_child(col)
 	col.add_child(Style.make_title("حذف داده", Palette.FS_HEADING))
-	var status := Style.make_body("", Palette.FS_CAPTION, Palette.OK)
+	var status := Style.make_body("", Palette.FS_CAPTION, Palette.EMERALD)
 
 	var del_avatar := Style.make_button("حذف آواتار و داده‌های مرتبط", "danger")
 	del_avatar.pressed.connect(func():

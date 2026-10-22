@@ -27,8 +27,9 @@ func build_content() -> void:
 	if _chapter_id.is_empty():
 		_chapter_id = "season_01"
 
-	# The stage IS the background on this screen, so the shell's flat colour
-	# must get out of the way or it paints straight over the scene.
+	# The stage IS the background on this screen, so the shell's backdrop must
+	# get out of the way or it paints straight over the scene. The gilded
+	# border is a separate node and stays.
 	background.visible = false
 	_stage = SceneStage.new()
 	add_child(_stage)
@@ -50,22 +51,20 @@ func build_content() -> void:
 	# Grows upward from the bottom edge, so a long line or a third choice
 	# pushes the box taller instead of being cut off.
 	bottom.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	bottom.offset_top = -460
+	bottom.offset_top = -300
 	bottom.offset_left = SAFE_MARGIN
 	bottom.offset_right = -SAFE_MARGIN
 	bottom.offset_bottom = -SAFE_MARGIN
 	bottom.add_theme_constant_override("separation", Palette.PAD_SM)
+	# Boxes sit on the bottom edge and grow upward only as far as their text
+	# needs, rather than stretching to fill the reserved strip.
+	bottom.alignment = BoxContainer.ALIGNMENT_END
 	add_child(bottom)
 
 	var toast_wrap := PanelContainer.new()
-	var tsb := StyleBoxFlat.new()
-	tsb.bg_color = Palette.BRASS
-	tsb.set_corner_radius_all(int(Palette.R_MD))
-	tsb.content_margin_left = Palette.PAD_MD
-	tsb.content_margin_right = Palette.PAD_MD
-	tsb.content_margin_top = Palette.PAD_XS
-	tsb.content_margin_bottom = Palette.PAD_XS
-	toast_wrap.add_theme_stylebox_override("panel", tsb)
+	toast_wrap.add_theme_stylebox_override("panel", OrnateBox.make(
+		OrnateBox.Kind.BUTTON, Palette.GOLD_BRIGHT, Palette.GOLD_DEEP,
+		Palette.R_MD, 2.5).with_margins(Palette.PAD_MD, Palette.PAD_XS))
 	toast_wrap.add_child(_toast)
 	toast_wrap.modulate.a = 0.0
 	bottom.add_child(toast_wrap)
@@ -208,17 +207,14 @@ func _make_hotspot(it: Dictionary) -> Control:
 
 	# Hotspots sit on top of a painting, so they are translucent with a bright
 	# outline: visible enough to find, light enough not to hide the picture.
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(Palette.NIGHT.r, Palette.NIGHT.g, Palette.NIGHT.b, 0.55)
-	sb.set_corner_radius_all(int(Palette.R_MD))
-	sb.set_border_width_all(2)
-	sb.border_color = Palette.BRASS
-	for side in ["left", "right", "top", "bottom"]:
-		sb.set("content_margin_" + side, Palette.PAD_XS)
-	button.add_theme_stylebox_override("normal", sb)
-	var hover := sb.duplicate() as StyleBoxFlat
-	hover.bg_color = Color(Palette.BRASS.r, Palette.BRASS.g, Palette.BRASS.b, 0.35)
-	button.add_theme_stylebox_override("hover", hover)
+	# A hotspot must not hide the painting behind it, so its face is a
+	# translucent well rather than a solid panel.
+	var dim := Color(Palette.NIGHT.r, Palette.NIGHT.g, Palette.NIGHT.b, 0.55)
+	button.add_theme_stylebox_override("normal", OrnateBox.make(
+		OrnateBox.Kind.WELL, dim, dim, Palette.R_MD, 2.0).with_margins(Palette.PAD_XS, Palette.PAD_XS))
+	var lit := Color(Palette.GOLD.r, Palette.GOLD.g, Palette.GOLD.b, 0.42)
+	button.add_theme_stylebox_override("hover", OrnateBox.make(
+		OrnateBox.Kind.WELL, lit, lit, Palette.R_MD, 2.0).with_margins(Palette.PAD_XS, Palette.PAD_XS))
 	button.add_theme_color_override("font_color", Palette.SNOW)
 	button.add_theme_font_size_override("font_size", Style.scaled(Palette.FS_CAPTION))
 

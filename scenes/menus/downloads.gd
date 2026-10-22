@@ -18,7 +18,7 @@ func build_content() -> void:
 	if not ContentEndpoints.is_configured():
 		content.add_child(make_notice(
 			"سرور محتوا هنوز تنظیم نشده است، بنابراین فصل تازه‌ای دریافت نمی‌شود. فصل‌هایی که روی دستگاه هستند بدون اینترنت کار می‌کنند.",
-			Palette.BRASS))
+			Palette.GOLD))
 
 	_status = Style.make_body("", Palette.FS_LABEL, Palette.SNOW)
 	content.add_child(_status)
@@ -75,7 +75,7 @@ func _row(entry: Dictionary) -> Control:
 	else:
 		state = "روی دستگاه نیست"
 	col.add_child(Style.make_body(state, Palette.FS_CAPTION,
-		Palette.OK if installed and not needs_update else Palette.SNOW_SOFT))
+		Palette.EMERALD if installed and not needs_update else Palette.SNOW_SOFT))
 
 	var actions := VBoxContainer.new()
 	actions.custom_minimum_size.x = 210

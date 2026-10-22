@@ -7,6 +7,11 @@ extends Control
 ## background id, so scenes are distinguishable while playing, and it carries
 ## a visible badge saying it is temporary. docs/ASSETS.md lists every id that
 ## still needs a real painting.
+##
+## It is framed in the same gold as everything else, because a stand-in that
+## looks broken makes the whole screen look broken — and the question being
+## asked of these screens is whether the layout reads, not whether the
+## painting is finished.
 
 const BADGE_TEXT := "دارایی موقت"
 
@@ -38,15 +43,13 @@ func _draw() -> void:
 	var r := size
 	var h := _hue()
 
-	# Sky: three bands, darkest at the top. These are deliberately well clear
-	# of the UI's night blue — a placeholder that reads as "the background did
-	# not load" is useless for telling two scenes apart while playing.
-	var top := Color.from_hsv(h, 0.52, 0.34)
-	var mid := Color.from_hsv(h, 0.46, 0.50)
-	var low := Color.from_hsv(fposmod(h + 0.06, 1.0), 0.40, 0.68)
-	draw_rect(Rect2(0, 0, r.x, r.y * 0.45), top)
-	draw_rect(Rect2(0, r.y * 0.45, r.x, r.y * 0.22), mid)
-	draw_rect(Rect2(0, r.y * 0.67, r.x, r.y * 0.33), low)
+	# Sky: a wash from dusk to a lit horizon. The hue comes from the id, so a
+	# scene looks the same every time and two scenes rarely collide — but the
+	# saturation stays low enough that it sits inside the game's palette
+	# instead of shouting over it.
+	var top := Color.from_hsv(h, 0.46, 0.22)
+	var low := Color.from_hsv(fposmod(h + 0.06, 1.0), 0.34, 0.46)
+	Ornate.draw_panel_fill(get_canvas_item(), Rect2(Vector2.ZERO, r), Palette.R_MD, top, low)
 
 	# Far silhouette, then near silhouette. The nearer layer drifts further,
 	# which is what reads as depth.
@@ -54,7 +57,19 @@ func _draw() -> void:
 	_draw_skyline(r, 0.78, Color.from_hsv(h, 0.62, 0.17), 5, drift)
 
 	# Ground.
-	draw_rect(Rect2(0, r.y * 0.86, r.x, r.y * 0.14), Color.from_hsv(h, 0.55, 0.12))
+	draw_rect(Rect2(0, r.y * 0.86, r.x, r.y * 0.14), Color.from_hsv(h, 0.55, 0.10))
+
+	# A lantern medallion in the middle says "a painting belongs here" in the
+	# game's own language rather than looking like a failed load.
+	var centre := r * 0.5
+	var badge_r := minf(r.x, r.y) * 0.16
+	if badge_r > 14.0:
+		CI.circle(get_canvas_item(), centre, badge_r, Color(0, 0, 0, 0.35))
+		CI.arc(get_canvas_item(), centre, badge_r, 0.0, TAU, Palette.GOLD, 2.5)
+		GameIcons.draw(get_canvas_item(), "lamp", centre, badge_r * 0.56, Palette.GOLD_BRIGHT)
+
+	Ornate.draw_frame(get_canvas_item(), Rect2(Vector2(2, 2), r - Vector2(4, 4)),
+		Palette.R_MD, 3.0, false)
 
 	if show_badge:
 		_draw_badge(r)
@@ -82,14 +97,16 @@ func _draw_badge(r: Vector2) -> void:
 		16, r.y - text_size.y - pad - 16,
 		text_size.x + pad * 2, text_size.y + pad
 	)
-	draw_rect(box, Color(0, 0, 0, 0.55), true)
-	draw_rect(box, Palette.ROSE, false, 2.0)
+	draw_rect(box, Color(0, 0, 0, 0.62), true)
+	draw_rect(box, Palette.GOLD_DEEP, false, 2.0)
 	draw_string(font, Vector2(box.position.x + pad, box.position.y + text_size.y + pad * 0.25),
-		text, HORIZONTAL_ALIGNMENT_RIGHT, -1, fs, Palette.SNOW)
+		text, HORIZONTAL_ALIGNMENT_RIGHT, -1, fs, Palette.GOLD_BRIGHT)
 
 ## Each background id gets its own stable hue, so a scene looks the same every
 ## time and two scenes rarely collide.
 func _hue() -> float:
 	if background_id.is_empty():
 		return 0.62
-	return fposmod(float(hash(background_id) % 1000) / 1000.0, 1.0)
+	# Kept inside teal → blue → violet. A free hue gave olive and mustard
+	# scenes that sat outside the game's palette entirely.
+	return 0.48 + fposmod(float(hash(background_id) % 1000) / 1000.0, 1.0) * 0.30

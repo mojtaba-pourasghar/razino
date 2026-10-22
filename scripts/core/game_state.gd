@@ -35,6 +35,12 @@ var current_scene: String = ""
 ## Chapters the player may open. Chapter 1 is always free (GDD §11.1).
 var unlocked_chapters: Dictionary = {"season_01": true}
 
+## The purse (GDD §5.3). Coins are earned by playing; gems are bought or
+## granted. Both are mirrored in the header of every screen, which is why they
+## live here rather than in the shop.
+var coins: int = 0
+var gems: int = 0
+
 func reset() -> void:
 	player_name = ""
 	avatar_id = ""
@@ -48,6 +54,8 @@ func reset() -> void:
 	current_chapter = ""
 	current_scene = ""
 	unlocked_chapters = {"season_01": true}
+	coins = 0
+	gems = 0
 	progress_reset.emit()
 	Log.info("GameState", "progress reset")
 
@@ -151,6 +159,8 @@ func to_dict() -> Dictionary:
 		"current_chapter": current_chapter,
 		"current_scene": current_scene,
 		"unlocked_chapters": unlocked_chapters.duplicate(),
+		"coins": coins,
+		"gems": gems,
 	}
 
 func from_dict(d: Dictionary) -> void:
@@ -166,5 +176,7 @@ func from_dict(d: Dictionary) -> void:
 	current_chapter = String(d.get("current_chapter", ""))
 	current_scene = String(d.get("current_scene", ""))
 	unlocked_chapters = d.get("unlocked_chapters", {"season_01": true})
+	coins = int(d.get("coins", 0))
+	gems = int(d.get("gems", 0))
 	# A save that predates a chapter being free must still get it free.
 	unlocked_chapters["season_01"] = true

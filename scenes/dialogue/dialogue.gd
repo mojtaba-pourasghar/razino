@@ -16,11 +16,12 @@ func _ready() -> void:
 func build_content() -> void:
 	var payload := Router.take_payload()
 	var stage := SceneStage.new()
-	stage.custom_minimum_size = Vector2(0, 320)
+	stage.custom_minimum_size = Vector2(0, 180)
 	stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(stage)
 
 	_panel = DialoguePanel.new()
+	_panel.size_flags_vertical = Control.SIZE_SHRINK_END
 	content.add_child(_panel)
 
 	var scene_id := String(payload.get("scene_id", ""))

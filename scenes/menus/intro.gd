@@ -17,7 +17,7 @@ var _dots: HBoxContainer
 var _next: Button
 
 func _ready() -> void:
-	configure("")
+	configure("", "", "splash")
 	super._ready()
 
 func build_content() -> void:
@@ -72,7 +72,7 @@ func _render() -> void:
 	for i in STEPS.size():
 		var dot := ColorRect.new()
 		dot.custom_minimum_size = Vector2(12, 12)
-		dot.color = Palette.BRASS if i == _step else Palette.PARCHMENT_DIM
+		dot.color = Palette.GOLD if i == _step else Palette.PARCHMENT_DIM
 		_dots.add_child(dot)
 
 func _advance() -> void:

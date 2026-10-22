@@ -33,6 +33,8 @@ func _ready() -> void:
 	GameState.add_clue("CLUE_S01_MAP_PIECE")
 	GameState.add_clue("CLUE_S01_NOTICE")
 	GameState.add_clue("CLUE_S01_DUST")
+	GameState.coins = 1240
+	GameState.gems = 36
 	AvatarManager.set_part("outfit", 0)
 	AvatarManager.set_part("accessory", 3)
 	ClueJournal.load_chapter_clues(ContentManager.load_chapter_story("season_01"))

@@ -6,7 +6,7 @@ extends RazinoScreen
 ## and the current chapter and its progress sit right above it.
 
 func _ready() -> void:
-	configure("")
+	configure("", "", "town", true)
 	super._ready()
 
 func build_content() -> void:
