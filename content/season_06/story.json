@@ -1058,5 +1058,159 @@
       ],
       "is_ending": true
     }
+  ],
+  "stages": [
+    {
+      "stage_id": "S06-ST01",
+      "index": 1,
+      "title": "هزار چراغ",
+      "secret": "پیداکردن تناقض در حرف شاهدان و جلوگیری از متهم‌شدن اشتباه یک نفر.",
+      "entry_scene_id": "S06-E01-SC01",
+      "scene_ids": [
+        "S06-E01-SC01",
+        "S06-E01-SC02"
+      ],
+      "secret_clue_id": "CLUE_S06_ACCUSED",
+      "clue_count": 2,
+      "puzzle_count": 0,
+      "par_seconds": 105,
+      "rewards": {
+        "coins": 40,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S06-ST02",
+      "index": 2,
+      "title": "غرفه‌ها",
+      "secret": "پیداکردن تناقض در حرف شاهدان و جلوگیری از متهم‌شدن اشتباه یک نفر.",
+      "entry_scene_id": "S06-E01-SC03",
+      "scene_ids": [
+        "S06-E01-SC03",
+        "S06-E01-SC04"
+      ],
+      "secret_clue_id": "CLUE_S06_NAVID",
+      "clue_count": 2,
+      "puzzle_count": 0,
+      "par_seconds": 170,
+      "rewards": {
+        "coins": 40,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S06-ST03",
+      "index": 3,
+      "title": "آقای غلامی",
+      "secret": "پیداکردن تناقض در حرف شاهدان و جلوگیری از متهم‌شدن اشتباه یک نفر.",
+      "entry_scene_id": "S06-E02-SC01",
+      "scene_ids": [
+        "S06-E02-SC01",
+        "S06-E02-SC02"
+      ],
+      "secret_clue_id": "CLUE_S06_RECEIPT",
+      "clue_count": 2,
+      "puzzle_count": 0,
+      "par_seconds": 170,
+      "rewards": {
+        "coins": 40,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S06-ST04",
+      "index": 4,
+      "title": "دو حرف که با هم نمی‌خوانند",
+      "secret": "پیداکردن تناقض در حرف شاهدان و جلوگیری از متهم‌شدن اشتباه یک نفر.",
+      "entry_scene_id": "S06-E02-SC03",
+      "scene_ids": [
+        "S06-E02-SC03",
+        "S06-E03-SC01"
+      ],
+      "secret_clue_id": "CLUE_S06_CONTRA",
+      "clue_count": 1,
+      "puzzle_count": 1,
+      "par_seconds": 210,
+      "rewards": {
+        "coins": 55,
+        "xp": 70
+      }
+    },
+    {
+      "stage_id": "S06-ST05",
+      "index": 5,
+      "title": "دوباره غرفهٔ تاریخ",
+      "secret": "پیداکردن تناقض در حرف شاهدان و جلوگیری از متهم‌شدن اشتباه یک نفر.",
+      "entry_scene_id": "S06-E03-SC02",
+      "scene_ids": [
+        "S06-E03-SC02",
+        "S06-E03-SC03"
+      ],
+      "secret_clue_id": "CLUE_S06_TRUTH",
+      "clue_count": 1,
+      "puzzle_count": 1,
+      "par_seconds": 260,
+      "rewards": {
+        "coins": 55,
+        "xp": 70
+      }
+    },
+    {
+      "stage_id": "S06-ST06",
+      "index": 6,
+      "title": "پس کار که بود؟",
+      "secret": "پیداکردن تناقض در حرف شاهدان و جلوگیری از متهم‌شدن اشتباه یک نفر.",
+      "entry_scene_id": "S06-E03-SC04",
+      "scene_ids": [
+        "S06-E03-SC04",
+        "S06-E04-SC01"
+      ],
+      "secret_clue_id": "",
+      "clue_count": 0,
+      "puzzle_count": 0,
+      "par_seconds": 120,
+      "rewards": {
+        "coins": 20,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S06-ST07",
+      "index": 7,
+      "title": "کدام جمله را بگوییم؟",
+      "secret": "پیداکردن تناقض در حرف شاهدان و جلوگیری از متهم‌شدن اشتباه یک نفر.",
+      "entry_scene_id": "S06-E04-SC02",
+      "scene_ids": [
+        "S06-E04-SC02",
+        "S06-E04-SC03"
+      ],
+      "secret_clue_id": "",
+      "clue_count": 0,
+      "puzzle_count": 1,
+      "par_seconds": 210,
+      "rewards": {
+        "coins": 45,
+        "xp": 70
+      }
+    },
+    {
+      "stage_id": "S06-ST08",
+      "index": 8,
+      "title": "اسمی که پاک شد",
+      "secret": "پیداکردن تناقض در حرف شاهدان و جلوگیری از متهم‌شدن اشتباه یک نفر.",
+      "entry_scene_id": "S06-E04-SC04",
+      "scene_ids": [
+        "S06-E04-SC04",
+        "S06-E04-SC05"
+      ],
+      "secret_clue_id": "CLUE_S06_KEEPER",
+      "clue_count": 1,
+      "puzzle_count": 0,
+      "par_seconds": 120,
+      "rewards": {
+        "coins": 30,
+        "xp": 50
+      }
+    }
   ]
 }

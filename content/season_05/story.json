@@ -1021,5 +1021,159 @@
       ],
       "is_ending": true
     }
+  ],
+  "stages": [
+    {
+      "stage_id": "S05-ST01",
+      "index": 1,
+      "title": "دریاچه",
+      "secret": "یافتن علت تغییر رنگ آب و بازیابی پیام صوتی ضبط‌شدهٔ مخترع.",
+      "entry_scene_id": "S05-E01-SC01",
+      "scene_ids": [
+        "S05-E01-SC01",
+        "S05-E01-SC02"
+      ],
+      "secret_clue_id": "CLUE_S05_COLOR",
+      "clue_count": 1,
+      "puzzle_count": 0,
+      "par_seconds": 105,
+      "rewards": {
+        "coins": 30,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S05-ST02",
+      "index": 2,
+      "title": "روی اسکله",
+      "secret": "یافتن علت تغییر رنگ آب و بازیابی پیام صوتی ضبط‌شدهٔ مخترع.",
+      "entry_scene_id": "S05-E01-SC03",
+      "scene_ids": [
+        "S05-E01-SC03",
+        "S05-E01-SC04"
+      ],
+      "secret_clue_id": "CLUE_S05_PARISA",
+      "clue_count": 3,
+      "puzzle_count": 0,
+      "par_seconds": 170,
+      "rewards": {
+        "coins": 50,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S05-ST03",
+      "index": 3,
+      "title": "آینه و آفتاب",
+      "secret": "یافتن علت تغییر رنگ آب و بازیابی پیام صوتی ضبط‌شدهٔ مخترع.",
+      "entry_scene_id": "S05-E02-SC01",
+      "scene_ids": [
+        "S05-E02-SC01",
+        "S05-E02-SC02"
+      ],
+      "secret_clue_id": "CLUE_S05_TUNNEL",
+      "clue_count": 1,
+      "puzzle_count": 0,
+      "par_seconds": 170,
+      "rewards": {
+        "coins": 30,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S05-ST04",
+      "index": 4,
+      "title": "زنجیرهٔ علت و معلول",
+      "secret": "یافتن علت تغییر رنگ آب و بازیابی پیام صوتی ضبط‌شدهٔ مخترع.",
+      "entry_scene_id": "S05-E02-SC03",
+      "scene_ids": [
+        "S05-E02-SC03",
+        "S05-E03-SC01"
+      ],
+      "secret_clue_id": "CLUE_S05_LENS",
+      "clue_count": 1,
+      "puzzle_count": 1,
+      "par_seconds": 210,
+      "rewards": {
+        "coins": 55,
+        "xp": 70
+      }
+    },
+    {
+      "stage_id": "S05-ST05",
+      "index": 5,
+      "title": "ته تونل",
+      "secret": "یافتن علت تغییر رنگ آب و بازیابی پیام صوتی ضبط‌شدهٔ مخترع.",
+      "entry_scene_id": "S05-E03-SC02",
+      "scene_ids": [
+        "S05-E03-SC02",
+        "S05-E03-SC03"
+      ],
+      "secret_clue_id": "CLUE_S05_DEVICE",
+      "clue_count": 1,
+      "puzzle_count": 1,
+      "par_seconds": 260,
+      "rewards": {
+        "coins": 55,
+        "xp": 70
+      }
+    },
+    {
+      "stage_id": "S05-ST06",
+      "index": 6,
+      "title": "چراغ قوی‌تر شد",
+      "secret": "یافتن علت تغییر رنگ آب و بازیابی پیام صوتی ضبط‌شدهٔ مخترع.",
+      "entry_scene_id": "S05-E03-SC04",
+      "scene_ids": [
+        "S05-E03-SC04",
+        "S05-E04-SC01"
+      ],
+      "secret_clue_id": "",
+      "clue_count": 0,
+      "puzzle_count": 0,
+      "par_seconds": 120,
+      "rewards": {
+        "coins": 20,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S05-ST07",
+      "index": 7,
+      "title": "کدام جمله با بقیه نمی‌خواند؟",
+      "secret": "یافتن علت تغییر رنگ آب و بازیابی پیام صوتی ضبط‌شدهٔ مخترع.",
+      "entry_scene_id": "S05-E04-SC02",
+      "scene_ids": [
+        "S05-E04-SC02",
+        "S05-E04-SC03"
+      ],
+      "secret_clue_id": "CLUE_S05_MESSAGE",
+      "clue_count": 1,
+      "puzzle_count": 1,
+      "par_seconds": 210,
+      "rewards": {
+        "coins": 55,
+        "xp": 70
+      }
+    },
+    {
+      "stage_id": "S05-ST08",
+      "index": 8,
+      "title": "پیامی که شنیده شد",
+      "secret": "یافتن علت تغییر رنگ آب و بازیابی پیام صوتی ضبط‌شدهٔ مخترع.",
+      "entry_scene_id": "S05-E04-SC04",
+      "scene_ids": [
+        "S05-E04-SC04",
+        "S05-E04-SC05"
+      ],
+      "secret_clue_id": "CLUE_S05_MESSAGE",
+      "clue_count": 1,
+      "puzzle_count": 0,
+      "par_seconds": 120,
+      "rewards": {
+        "coins": 30,
+        "xp": 50
+      }
+    }
   ]
 }

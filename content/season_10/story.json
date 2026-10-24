@@ -1082,5 +1082,159 @@
       ],
       "is_ending": true
     }
+  ],
+  "stages": [
+    {
+      "stage_id": "S10-ST01",
+      "index": 1,
+      "title": "قلب",
+      "secret": "فعال‌کردن دوبارهٔ برج و تصمیم‌گیری دربارهٔ اینکه این دانش به چه کسی سپرده شود.",
+      "entry_scene_id": "S10-E01-SC01",
+      "scene_ids": [
+        "S10-E01-SC01",
+        "S10-E01-SC02"
+      ],
+      "secret_clue_id": "CLUE_S10_SLOT",
+      "clue_count": 2,
+      "puzzle_count": 0,
+      "par_seconds": 105,
+      "rewards": {
+        "coins": 40,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S10-ST02",
+      "index": 2,
+      "title": "دور اتاق",
+      "secret": "فعال‌کردن دوبارهٔ برج و تصمیم‌گیری دربارهٔ اینکه این دانش به چه کسی سپرده شود.",
+      "entry_scene_id": "S10-E01-SC03",
+      "scene_ids": [
+        "S10-E01-SC03",
+        "S10-E01-SC04"
+      ],
+      "secret_clue_id": "CLUE_S10_RULE",
+      "clue_count": 3,
+      "puzzle_count": 0,
+      "par_seconds": 170,
+      "rewards": {
+        "coins": 50,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S10-ST03",
+      "index": 3,
+      "title": "«که فراموش نشود»",
+      "secret": "فعال‌کردن دوبارهٔ برج و تصمیم‌گیری دربارهٔ اینکه این دانش به چه کسی سپرده شود.",
+      "entry_scene_id": "S10-E02-SC01",
+      "scene_ids": [
+        "S10-E02-SC01",
+        "S10-E02-SC02"
+      ],
+      "secret_clue_id": "CLUE_S10_READY",
+      "clue_count": 2,
+      "puzzle_count": 0,
+      "par_seconds": 170,
+      "rewards": {
+        "coins": 40,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S10-ST04",
+      "index": 4,
+      "title": "ده بازو، ده نقطه",
+      "secret": "فعال‌کردن دوبارهٔ برج و تصمیم‌گیری دربارهٔ اینکه این دانش به چه کسی سپرده شود.",
+      "entry_scene_id": "S10-E02-SC03",
+      "scene_ids": [
+        "S10-E02-SC03",
+        "S10-E03-SC01"
+      ],
+      "secret_clue_id": "",
+      "clue_count": 0,
+      "puzzle_count": 1,
+      "par_seconds": 210,
+      "rewards": {
+        "coins": 45,
+        "xp": 70
+      }
+    },
+    {
+      "stage_id": "S10-ST05",
+      "index": 5,
+      "title": "برای چه ساخته شد؟",
+      "secret": "فعال‌کردن دوبارهٔ برج و تصمیم‌گیری دربارهٔ اینکه این دانش به چه کسی سپرده شود.",
+      "entry_scene_id": "S10-E03-SC02",
+      "scene_ids": [
+        "S10-E03-SC02",
+        "S10-E03-SC03"
+      ],
+      "secret_clue_id": "",
+      "clue_count": 0,
+      "puzzle_count": 1,
+      "par_seconds": 195,
+      "rewards": {
+        "coins": 45,
+        "xp": 70
+      }
+    },
+    {
+      "stage_id": "S10-ST06",
+      "index": 6,
+      "title": "حالا چه؟",
+      "secret": "فعال‌کردن دوبارهٔ برج و تصمیم‌گیری دربارهٔ اینکه این دانش به چه کسی سپرده شود.",
+      "entry_scene_id": "S10-E03-SC04",
+      "scene_ids": [
+        "S10-E03-SC04",
+        "S10-E04-SC01"
+      ],
+      "secret_clue_id": "",
+      "clue_count": 0,
+      "puzzle_count": 0,
+      "par_seconds": 120,
+      "rewards": {
+        "coins": 20,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S10-ST07",
+      "index": 7,
+      "title": "تصمیم تو",
+      "secret": "فعال‌کردن دوبارهٔ برج و تصمیم‌گیری دربارهٔ اینکه این دانش به چه کسی سپرده شود.",
+      "entry_scene_id": "S10-E04-SC02",
+      "scene_ids": [
+        "S10-E04-SC02",
+        "S10-E04-SC03"
+      ],
+      "secret_clue_id": "",
+      "clue_count": 0,
+      "puzzle_count": 0,
+      "par_seconds": 120,
+      "rewards": {
+        "coins": 20,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S10-ST08",
+      "index": 8,
+      "title": "به شهر سپرده شد",
+      "secret": "فعال‌کردن دوبارهٔ برج و تصمیم‌گیری دربارهٔ اینکه این دانش به چه کسی سپرده شود.",
+      "entry_scene_id": "S10-E04-SC04",
+      "scene_ids": [
+        "S10-E04-SC04",
+        "S10-E04-SC05"
+      ],
+      "secret_clue_id": "",
+      "clue_count": 0,
+      "puzzle_count": 0,
+      "par_seconds": 120,
+      "rewards": {
+        "coins": 20,
+        "xp": 50
+      }
+    }
   ]
 }

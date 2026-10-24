@@ -85,8 +85,36 @@ def clues_added(scene: dict) -> list[str]:
     return found
 
 
+def derive_plan(story: dict) -> list[tuple]:
+    """Cuts stages out of a chapter that has no hand-written plan.
+
+    The scenes are grouped in pairs, which is the rhythm the written plan
+    for chapter one follows: a thing that happens and what it turns up. The
+    title is the first scene's own, and the question is the chapter's
+    narrative goal — placeholders good enough to play against, and obvious
+    to replace, which is better than a chapter with no stages at all.
+    """
+    scenes = story.get("scenes", [])
+    goal = str(story.get("narrative_goal", "")).strip()
+    plan = []
+    for i in range(0, len(scenes), 2):
+        group = scenes[i:i + 2]
+        plan.append((
+            [s["scene_id"] for s in group],
+            str(group[0].get("title", f"مرحلهٔ {i // 2 + 1}")),
+            goal or "راز این مرحله چیست؟",
+        ))
+    # A trailing single scene joins the stage before it rather than standing
+    # alone, so no stage is one dialogue long.
+    if len(plan) > 1 and len(plan[-1][0]) == 1:
+        last = plan.pop()
+        merged = plan[-1]
+        plan[-1] = (merged[0] + last[0], merged[1], merged[2])
+    return plan
+
+
 def build(chapter_id: str, story: dict) -> list[dict]:
-    plan = STAGES.get(chapter_id)
+    plan = STAGES.get(chapter_id) or derive_plan(story)
     if not plan:
         return []
     by_id = {s["scene_id"]: s for s in story.get("scenes", [])}
@@ -132,7 +160,8 @@ def main() -> int:
     ap.add_argument("chapters", nargs="*", help="chapter ids; default all with a plan")
     args = ap.parse_args()
 
-    wanted = args.chapters or sorted(STAGES.keys())
+    wanted = args.chapters or sorted(
+        d.name for d in (ROOT / "content").glob("season_*") if d.is_dir())
     changed = 0
     for chapter_id in wanted:
         path = ROOT / "content" / chapter_id / "story.json"
@@ -142,18 +171,16 @@ def main() -> int:
         story = json.loads(path.read_text(encoding="utf-8"))
         stages = build(chapter_id, story)
         if not stages:
-            print(f"  · {chapter_id}: no stage plan yet")
+            print(f"  · {chapter_id}: no scenes to cut stages from")
             continue
+        written = chapter_id in STAGES
         story["stages"] = stages
         path.write_text(json.dumps(story, ensure_ascii=False, indent=2) + "\n",
                         encoding="utf-8")
         covered = sum(len(s["scene_ids"]) for s in stages)
+        how = "written" if written else "derived — titles are placeholders"
         print(f"  {chapter_id}: {len(stages)} stages over {covered}/"
-              f"{len(story.get('scenes', []))} scenes")
-        for s in stages:
-            print(f"     {s['stage_id']}  {s['title']:28s} "
-                  f"clues {s['clue_count']}  puzzles {s['puzzle_count']}  "
-                  f"par {s['par_seconds']}s  {s['rewards']['coins']} coins")
+              f"{len(story.get('scenes', []))} scenes ({how})")
         changed += 1
     return 0 if changed else 1
 

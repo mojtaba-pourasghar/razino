@@ -1039,5 +1039,159 @@
       ],
       "is_ending": true
     }
+  ],
+  "stages": [
+    {
+      "stage_id": "S02-ST01",
+      "index": 1,
+      "title": "هزار در",
+      "secret": "پیداکردن مسیر مخفی از روی نشانه‌های کتاب‌ها و یادداشت‌های کتابدار بازنشسته.",
+      "entry_scene_id": "S02-E01-SC01",
+      "scene_ids": [
+        "S02-E01-SC01",
+        "S02-E01-SC02"
+      ],
+      "secret_clue_id": "",
+      "clue_count": 0,
+      "puzzle_count": 0,
+      "par_seconds": 105,
+      "rewards": {
+        "coins": 20,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S02-ST02",
+      "index": 2,
+      "title": "دنبال جای خالی",
+      "secret": "پیداکردن مسیر مخفی از روی نشانه‌های کتاب‌ها و یادداشت‌های کتابدار بازنشسته.",
+      "entry_scene_id": "S02-E01-SC03",
+      "scene_ids": [
+        "S02-E01-SC03",
+        "S02-E01-SC04"
+      ],
+      "secret_clue_id": "CLUE_S02_LADDER",
+      "clue_count": 3,
+      "puzzle_count": 0,
+      "par_seconds": 170,
+      "rewards": {
+        "coins": 50,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S02-ST03",
+      "index": 3,
+      "title": "آقای شریفی",
+      "secret": "پیداکردن مسیر مخفی از روی نشانه‌های کتاب‌ها و یادداشت‌های کتابدار بازنشسته.",
+      "entry_scene_id": "S02-E02-SC01",
+      "scene_ids": [
+        "S02-E02-SC01",
+        "S02-E02-SC02"
+      ],
+      "secret_clue_id": "CLUE_S02_SPINE",
+      "clue_count": 2,
+      "puzzle_count": 0,
+      "par_seconds": 170,
+      "rewards": {
+        "coins": 40,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S02-ST04",
+      "index": 4,
+      "title": "ترتیب رنگین‌کمان",
+      "secret": "پیداکردن مسیر مخفی از روی نشانه‌های کتاب‌ها و یادداشت‌های کتابدار بازنشسته.",
+      "entry_scene_id": "S02-E02-SC03",
+      "scene_ids": [
+        "S02-E02-SC03",
+        "S02-E03-SC01"
+      ],
+      "secret_clue_id": "CLUE_S02_ORDER",
+      "clue_count": 1,
+      "puzzle_count": 1,
+      "par_seconds": 210,
+      "rewards": {
+        "coins": 55,
+        "xp": 70
+      }
+    },
+    {
+      "stage_id": "S02-ST05",
+      "index": 5,
+      "title": "هل‌دادن قفسه‌ها",
+      "secret": "پیداکردن مسیر مخفی از روی نشانه‌های کتاب‌ها و یادداشت‌های کتابدار بازنشسته.",
+      "entry_scene_id": "S02-E03-SC02",
+      "scene_ids": [
+        "S02-E03-SC02",
+        "S02-E03-SC03"
+      ],
+      "secret_clue_id": "CLUE_S02_SIGN",
+      "clue_count": 2,
+      "puzzle_count": 1,
+      "par_seconds": 260,
+      "rewards": {
+        "coins": 65,
+        "xp": 70
+      }
+    },
+    {
+      "stage_id": "S02-ST06",
+      "index": 6,
+      "title": "پشت در",
+      "secret": "پیداکردن مسیر مخفی از روی نشانه‌های کتاب‌ها و یادداشت‌های کتابدار بازنشسته.",
+      "entry_scene_id": "S02-E03-SC04",
+      "scene_ids": [
+        "S02-E03-SC04",
+        "S02-E04-SC01"
+      ],
+      "secret_clue_id": "CLUE_S02_MAKER",
+      "clue_count": 1,
+      "puzzle_count": 0,
+      "par_seconds": 120,
+      "rewards": {
+        "coins": 30,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S02-ST07",
+      "index": 7,
+      "title": "کدام کتاب جایش را گرفت؟",
+      "secret": "پیداکردن مسیر مخفی از روی نشانه‌های کتاب‌ها و یادداشت‌های کتابدار بازنشسته.",
+      "entry_scene_id": "S02-E04-SC02",
+      "scene_ids": [
+        "S02-E04-SC02",
+        "S02-E04-SC03"
+      ],
+      "secret_clue_id": "",
+      "clue_count": 0,
+      "puzzle_count": 1,
+      "par_seconds": 210,
+      "rewards": {
+        "coins": 45,
+        "xp": 70
+      }
+    },
+    {
+      "stage_id": "S02-ST08",
+      "index": 8,
+      "title": "دری که باز شد",
+      "secret": "پیداکردن مسیر مخفی از روی نشانه‌های کتاب‌ها و یادداشت‌های کتابدار بازنشسته.",
+      "entry_scene_id": "S02-E04-SC04",
+      "scene_ids": [
+        "S02-E04-SC04",
+        "S02-E04-SC05"
+      ],
+      "secret_clue_id": "",
+      "clue_count": 0,
+      "puzzle_count": 0,
+      "par_seconds": 120,
+      "rewards": {
+        "coins": 20,
+        "xp": 50
+      }
+    }
   ]
 }

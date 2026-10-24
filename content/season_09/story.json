@@ -1084,5 +1084,159 @@
       ],
       "is_ending": true
     }
+  ],
+  "stages": [
+    {
+      "stage_id": "S09-ST01",
+      "index": 1,
+      "title": "ده نماد",
+      "secret": "کنار هم گذاشتن یافته‌های هشت فصل و فعال‌کردن ده بخش دستگاه به ترتیب درست.",
+      "entry_scene_id": "S09-E01-SC01",
+      "scene_ids": [
+        "S09-E01-SC01",
+        "S09-E01-SC02"
+      ],
+      "secret_clue_id": "CLUE_S09_HALL",
+      "clue_count": 1,
+      "puzzle_count": 0,
+      "par_seconds": 105,
+      "rewards": {
+        "coins": 30,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S09-ST02",
+      "index": 2,
+      "title": "دور تالار",
+      "secret": "کنار هم گذاشتن یافته‌های هشت فصل و فعال‌کردن ده بخش دستگاه به ترتیب درست.",
+      "entry_scene_id": "S09-E01-SC03",
+      "scene_ids": [
+        "S09-E01-SC03",
+        "S09-E01-SC04"
+      ],
+      "secret_clue_id": "CLUE_S09_INVITE",
+      "clue_count": 4,
+      "puzzle_count": 0,
+      "par_seconds": 170,
+      "rewards": {
+        "coins": 60,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S09-ST03",
+      "index": 3,
+      "title": "آسمان یا راه خودمان؟",
+      "secret": "کنار هم گذاشتن یافته‌های هشت فصل و فعال‌کردن ده بخش دستگاه به ترتیب درست.",
+      "entry_scene_id": "S09-E02-SC01",
+      "scene_ids": [
+        "S09-E02-SC01",
+        "S09-E02-SC02"
+      ],
+      "secret_clue_id": "CLUE_S09_GHOLAMI2",
+      "clue_count": 2,
+      "puzzle_count": 0,
+      "par_seconds": 170,
+      "rewards": {
+        "coins": 40,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S09-ST04",
+      "index": 4,
+      "title": "ده نماد، به ترتیب",
+      "secret": "کنار هم گذاشتن یافته‌های هشت فصل و فعال‌کردن ده بخش دستگاه به ترتیب درست.",
+      "entry_scene_id": "S09-E02-SC03",
+      "scene_ids": [
+        "S09-E02-SC03",
+        "S09-E03-SC01"
+      ],
+      "secret_clue_id": "",
+      "clue_count": 0,
+      "puzzle_count": 1,
+      "par_seconds": 210,
+      "rewards": {
+        "coins": 45,
+        "xp": 70
+      }
+    },
+    {
+      "stage_id": "S09-ST05",
+      "index": 5,
+      "title": "گذاشتن کلیدها",
+      "secret": "کنار هم گذاشتن یافته‌های هشت فصل و فعال‌کردن ده بخش دستگاه به ترتیب درست.",
+      "entry_scene_id": "S09-E03-SC02",
+      "scene_ids": [
+        "S09-E03-SC02",
+        "S09-E03-SC03"
+      ],
+      "secret_clue_id": "",
+      "clue_count": 0,
+      "puzzle_count": 1,
+      "par_seconds": 260,
+      "rewards": {
+        "coins": 45,
+        "xp": 70
+      }
+    },
+    {
+      "stage_id": "S09-ST06",
+      "index": 6,
+      "title": "صدای چرخیدن",
+      "secret": "کنار هم گذاشتن یافته‌های هشت فصل و فعال‌کردن ده بخش دستگاه به ترتیب درست.",
+      "entry_scene_id": "S09-E03-SC04",
+      "scene_ids": [
+        "S09-E03-SC04",
+        "S09-E04-SC01"
+      ],
+      "secret_clue_id": "CLUE_S09_MISSING",
+      "clue_count": 1,
+      "puzzle_count": 0,
+      "par_seconds": 120,
+      "rewards": {
+        "coins": 30,
+        "xp": 50
+      }
+    },
+    {
+      "stage_id": "S09-ST07",
+      "index": 7,
+      "title": "بازکردن اهرم بدون شکستن",
+      "secret": "کنار هم گذاشتن یافته‌های هشت فصل و فعال‌کردن ده بخش دستگاه به ترتیب درست.",
+      "entry_scene_id": "S09-E04-SC02",
+      "scene_ids": [
+        "S09-E04-SC02",
+        "S09-E04-SC03"
+      ],
+      "secret_clue_id": "",
+      "clue_count": 0,
+      "puzzle_count": 1,
+      "par_seconds": 210,
+      "rewards": {
+        "coins": 45,
+        "xp": 70
+      }
+    },
+    {
+      "stage_id": "S09-ST08",
+      "index": 8,
+      "title": "دری که باز شد",
+      "secret": "کنار هم گذاشتن یافته‌های هشت فصل و فعال‌کردن ده بخش دستگاه به ترتیب درست.",
+      "entry_scene_id": "S09-E04-SC04",
+      "scene_ids": [
+        "S09-E04-SC04",
+        "S09-E04-SC05"
+      ],
+      "secret_clue_id": "",
+      "clue_count": 0,
+      "puzzle_count": 0,
+      "par_seconds": 120,
+      "rewards": {
+        "coins": 20,
+        "xp": 50
+      }
+    }
   ]
 }
