@@ -126,7 +126,8 @@ func _build_ordering() -> void:
 		var id := String((item as Dictionary).get("id", ""))
 		if _ordered.has(id):
 			continue
-		var b := Style.make_button(String((item as Dictionary).get("label", id)), "quiet")
+		var b := Style.make_button(String((item as Dictionary).get("label", id)),
+			"quiet", _icon_of(item))
 		b.pressed.connect(func():
 			_ordered.append(id)
 			AudioManager.play_sfx("SFX_UI_TAP")
@@ -139,6 +140,50 @@ func _build_ordering() -> void:
 			_ordered.pop_back()
 			_rebuild())
 		_work_area.add_child(undo)
+
+## The shapes the content names, mapped onto the drawn icon set.
+##
+## Seventeen ICON_* ids sit in the puzzle data and nothing was showing them:
+## every choice was a word. A symbol puzzle whose symbols are words is not
+## the puzzle the writer wrote, and a child who cannot yet read quickly is
+## shut out of it. An id with no shape falls back to the label alone, which
+## is what every item did before.
+const ITEM_ICONS := {
+	"ICON_DROP": "drop", "ICON_SUN": "sun", "ICON_STEP": "step",
+	"ICON_TREE": "tree", "ICON_TOWER": "tower", "ICON_BOOK": "book",
+	"ICON_GEAR": "gear", "ICON_LENS": "magnifier", "ICON_ARROW_UP": "arrow_up",
+	"ICON_DOT_RED": "dot", "ICON_DOT_BLUE": "dot",
+	"ICON_DOT_GREEN": "dot", "ICON_DOT_YELLOW": "dot",
+	"ICON_STAR_1": "star", "ICON_STAR_2": "star",
+	"ICON_STAR_3": "star", "ICON_STAR_4": "star",
+}
+
+## The four coloured dots are one shape in four colours, so the colour is
+## what tells them apart — exactly as the puzzle intends.
+const ITEM_COLOURS := {
+	"ICON_DOT_RED": Palette.RUBY_LIGHT, "ICON_DOT_BLUE": Palette.BLUE,
+	"ICON_DOT_GREEN": Palette.GREEN, "ICON_DOT_YELLOW": Palette.GOLD_BRIGHT,
+}
+
+## What each symbol is called, for the dials. A dial's options are icon ids
+## rather than items, so there is no label in the data to read — and a dial
+## that reads "ICON_SUN" is a name for the writer, not for a child.
+const ICON_NAMES := {
+	"ICON_DROP": "قطره", "ICON_SUN": "خورشید", "ICON_STEP": "پله",
+	"ICON_TREE": "درخت", "ICON_TOWER": "برج", "ICON_BOOK": "کتاب",
+	"ICON_GEAR": "چرخ‌دنده", "ICON_LENS": "ذره‌بین", "ICON_ARROW_UP": "بالا",
+	"ICON_DOT_RED": "قرمز", "ICON_DOT_BLUE": "آبی",
+	"ICON_DOT_GREEN": "سبز", "ICON_DOT_YELLOW": "زرد",
+	"ICON_STAR_1": "ستارهٔ ۱", "ICON_STAR_2": "ستارهٔ ۲",
+	"ICON_STAR_3": "ستارهٔ ۳", "ICON_STAR_4": "ستارهٔ ۴",
+}
+
+## The drawn icon for an item, or "" when the content named none.
+func _icon_of(item: Dictionary) -> String:
+	return String(ITEM_ICONS.get(String(item.get("icon", "")), ""))
+
+func _icon_colour(item: Dictionary) -> Color:
+	return ITEM_COLOURS.get(String(item.get("icon", "")), Palette.GOLD_BRIGHT)
 
 # — dial_code ——————————————————————————————————————————————
 
@@ -165,7 +210,13 @@ func _build_dials() -> void:
 			_rebuild())
 		row.add_child(down)
 
-		row.add_child(_token(String(options[int(_dials[id])]), Palette.PARCHMENT, Palette.INK))
+		# A dial shows the symbol it is set to, not the symbol's id. It read
+		# "ICON_SUN" before, which is a name for the writer, not for a child.
+		var showing := String(options[int(_dials[id])])
+		row.add_child(_token(String(ICON_NAMES.get(showing, _label_for(showing))),
+			Palette.PARCHMENT, Palette.INK,
+			String(ITEM_ICONS.get(showing, "")),
+			ITEM_COLOURS.get(showing, Palette.INK)))
 
 		var up := Style.make_button("›", "quiet")
 		up.custom_minimum_size = Vector2(Palette.TOUCH_MIN, Palette.TOUCH_MIN)
@@ -192,7 +243,7 @@ func _build_pairs() -> void:
 		if _in_done(id):
 			continue
 		var b := Style.make_button(String((item as Dictionary).get("label", id)),
-			"secondary" if id == _pair_first else "quiet")
+			"secondary" if id == _pair_first else "quiet", _icon_of(item))
 		b.pressed.connect(func(): _pick_pair(id))
 		pool.add_child(b)
 
@@ -243,7 +294,7 @@ func _build_picking() -> void:
 	for item in _puzzle.get("items", []):
 		var id := String((item as Dictionary).get("id", ""))
 		var b := Style.make_button(String((item as Dictionary).get("label", id)),
-			"secondary" if _picked.has(id) else "quiet")
+			"secondary" if _picked.has(id) else "quiet", _icon_of(item))
 		b.custom_minimum_size.y = maxf(Palette.TOUCH_MIN, 60)
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		b.pressed.connect(func():
@@ -341,10 +392,20 @@ func _label_for(id: Variant) -> String:
 			return String((item as Dictionary).get("label", id))
 	return String(id)
 
-func _token(text: String, bg: Color, fg: Color) -> Control:
+func _token(text: String, bg: Color, fg: Color, icon: String = "",
+		icon_colour: Color = Palette.INK) -> Control:
 	var p := PanelContainer.new()
 	p.add_theme_stylebox_override("panel", OrnateBox.make(
 		OrnateBox.Kind.BUTTON, bg.lightened(0.12), bg.darkened(0.2),
 		Palette.R_SM, 2.0).with_margins(Palette.PAD_MD, Palette.PAD_XS))
-	p.add_child(Style.make_body(text, Palette.FS_LABEL, fg, false))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", Palette.PAD_XS)
+	if not icon.is_empty():
+		# Drawn, not painted: the painted icons carry a dark tile that would
+		# sit on this parchment token as a brown square.
+		var badge := IconRect.new(icon, 28.0, icon_colour)
+		badge.painted = false
+		row.add_child(badge)
+	row.add_child(Style.make_body(text, Palette.FS_LABEL, fg, false))
+	p.add_child(row)
 	return p

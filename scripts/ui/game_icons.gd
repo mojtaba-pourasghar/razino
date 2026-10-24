@@ -41,6 +41,15 @@ static func draw(ci: RID, name: String, centre: Vector2, radius: float,
 		"backpack":  _backpack(ci, centre, r, colour)
 		"compass":   _compass(ci, centre, r, colour)
 		"rope":      _rope(ci, centre, r, colour)
+		# The shapes the puzzles name. Content asks for them by id (ICON_SUN
+		# and the rest); PuzzlePanel maps the id to one of these.
+		"drop":      _drop(ci, centre, r, colour)
+		"sun":       _sun(ci, centre, r, colour)
+		"step":      _step(ci, centre, r, colour)
+		"tree":      _tree(ci, centre, r, colour)
+		"tower":     _tower(ci, centre, r, colour)
+		"dot":       _dot(ci, centre, r, colour)
+		"arrow_up":  _arrow_up(ci, centre, r, colour)
 		"pencil":    _pencil(ci, centre, r, colour)
 		"trophy":    _trophy(ci, centre, r, colour)
 		_:           _star(ci, centre, r, colour, 4)
@@ -294,6 +303,59 @@ static func _rope(ci: RID, p: Vector2, r: float, col: Color) -> void:
 		p + Vector2(r * 0.6, r * 0.45), p + Vector2(r * 0.9, r * 0.1),
 		p + Vector2(r * 0.72, -r * 0.3),
 	]), col, w)
+
+static func _drop(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	# A teardrop: a disc with a point pulled off the top of it.
+	CI.circle(ci, p + Vector2(0, r * 0.22), r * 0.68, col)
+	CI.poly(ci, PackedVector2Array([
+		p + Vector2(0, -r * 0.95), p + Vector2(r * 0.58, r * 0.38),
+		p + Vector2(-r * 0.58, r * 0.38),
+	]), col)
+
+static func _sun(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	CI.circle(ci, p, r * 0.46, col)
+	var w := maxf(r * 0.14, 2.0)
+	for i in 8:
+		var a := TAU * float(i) / 8.0
+		var dir := Vector2(cos(a), sin(a))
+		CI.polyline(ci, PackedVector2Array([p + dir * r * 0.64, p + dir * r * 0.98]), col, w)
+
+static func _step(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	# Three rising treads, read left to right whichever way the page runs.
+	for i in 3:
+		var h := r * (0.4 + 0.3 * float(i))
+		var x := p.x - r * 0.9 + float(i) * r * 0.62
+		CI.rect(ci, Rect2(x, p.y + r * 0.9 - h, r * 0.52, h), col)
+
+static func _tree(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	CI.rect(ci, Rect2(p.x - r * 0.12, p.y + r * 0.25, r * 0.24, r * 0.7), col)
+	for i in 3:
+		var y := p.y - r * 0.75 + float(i) * r * 0.42
+		var half := r * (0.34 + 0.22 * float(i))
+		CI.poly(ci, PackedVector2Array([
+			Vector2(p.x, y - r * 0.34), Vector2(p.x + half, y + r * 0.22),
+			Vector2(p.x - half, y + r * 0.22),
+		]), col)
+
+static func _tower(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	CI.rect(ci, Rect2(p.x - r * 0.42, p.y - r * 0.35, r * 0.84, r * 1.3), col)
+	CI.poly(ci, PackedVector2Array([
+		Vector2(p.x, p.y - r * 0.98), Vector2(p.x + r * 0.58, p.y - r * 0.3),
+		Vector2(p.x - r * 0.58, p.y - r * 0.3),
+	]), col)
+	# The clock face, because every tower in this story is the clock tower.
+	CI.circle(ci, p + Vector2(0, r * 0.28), r * 0.26, Palette.PANEL_DEEP)
+
+static func _dot(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	CI.circle(ci, p, r * 0.74, col)
+	CI.arc(ci, p, r * 0.9, 0.0, TAU, col, maxf(r * 0.12, 1.5), 24)
+
+static func _arrow_up(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	CI.poly(ci, PackedVector2Array([
+		Vector2(p.x, p.y - r * 0.92), Vector2(p.x + r * 0.72, p.y - r * 0.05),
+		Vector2(p.x - r * 0.72, p.y - r * 0.05),
+	]), col)
+	CI.rect(ci, Rect2(p.x - r * 0.24, p.y - r * 0.1, r * 0.48, r * 1.0), col)
 
 static func _pencil(ci: RID, p: Vector2, r: float, col: Color) -> void:
 	CI.poly(ci, PackedVector2Array([

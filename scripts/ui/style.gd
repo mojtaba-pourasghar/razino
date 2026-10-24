@@ -315,11 +315,15 @@ func make_card(radius: float = Palette.R_LG) -> PanelContainer:
 		Color("FBF1DA"), Palette.PARCHMENT_DIM, radius, 3.0, Palette.PAD_MD, Palette.PAD_MD))
 	return p
 
+## A dark card for a row in a list. Drawn, never painted: it is a row, not a
+## screen panel, and the painted plate's corner ornament draws at its source
+## size — in a card this short it crumples over whatever the card says. Use
+## make_section() when the thing really is a framed panel.
 func make_night_card(radius: float = Palette.R_LG) -> PanelContainer:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.PANEL,
-		Palette.PANEL_LIGHT, Palette.PANEL_DEEP, radius, Palette.FRAME_W,
-		Palette.PAD_MD, Palette.PAD_MD))
+	p.add_theme_stylebox_override("panel", OrnateBox.make(
+		OrnateBox.Kind.PANEL, Palette.PANEL_LIGHT, Palette.PANEL_DEEP,
+		radius, Palette.FRAME_W).with_margins(Palette.PAD_MD, Palette.PAD_MD))
 	return p
 
 ## An inset row — list items, inventory slots, anything in a column.

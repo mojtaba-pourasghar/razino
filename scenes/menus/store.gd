@@ -45,9 +45,11 @@ func build_refresh() -> void:
 		_fill(list as VBoxContainer)
 
 func _fill(list: VBoxContainer) -> void:
-	list.add_child(Style.make_body(
-		"فصل اول رایگان است و برای فهمیدن اینکه بازی را دوست دارید یا نه کافی است. هیچ معمایی با پرداخت حل نمی‌شود.",
-		Palette.FS_CAPTION, Palette.SNOW_SOFT))
+	# On a parchment quote rather than loose on the backdrop: a bare label
+	# over the painted town had nothing behind it and ran under the frame.
+	list.add_child(Style.make_quote(
+		"فصل اول رایگان است و برای فهمیدن اینکه بازی را دوست دارید یا نه کافی"
+		+ " است. هیچ معمایی با پرداخت حل نمی‌شود."))
 
 	for entry in ContentManager.catalog:
 		var e: Dictionary = entry

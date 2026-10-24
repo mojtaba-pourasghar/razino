@@ -24,6 +24,10 @@ const SHOTS := [
 	{"ui": "UI-17", "name": "17_profile"},
 	{"ui": "UI-18", "name": "18_notifications"},
 	{"ui": "UI-19", "name": "19_inventory"},
+	# A dial puzzle too, so the symbol tokens are seen as well as the word
+	# buttons of the ordering puzzle.
+	{"ui": "UI-09", "name": "09b_puzzle_dials",
+	 "payload": {"chapter_id": "season_01", "scene_id": "S01-E03-SC04"}},
 	{"ui": "UI-20", "name": "20_stage_select", "payload": {"chapter_id": "season_01"}},
 	{"ui": "UI-21", "name": "21_loadout",
 	 "payload": {"chapter_id": "season_01", "stage_id": "S01-ST02"}},
