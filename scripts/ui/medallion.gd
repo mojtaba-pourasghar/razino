@@ -69,7 +69,13 @@ func _draw() -> void:
 		var box := Rect2(centre - Vector2(r - 4, r - 4), Vector2(r - 4, r - 4) * 2.0)
 		draw_texture_rect(portrait, box, false)
 	else:
-		GameIcons.draw(ci, icon_name, centre, r * 0.5, icon_colour)
+		var painted := UiArt.icon(icon_name)
+		if painted != null:
+			var side := r * 1.15
+			draw_texture_rect(painted,
+				Rect2(centre - Vector2(side, side) * 0.5, Vector2(side, side)), false)
+		else:
+			GameIcons.draw(ci, icon_name, centre, r * 0.5, icon_colour)
 
 	if has_focus():
 		CI.arc(ci, centre, r + 2.0, 0.0, TAU, Palette.SNOW, 2.0)

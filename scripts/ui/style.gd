@@ -64,9 +64,38 @@ func rebuild() -> void:
 
 # — the box factory ———————————————————————————————————————
 
+## Which painted plate stands in for each drawn kind. A kind with no entry
+## keeps its drawn version.
+## Only the big framed panels use a painted plate.
+##
+## A nine-patch corner draws at its source size, so a painted ornament
+## inside a 58-pixel button or a 60-pixel list card has nowhere to go and
+## crumples — the notification list came out as unreadable gold scrollwork.
+## Buttons, chips, plaques, cards and rows keep the drawn bevel, which holds
+## its shape at any size; the sheets give those a thin gold edge anyway.
+const PLATE_FOR := {
+	OrnateBox.Kind.PANEL: "panel",
+}
+
 func _box(kind: OrnateBox.Kind, top: Color, bottom: Color, radius: float = Palette.R_LG,
-		frame: float = Palette.FRAME_W, h: int = Palette.PAD_MD, v: int = Palette.PAD_SM) -> OrnateBox:
+		frame: float = Palette.FRAME_W, h: int = Palette.PAD_MD, v: int = Palette.PAD_SM) -> StyleBox:
+	# A painted plate beats a drawn one wherever it exists; the drawn box
+	# stays as the fallback, because the art lands a few pieces at a time.
+	if PLATE_FOR.has(kind):
+		var painted := UiArt.box(String(PLATE_FOR[kind]), Color.WHITE, h, v)
+		if painted != null:
+			return painted
 	return OrnateBox.make(kind, top, bottom, radius, frame).with_margins(h, v)
+
+## A button's faces come from a painted plate when there is one, so the
+## variant picks the plate rather than a pair of colours.
+func _button_box(plate: String, tint: Color, radius: float, frame: float,
+		top: Color, bottom: Color) -> StyleBox:
+	var painted := UiArt.box(plate, tint, Palette.PAD_MD, Palette.PAD_SM)
+	if painted != null:
+		return painted
+	return OrnateBox.make(OrnateBox.Kind.BUTTON, top, bottom, radius, frame) \
+		.with_margins(Palette.PAD_MD, Palette.PAD_SM)
 
 func _flat(bg: Color, radius: float, border: Color = Color.TRANSPARENT, border_w: int = 0) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
@@ -83,13 +112,23 @@ func _flat(bg: Color, radius: float, border: Color = Color.TRANSPARENT, border_w
 
 ## The four faces of a button, in one place so every variant bevels alike.
 ## A press flips the gradient, which is what makes it feel physical.
-func button_faces(top: Color, bottom: Color, radius: float = Palette.R_MD) -> Dictionary:
+func button_faces(top: Color, bottom: Color, radius: float = Palette.R_MD,
+		plate: String = "") -> Dictionary:
+	if not plate.is_empty() and UiArt.plate(plate) != null:
+		# A painted face is lit by its own paint, so hover and press shift
+		# its brightness rather than swapping two colours.
+		return {
+			"normal": UiArt.box(plate, Color.WHITE),
+			"hover": UiArt.box(plate, Color(1.14, 1.14, 1.14)),
+			"pressed": UiArt.box(plate, Color(0.82, 0.82, 0.82)),
+			"disabled": UiArt.box(plate, Color(0.55, 0.6, 0.64)),
+		}
 	return {
-		"normal": _box(OrnateBox.Kind.BUTTON, top, bottom, radius, 2.5),
-		"hover": _box(OrnateBox.Kind.BUTTON, top.lightened(0.12), bottom.lightened(0.12), radius, 2.5),
-		"pressed": _box(OrnateBox.Kind.BUTTON, bottom, top, radius, 2.5),
-		"disabled": _box(OrnateBox.Kind.BUTTON, Palette.LOCKED.lightened(0.08),
-			Palette.LOCKED.darkened(0.35), radius, 2.0),
+		"normal": OrnateBox.make(OrnateBox.Kind.BUTTON, top, bottom, radius, 2.5).with_margins(Palette.PAD_MD, Palette.PAD_SM),
+		"hover": OrnateBox.make(OrnateBox.Kind.BUTTON, top.lightened(0.12), bottom.lightened(0.12), radius, 2.5).with_margins(Palette.PAD_MD, Palette.PAD_SM),
+		"pressed": OrnateBox.make(OrnateBox.Kind.BUTTON, bottom, top, radius, 2.5).with_margins(Palette.PAD_MD, Palette.PAD_SM),
+		"disabled": OrnateBox.make(OrnateBox.Kind.BUTTON, Palette.LOCKED.lightened(0.08),
+			Palette.LOCKED.darkened(0.35), radius, 2.0).with_margins(Palette.PAD_MD, Palette.PAD_SM),
 	}
 
 func _style_buttons() -> void:
@@ -239,7 +278,7 @@ func make_button(text: String, variant: String = "primary", icon: String = "") -
 	var ink := false
 	match variant:
 		"gold":
-			# The one gold button in the mockup: "continue" on the home screen.
+			# The one gold button in the sheets: "continue" on the home screen.
 			faces = button_faces(Palette.GOLD, Palette.GOLD_DEEP)
 			ink = true
 		"secondary":
@@ -453,7 +492,7 @@ func make_menu_button(text: String, icon: String) -> Button:
 	b.add_theme_constant_override("h_separation", 0)
 	var pad := int(Palette.MEDALLION)
 	for state in faces:
-		(faces[state] as OrnateBox).content_margin_left = pad
+		(faces[state] as StyleBox).content_margin_left = pad
 	return b
 
 ## The player capsule: avatar medallion, name, level and experience bar.
@@ -644,7 +683,7 @@ func make_nav_item(icon: String, label: String, active: bool = false) -> Button:
 	badge.offset_bottom = 15
 	b.add_child(badge)
 	for state in faces:
-		(faces[state] as OrnateBox).content_margin_right = 56
+		(faces[state] as StyleBox).content_margin_right = 56
 	return b
 
 ## A parchment list card: medallion, a title over a subtitle, a time on the

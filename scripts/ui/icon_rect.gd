@@ -1,10 +1,10 @@
 class_name IconRect
 extends Control
-## Places one of the code-drawn icons in a layout.
+## Places an icon in a layout: the painted one when it exists, the drawn
+## shape when it does not.
 ##
-## Needed because the icons are drawn, not textures, so they cannot go into a
-## TextureRect. A ring makes a medallion — the form used for currency chips,
-## stage markers and button adornments.
+## A ring makes a medallion — the form used for currency chips, stage markers
+## and button adornments.
 
 @export var icon: String = "star":
 	set(value):
@@ -36,4 +36,11 @@ func _draw() -> void:
 		CI.circle(ci, centre, r, Palette.PANEL_DEEP)
 		CI.arc(ci, centre, r - 1.5, 0.0, TAU, Palette.GOLD, 2.5)
 		r *= 0.62
+	var painted := UiArt.icon(icon)
+	if painted != null:
+		# A painting carries its own colour; tinting it would flatten it.
+		var side := r * 1.9
+		draw_texture_rect(painted,
+			Rect2(centre - Vector2(side, side) * 0.5, Vector2(side, side)), false)
+		return
 	GameIcons.draw(ci, icon, centre, r * 0.92, colour)

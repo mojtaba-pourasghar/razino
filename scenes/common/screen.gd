@@ -132,10 +132,22 @@ func _build_backdrop() -> void:
 	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	background.add_child(wash)
 
-	screen_edge = ScreenEdge.new()
-	screen_edge.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	screen_edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(screen_edge)
+	# A painted border beats a drawn one; the drawn ScreenEdge stays as the
+	# fallback until that piece is painted.
+	var painted_frame := UiArt.plate("screen_frame")
+	if painted_frame != null:
+		var frame := TextureRect.new()
+		frame.texture = painted_frame
+		frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		frame.stretch_mode = TextureRect.STRETCH_SCALE
+		frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(frame)
+	else:
+		screen_edge = ScreenEdge.new()
+		screen_edge.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		screen_edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(screen_edge)
 
 func _build_header() -> void:
 	# Left corner: the way out.
