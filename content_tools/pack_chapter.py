@@ -80,6 +80,12 @@ def collect(chapter_dir: Path) -> list[Path]:
             continue
         if p.suffix.lower() in FORBIDDEN_SUFFIXES:
             raise SystemExit(f"refusing to package executable file: {p}")
+        # Godot writes a .import beside every asset under res://. A
+        # downloaded chapter lands in user://, where nothing reads them —
+        # SceneArt decodes those files by hand — so they are dead weight in
+        # the package and dead weight in the signature.
+        if p.suffix.lower() == ".import":
+            continue
         files.append(p)
     return files
 
