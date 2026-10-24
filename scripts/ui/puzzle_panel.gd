@@ -307,6 +307,9 @@ func _succeed() -> void:
 ## Hints come one at a time, and the last one effectively gives the answer —
 ## because being stuck should end in understanding, not in defeat.
 func _next_hint() -> void:
+	# A hint costs score and never progress (GDD §5.2): the puzzle still
+	# counts as solved afterwards, the run just scores lower.
+	StageEngine.record_hint()
 	var hints: Array = _puzzle.get("hints", [])
 	if hints.is_empty():
 		_hint_label.text = "راهنمایی‌ای برای این معما نوشته نشده است."

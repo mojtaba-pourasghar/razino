@@ -51,6 +51,12 @@ var gems: int = 0
 var level: int = 1
 var xp: int = 0
 
+## What each stage is worth to this player (GDD §5.8): whether it is
+## finished, the best score and stars, and whether it was ever done without
+## a hint. Only the best of each is kept — a worse replay never takes
+## anything away, or a child learns not to try again.
+var stage_records: Dictionary = {}
+
 const XP_BASE := 500
 
 ## How much experience the current level needs in total.
@@ -85,6 +91,7 @@ func reset() -> void:
 	gems = 0
 	level = 1
 	xp = 0
+	stage_records.clear()
 	progress_reset.emit()
 	Log.info("GameState", "progress reset")
 
@@ -192,6 +199,7 @@ func to_dict() -> Dictionary:
 		"gems": gems,
 		"level": level,
 		"xp": xp,
+		"stage_records": stage_records.duplicate(true),
 	}
 
 func from_dict(d: Dictionary) -> void:
@@ -211,5 +219,21 @@ func from_dict(d: Dictionary) -> void:
 	gems = int(d.get("gems", 0))
 	level = maxi(1, int(d.get("level", 1)))
 	xp = int(d.get("xp", 0))
+	stage_records = d.get("stage_records", {})
 	# A save that predates a chapter being free must still get it free.
 	unlocked_chapters["season_01"] = true
+
+
+# — stages ————————————————————————————————————————————————
+
+## What is known about a stage. An empty dictionary means never played,
+## which every caller treats as "open but unfinished".
+func stage_record(stage_id: String) -> Dictionary:
+	return stage_records.get(stage_id, {})
+
+func set_stage_record(stage_id: String, record: Dictionary) -> void:
+	stage_records[stage_id] = record
+	variable_changed.emit("stage:%s" % stage_id, record)
+
+func is_stage_complete(stage_id: String) -> bool:
+	return bool(stage_record(stage_id).get("completed", false))

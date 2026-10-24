@@ -165,6 +165,7 @@ func choose(choice_id: String) -> void:
 ## Called by the puzzle host once a puzzle is solved or skipped.
 func puzzle_resolved(solved: bool) -> void:
 	var puzzle: Dictionary = current_scene.get("puzzle", {})
+	StageEngine.record_puzzle(solved)
 	if solved:
 		apply_effects(puzzle.get("on_solve", []))
 	else:
