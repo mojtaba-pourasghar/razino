@@ -20,6 +20,13 @@ var _quest: PanelContainer
 const HEARTS := 3
 
 var _chapter_id: String = "season_01"
+## Set when the player came in through the stage select and its loadout.
+## Empty means they are simply reading the chapter from wherever they left
+## off, which is still a legal way to play — the stage layer scores a run,
+## it does not gate the story.
+var _stage_id: String = ""
+var _tools: Array = []
+var _companions: Array = []
 var _used_interactions: Dictionary = {}
 
 func _ready() -> void:
@@ -29,6 +36,9 @@ func _ready() -> void:
 func build_content() -> void:
 	var payload := Router.take_payload()
 	_chapter_id = String(payload.get("chapter_id", GameState.current_chapter))
+	_stage_id = String(payload.get("stage_id", ""))
+	_tools = payload.get("tools", [])
+	_companions = payload.get("companions", [])
 	if _chapter_id.is_empty():
 		_chapter_id = "season_01"
 
@@ -177,14 +187,24 @@ func _connect_engine() -> void:
 	StoryEngine.chapter_finished.connect(_on_chapter_finished)
 	StoryEngine.story_error.connect(_on_story_error)
 	GameState.clue_discovered.connect(_on_clue_discovered)
+	StageEngine.stage_finished.connect(_on_stage_finished)
 
 func _exit_tree() -> void:
 	for sig in [StoryEngine.scene_entered, StoryEngine.line_shown, StoryEngine.choices_offered,
 			StoryEngine.puzzle_requested, StoryEngine.cinematic_requested,
-			StoryEngine.chapter_finished, StoryEngine.story_error, GameState.clue_discovered]:
+			StoryEngine.chapter_finished, StoryEngine.story_error, GameState.clue_discovered,
+			StageEngine.stage_finished]:
 		for conn in sig.get_connections():
 			if (conn["callable"] as Callable).get_object() == self:
 				sig.disconnect(conn["callable"])
+
+## A finished stage goes straight to its score card. The story has already
+## stepped into the next scene by the time this fires, so the position saved
+## behind the card is the right one to come back to.
+func _on_stage_finished(stage_id: String, result: Dictionary) -> void:
+	SaveManager.save()
+	Router.go("UI-22", {"result": result, "stage_id": stage_id,
+		"chapter_id": _chapter_id})
 
 func _begin(resume: bool) -> void:
 	if not ContentManager.is_installed(_chapter_id):
@@ -193,6 +213,12 @@ func _begin(resume: bool) -> void:
 	if not StoryEngine.load_chapter(_chapter_id):
 		Router.go("UI-16", {"reason": "story_unreadable", "chapter_id": _chapter_id})
 		return
+	if not _stage_id.is_empty():
+		# A stage run starts at the stage's own first scene, with the loadout
+		# the player chose, and is scored when the story walks out of it.
+		if StageEngine.begin(_stage_id, _tools, _companions):
+			return
+		Log.warn("Explore", "stage %s would not start; reading the chapter instead" % _stage_id)
 	if resume:
 		StoryEngine.resume()
 	else:

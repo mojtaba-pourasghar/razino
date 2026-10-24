@@ -133,3 +133,46 @@ func test_the_loadout_cannot_exceed_its_slots():
 		"and only two companions")
 	ok(StageEngine.carrying("ITEM_TOOLS"), "a carried tool is known")
 	ok(not StageEngine.carrying("ITEM_BRASS_KEY"), "a dropped one is not")
+
+# — the run, end to end ————————————————————————————————————
+
+func test_a_stage_ends_when_the_story_leaves_it():
+	# This is what makes the stage layer work at all without the content
+	# knowing it exists: nothing in story.json marks the end of a stage, so
+	# the stage watches the story and closes itself when it walks out.
+	_load_chapter_one()
+	StageEngine.begin("S01-ST01")
+	ok(StageEngine.is_running(), "the run starts")
+	var after: Dictionary = StageEngine.stage("S01-ST02")
+	StoryEngine.enter_scene(String(after.get("entry_scene_id", "")))
+	ok(not StageEngine.is_running(), "and ends when the story moves on")
+	ok(GameState.is_stage_complete("S01-ST01"), "with the stage recorded")
+
+func test_abilities_are_charged_per_stage_and_run_out():
+	_load_chapter_one()
+	StageEngine.begin("S01-ST01", [], ["raha", "mani"])
+	eq(StageEngine.ability_charges("raha"), Loadout.USES_PER_STAGE,
+		"a chosen companion starts charged")
+	for _i in Loadout.USES_PER_STAGE:
+		ok(StageEngine.use_ability("raha"), "each charge spends")
+	ok(not StageEngine.use_ability("raha"), "and the next one is refused")
+
+func test_fandogh_helps_even_when_he_was_not_chosen():
+	# GDD §5.4: his nose is always free and always available, so a child who
+	# is stuck is never left with nothing at all.
+	_load_chapter_one()
+	StageEngine.begin("S01-ST01", [], ["raha", "mani"])
+	ok(StageEngine.ability_charges("fandogh") > 0,
+		"فندق is available without taking a slot")
+
+func test_the_loadout_catalogue_matches_the_slots():
+	ok(Loadout.COMPANIONS.size() >= StageEngine.COMPANION_SLOTS,
+		"there are more companions than slots, or there is no choice")
+	ok(Loadout.TOOLS.size() > StageEngine.TOOL_SLOTS,
+		"and more tools than slots")
+	var free := 0
+	for t: Dictionary in Loadout.TOOLS:
+		if bool(t["free"]):
+			free += 1
+	eq(free, StageEngine.TOOL_SLOTS,
+		"a new player owns exactly enough tools to fill the pack")

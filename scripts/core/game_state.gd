@@ -57,6 +57,12 @@ var xp: int = 0
 ## anything away, or a child learns not to try again.
 var stage_records: Dictionary = {}
 
+## The tools in the pack (GDD §5.6). Two are there from the first stage so a
+## new player always has a loadout to choose from; the rest are bought with
+## coins. Tools are never required to finish a stage, so an empty purse costs
+## a child nothing but an optional route.
+var owned_tools: Dictionary = {"TOOL_LANTERN": true, "TOOL_MAGNIFIER": true}
+
 const XP_BASE := 500
 
 ## How much experience the current level needs in total.
@@ -92,6 +98,7 @@ func reset() -> void:
 	level = 1
 	xp = 0
 	stage_records.clear()
+	owned_tools = {"TOOL_LANTERN": true, "TOOL_MAGNIFIER": true}
 	progress_reset.emit()
 	Log.info("GameState", "progress reset")
 
@@ -200,6 +207,7 @@ func to_dict() -> Dictionary:
 		"level": level,
 		"xp": xp,
 		"stage_records": stage_records.duplicate(true),
+		"owned_tools": owned_tools.duplicate(),
 	}
 
 func from_dict(d: Dictionary) -> void:
@@ -220,6 +228,7 @@ func from_dict(d: Dictionary) -> void:
 	level = maxi(1, int(d.get("level", 1)))
 	xp = int(d.get("xp", 0))
 	stage_records = d.get("stage_records", {})
+	owned_tools = d.get("owned_tools", {"TOOL_LANTERN": true, "TOOL_MAGNIFIER": true})
 	# A save that predates a chapter being free must still get it free.
 	unlocked_chapters["season_01"] = true
 

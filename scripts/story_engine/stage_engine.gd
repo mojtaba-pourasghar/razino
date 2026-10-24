@@ -41,7 +41,25 @@ var run: Dictionary = {}
 
 func _ready() -> void:
 	StoryEngine.chapter_loaded.connect(_on_chapter_loaded)
+	StoryEngine.scene_entered.connect(_on_scene_entered)
+	StoryEngine.chapter_finished.connect(_on_chapter_finished)
 	GameState.clue_discovered.connect(_on_clue)
+
+## A stage ends when the story walks out of it. Watching the story rather
+## than asking the content to mark an exit means a stage cannot be left
+## hanging by a scene whose author forgot to close it — and the story keeps
+## knowing nothing about stages, which is the point of the split.
+func _on_scene_entered(scene: Dictionary) -> void:
+	if not is_running():
+		return
+	var scene_id := String(scene.get("scene_id", ""))
+	if scene_id in stage(String(run["stage_id"])).get("scene_ids", []):
+		return
+	finish()
+
+func _on_chapter_finished(_chapter_id: String, _ending_id: String) -> void:
+	if is_running():
+		finish()
 
 func _on_chapter_loaded(id: String) -> void:
 	load_stages(StoryEngine.story)
@@ -85,7 +103,17 @@ func begin(stage_id: String, tools: Array = [], companions: Array = []) -> bool:
 		"puzzles_attempted": 0,
 		"hints_used": 0,
 		"secret_found": false,
+		# Each companion's ability, charged fresh for this stage. Charges are
+		# free and never bought back mid-stage: a child who runs out has to
+		# look, which is the whole exercise.
+		"ability_uses": {},
 	}
+	for c: String in run["companions"]:
+		run["ability_uses"][c] = Loadout.USES_PER_STAGE
+	# فندق's nose works whether or not he was chosen, so a child who is stuck
+	# is never left with nothing (GDD §5.4).
+	if not run["ability_uses"].has("fandogh"):
+		run["ability_uses"]["fandogh"] = Loadout.USES_PER_STAGE
 	Log.info("StageEngine", "stage %s begun with %s / %s" % [
 		stage_id, run["tools"], run["companions"]])
 	stage_started.emit(stage_id)
@@ -121,6 +149,22 @@ func record_puzzle(solved: bool) -> void:
 	run["puzzles_attempted"] = int(run["puzzles_attempted"]) + 1
 	if solved:
 		run["puzzles_solved"] = int(run["puzzles_solved"]) + 1
+
+## How many times a companion's ability can still be used in this stage.
+func ability_charges(character_id: String) -> int:
+	return int(run.get("ability_uses", {}).get(character_id, 0))
+
+## Spends one charge. Returns false when there is none left, so a caller
+## cannot quietly overspend.
+func use_ability(character_id: String) -> bool:
+	if ability_charges(character_id) <= 0:
+		return false
+	run["ability_uses"][character_id] = ability_charges(character_id) - 1
+	# An ability narrows the search; a hint gives the answer. Only the hint
+	# costs score (GDD §5.2), so this records nothing against the run.
+	Log.info("StageEngine", "ability of %s used, %d left" % [
+		character_id, ability_charges(character_id)])
+	return true
 
 func record_hint() -> void:
 	if not is_running():

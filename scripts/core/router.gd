@@ -26,6 +26,11 @@ const SCREENS := {
 	"UI-17": "res://scenes/menus/profile.tscn",
 	"UI-18": "res://scenes/menus/notifications.tscn",
 	"UI-19": "res://scenes/menus/inventory.tscn",
+	# The stage layer (GDD §5.8): pick a stage, pack for it, see what it was
+	# worth. Nothing here is a detour — this is how a chapter is played.
+	"UI-20": "res://scenes/menus/stage_select.tscn",
+	"UI-21": "res://scenes/menus/loadout.tscn",
+	"UI-22": "res://scenes/menus/stage_result.tscn",
 }
 
 const FADE_SECONDS := 0.22

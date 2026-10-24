@@ -40,6 +40,7 @@ static func draw(ci: RID, name: String, centre: Vector2, radius: float,
 		"bell":      _bell(ci, centre, r, colour)
 		"backpack":  _backpack(ci, centre, r, colour)
 		"compass":   _compass(ci, centre, r, colour)
+		"rope":      _rope(ci, centre, r, colour)
 		"pencil":    _pencil(ci, centre, r, colour)
 		"trophy":    _trophy(ci, centre, r, colour)
 		_:           _star(ci, centre, r, colour, 4)
@@ -280,6 +281,19 @@ static func _compass(ci: RID, p: Vector2, r: float, col: Color) -> void:
 	CI.poly(ci, PackedVector2Array([
 		p + Vector2(0, r * 0.7), p + Vector2(r * 0.26, 0), p + Vector2(-r * 0.26, 0),
 	]), Palette.PANEL_DEEP)
+
+static func _rope(ci: RID, p: Vector2, r: float, col: Color) -> void:
+	# A coil seen from the side: three loops and the loose end hanging off it.
+	# Drawn as open arcs rather than rings so the coil reads as rope rather
+	# than as three stacked washers.
+	var w := maxf(r * 0.16, 2.0)
+	for i in 3:
+		var y := p.y - r * 0.45 + float(i) * r * 0.45
+		CI.arc(ci, Vector2(p.x, y), r * 0.62, PI * 0.08, PI * 1.08, col, w, 20)
+	CI.polyline(ci, PackedVector2Array([
+		p + Vector2(r * 0.6, r * 0.45), p + Vector2(r * 0.9, r * 0.1),
+		p + Vector2(r * 0.72, -r * 0.3),
+	]), col, w)
 
 static func _pencil(ci: RID, p: Vector2, r: float, col: Color) -> void:
 	CI.poly(ci, PackedVector2Array([

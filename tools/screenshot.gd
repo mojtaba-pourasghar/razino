@@ -24,6 +24,15 @@ const SHOTS := [
 	{"ui": "UI-17", "name": "17_profile"},
 	{"ui": "UI-18", "name": "18_notifications"},
 	{"ui": "UI-19", "name": "19_inventory"},
+	{"ui": "UI-20", "name": "20_stage_select", "payload": {"chapter_id": "season_01"}},
+	{"ui": "UI-21", "name": "21_loadout",
+	 "payload": {"chapter_id": "season_01", "stage_id": "S01-ST02"}},
+	{"ui": "UI-22", "name": "22_stage_result",
+	 "payload": {"chapter_id": "season_01", "stage_id": "S01-ST01",
+		"result": {"score": 0.78, "stars": 2, "clues_found": 1, "clues_total": 1,
+			"puzzles_solved": 0, "puzzles_total": 0, "secret_found": true,
+			"hints_used": 1, "seconds": 142.0, "coins": 30, "xp": 50,
+			"first_time": true}}},
 ]
 
 const OUT_DIR := "user://shots"
@@ -48,6 +57,9 @@ func _ready() -> void:
 	AvatarManager.set_part("outfit", 0)
 	AvatarManager.set_part("accessory", 3)
 	ClueJournal.load_chapter_clues(ContentManager.load_chapter_story("season_01"))
+	StoryEngine.load_chapter("season_01")
+	GameState.set_stage_record("S01-ST01", {
+		"completed": true, "score": 0.82, "stars": 2, "clues": 1, "no_hint": true})
 
 	await get_tree().process_frame
 	for shot in SHOTS:
