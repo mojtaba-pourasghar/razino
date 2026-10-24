@@ -12,7 +12,12 @@ var _hotspots: Control
 var _dialogue: DialoguePanel
 var _puzzle: PuzzlePanel
 var _toast: Label
-var _hud: HBoxContainer
+var _quest: PanelContainer
+
+## Hearts shown on the HUD. The story never takes one away yet — nothing in
+## chapter one can hurt the player — so these read as a promise the design
+## makes rather than a resource being spent.
+const HEARTS := 3
 
 var _chapter_id: String = "season_01"
 var _used_interactions: Dictionary = {}
@@ -86,29 +91,82 @@ func build_content() -> void:
 	_begin(bool(payload.get("resume", false)))
 
 func _build_hud() -> void:
-	_hud = HBoxContainer.new()
-	_hud.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	_hud.offset_left = SAFE_MARGIN
-	_hud.offset_right = -SAFE_MARGIN
-	_hud.offset_top = SAFE_MARGIN
-	_hud.add_theme_constant_override("separation", Palette.PAD_SM)
-	add_child(_hud)
+	# The HUD the reference sheet draws. It is built rather than painted,
+	# unlike the menus: in the sheet the HUD sits ON the picture, so there
+	# is no frame to cut it out of — and the picture underneath has to be
+	# the real chapter scene, not the sheet's painted town.
 
-	var journal := Style.make_button("دفتر سرنخ‌ها", "quiet")
-	journal.custom_minimum_size.x = 200
-	journal.pressed.connect(func(): Router.go("UI-08", {"return_to": "UI-06", "chapter_id": _chapter_id}))
-	_hud.add_child(journal)
+	# Top left: who you are, and how you are doing.
+	var left := HBoxContainer.new()
+	left.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	left.add_theme_constant_override("separation", Palette.PAD_SM)
+	left.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	left.offset_left = SAFE_MARGIN
+	left.offset_top = SAFE_MARGIN
+	add_child(left)
 
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_hud.add_child(spacer)
+	var face := Medallion.new("friend", 62.0)
+	face.tooltip_text = "پروفایل"
+	face.pressed.connect(func(): Router.go("UI-17"))
+	left.add_child(face)
 
-	var pause := Style.make_button("توقف", "quiet")
-	pause.custom_minimum_size.x = 140
+	var hearts := HBoxContainer.new()
+	hearts.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	hearts.alignment = BoxContainer.ALIGNMENT_CENTER
+	hearts.add_theme_constant_override("separation", 2)
+	for i in HEARTS:
+		hearts.add_child(IconRect.new("heart", 34.0, Palette.RUBY_LIGHT))
+	left.add_child(hearts)
+
+	# Top right: what you own, then the way out.
+	var right := HBoxContainer.new()
+	right.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	right.add_theme_constant_override("separation", Palette.PAD_SM)
+	right.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	right.offset_right = -SAFE_MARGIN
+	right.offset_top = SAFE_MARGIN
+	right.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	add_child(right)
+	right.add_child(Style.make_chip("coin", GameState.coins, Palette.ORANGE))
+	right.add_child(Style.make_chip("gem", GameState.gems, Palette.BLUE))
+	var pause := Medallion.new("gear", 62.0)
+	pause.tooltip_text = "توقف"
 	pause.pressed.connect(func():
 		SaveManager.save()
 		Router.go("UI-04"))
-	_hud.add_child(pause)
+	right.add_child(pause)
+
+	# Under the purse: what the player is supposed to be doing. The sheet
+	# puts it here because it is the one thing a child re-reads.
+	_quest = Style.make_two_line_plaque("مأموریت فعلی", "")
+	_quest.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	_quest.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_quest.offset_right = -SAFE_MARGIN
+	_quest.offset_top = SAFE_MARGIN + 78
+	_quest.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	add_child(_quest)
+
+	# Right edge: the things you do.
+	var actions := VBoxContainer.new()
+	actions.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	actions.add_theme_constant_override("separation", Palette.PAD_SM)
+	actions.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
+	actions.offset_right = -SAFE_MARGIN
+	actions.offset_left = -SAFE_MARGIN - 70
+	actions.offset_top = -40
+	actions.offset_bottom = 170
+	add_child(actions)
+	for action in [
+		{"icon": "magnifier", "tip": "دفتر سرنخ‌ها", "ui": "UI-08"},
+		{"icon": "backpack", "tip": "کوله‌پشتی", "ui": "UI-19"},
+	]:
+		var medal := Medallion.new(String(action["icon"]), 66.0)
+		medal.tooltip_text = String(action["tip"])
+		var ui_id := String(action["ui"])
+		medal.pressed.connect(func():
+			AudioManager.play_sfx("SFX_UI_TAP")
+			Router.go(ui_id, {"return_to": "UI-06", "chapter_id": _chapter_id}))
+		actions.add_child(medal)
 
 func _connect_engine() -> void:
 	StoryEngine.scene_entered.connect(_on_scene_entered)
@@ -147,6 +205,28 @@ func _on_scene_entered(scene: Dictionary) -> void:
 	_puzzle.visible = false
 	_dialogue.visible = true
 	_rebuild_hotspots(scene)
+	_update_quest(scene)
+
+## The quest plaque says which stage the player is in, which is the thing a
+## child re-reads when they put the game down and pick it up again. A scene
+## outside any stage leaves the plaque showing the scene's own title rather
+## than going blank.
+func _update_quest(scene: Dictionary) -> void:
+	if _quest == null:
+		return
+	var scene_id := String(scene.get("scene_id", ""))
+	var stage_id := StageEngine.stage_of_scene(scene_id)
+	var line := String(scene.get("title", ""))
+	if not stage_id.is_empty():
+		var stage := StageEngine.stage(stage_id)
+		line = String(stage.get("title", line))
+	for child in _quest.get_children():
+		child.queue_free()
+	var replacement := Style.make_two_line_plaque("مأموریت فعلی", line)
+	for child in replacement.get_children():
+		replacement.remove_child(child)
+		_quest.add_child(child)
+	replacement.queue_free()
 
 func _on_line_shown(line: Dictionary, _index: int, _total: int) -> void:
 	var speaker := String(line.get("speaker_id", ""))

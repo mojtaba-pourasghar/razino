@@ -1,52 +1,83 @@
-extends RazinoScreen
-## UI-05 — نقشهٔ جهان.
+extends Control
+## UI-05 — نقشهٔ جهان, built on the reference painting.
 ##
-## GDD §3 asks for one world rather than ten separate scenes: places the
-## player has already been stay open, and each chapter opens a new part of the
-## same map. The regions below are the five from the GDD's world map.
+## The map, its islands, the compass rose and the gold frame are the
+## approved art. Only the eight place plaques are live, because neither
+## line on them can be left painted: the names are the artist's places
+## rather than this game's chapters, and a painted "open" on a chapter the
+## player has not reached is a lie the moment they tap it.
+##
+## The plaque positions were found by locating the painting's own parchment
+## regions, not estimated.
 
-const REGIONS := [
-	{"id": "centre", "icon": "clock", "name": "منطقهٔ مرکزی شهر", "desc": "مدرسه، میدان ساعت، کتابخانه و خانهٔ شخصیت‌ها. نقطهٔ شروع و بازگشت.", "opens_with": "season_01"},
-	{"id": "nature", "icon": "map", "name": "منطقهٔ طبیعت", "desc": "جنگل نشانه‌ها، آبشار، رودخانه و مسیرهای کوهستانی.", "opens_with": "season_03"},
-	{"id": "invent", "icon": "gear", "name": "منطقهٔ اختراع‌ها", "desc": "کارگاه مانی، آزمایشگاه علمی و انبار قطعه‌ها.", "opens_with": "season_04"},
-	{"id": "far", "icon": "star", "name": "منطقهٔ دوردست", "desc": "رصدخانه، دریاچه و ایستگاه پژوهشی.", "opens_with": "season_05"},
-	{"id": "under", "icon": "key", "name": "منطقهٔ زیرزمینی", "desc": "مسیرهای مخفی، تالار نمادها و دستگاه مرکزی.", "opens_with": "season_08"},
+## Where each painted plaque sits, in fractions of the painting, in the
+## order the map reads them.
+const NODES := [
+	Rect2(0.760, 0.204, 0.135, 0.066),
+	Rect2(0.417, 0.237, 0.141, 0.062),
+	Rect2(0.230, 0.344, 0.121, 0.062),
+	Rect2(0.700, 0.361, 0.128, 0.062),
+	Rect2(0.439, 0.494, 0.129, 0.065),
+	Rect2(0.140, 0.532, 0.130, 0.062),
+	Rect2(0.755, 0.629, 0.130, 0.062),
+	Rect2(0.326, 0.707, 0.131, 0.062),
 ]
 
+const SPOTS := {
+	"title": Rect2(0.045, 0.025, 0.200, 0.065),
+	"gear":  Rect2(0.930, 0.028, 0.050, 0.075),
+	"back":  Rect2(0.030, 0.890, 0.180, 0.070),
+}
+
+var _plate: ScreenPlate
+
 func _ready() -> void:
-	configure("نقشهٔ جهان", "UI-04", "worldmap", true)
-	super._ready()
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	Style.attach(self)
+	_plate = ScreenPlate.new()
+	add_child(_plate)
+	_plate.plate = load("res://assets/art/screens/worldmap.png")
+	_build()
 
-func build_content() -> void:
-	content.add_child(Style.make_banner("BG_WORLD_MAP", 200))
+func _build() -> void:
+	# The map shows as many places as it has plaques; the chapters fill
+	# them in order, so a map painted with eight is not asked for ten.
+	var chapters := ContentManager.chapter_ids()
+	for i in NODES.size():
+		if i >= chapters.size():
+			break
+		var chapter_id := String(chapters[i])
+		var entry := ContentManager.catalog_entry(chapter_id)
+		var open := GameState.is_chapter_unlocked(chapter_id)
 
-	var list := make_scroll()
-	for region in REGIONS:
-		list.add_child(_region_card(region))
+		var node := PlateNode.new()
+		node.title = String(entry.get("title", chapter_id))
+		node.unlocked = open
+		node.state_text = _state_of(chapter_id, open)
+		node.disabled = not open
+		node.pressed.connect(func():
+			AudioManager.play_sfx("SFX_UI_TAP")
+			Router.go("UI-10", {"chapter_id": chapter_id}))
+		_plate.place(node, NODES[i])
 
-func _region_card(region: Dictionary) -> Control:
-	var needs := String(region["opens_with"])
-	# A region opens once its chapter has been reached, not only finished, so
-	# the map grows with the story rather than lagging behind it.
-	var open := GameState.is_chapter_unlocked(needs)
+	var gear := PlateControls.hotspot("تنظیمات")
+	gear.pressed.connect(func(): Router.go("UI-13"))
+	_plate.place(gear, SPOTS["gear"])
 
-	var card := Style.make_night_card()
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", Palette.PAD_MD)
-	card.add_child(row)
+	var back := PlateControls.hotspot("بازگشت")
+	back.pressed.connect(func(): Router.go("UI-04"))
+	_plate.place(back, SPOTS["back"])
 
-	row.add_child(Style.make_art_frame("region_%s" % String(region["id"]),
-		String(region.get("icon", "map")), Vector2(150, 96), open))
-
-	var col := VBoxContainer.new()
-	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(col)
-	col.add_child(Style.make_title(String(region["name"]), Palette.FS_HEADING,
-		Palette.SNOW if open else Palette.SNOW_SOFT))
-	col.add_child(Style.make_body(String(region["desc"]), Palette.FS_CAPTION, Palette.SNOW_SOFT))
+## What the second line of a plaque says. A chapter the player is part way
+## through says so, because "باز" on a chapter half finished tells them
+## nothing they did not know.
+func _state_of(chapter_id: String, open: bool) -> String:
 	if not open:
-		var entry := ContentManager.catalog_entry(needs)
-		col.add_child(Style.make_body(
-			"با رسیدن به «%s» باز می‌شود." % String(entry.get("title", needs)),
-			Palette.FS_CAPTION, Palette.LOCKED))
-	return card
+		return "قفل"
+	if GameState.is_chapter_complete(chapter_id):
+		return "تمام شد"
+	var entry := ContentManager.catalog_entry(chapter_id)
+	var percent := GameState.chapter_percent(chapter_id, int(entry.get("scene_count", 1)))
+	if percent > 0.0:
+		return Fa.percent(percent)
+	return "باز"

@@ -464,6 +464,7 @@ func make_two_line_plaque(small: String, large: String,
 	var bottom := make_title(large, Palette.FS_HEADING,
 		Palette.INK if parchment else Palette.GOLD_LIGHT)
 	bottom.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bottom.autowrap_mode = TextServer.AUTOWRAP_OFF
 	col.add_child(bottom)
 	p.add_child(col)
 	return p
