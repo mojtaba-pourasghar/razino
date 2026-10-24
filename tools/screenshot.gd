@@ -5,6 +5,7 @@ extends Node
 ## Output goes to user://shots/ — the console prints the absolute paths.
 
 const SHOTS := [
+	{"ui": "UI-01", "name": "01_start"},
 	{"ui": "UI-02", "name": "02_intro"},
 	{"ui": "UI-03", "name": "03_avatar_builder"},
 	{"ui": "UI-04", "name": "04_home"},

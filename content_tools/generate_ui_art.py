@@ -49,6 +49,17 @@ TIMEOUT = 300
 ## the backdrop colour is read off the finished image rather than assumed.
 KEY_HINT = (255, 0, 255)
 
+## Characters need a different brief from chrome. Asking for them under the
+## interface style produced a tiny cast inside an ornate frame, because that
+## style asks for frames.
+CAST_STYLE = (
+    "2D hand-painted cartoon character art for a children's adventure game, "
+    "bright friendly storybook style, clean outlines, soft shading, large "
+    "expressive eyes, full body head to toe, filling the frame. "
+    "No frame, no border, no ornament, no scenery, no ground, no shadow, "
+    "no text, no letters, no watermark."
+)
+
 STYLE = (
     "Ornate hand-painted fantasy game interface art, the style of a "
     "high-end children's adventure game. Polished gold metal with warm "
@@ -90,6 +101,36 @@ PLATES = [
      "A single sunken panel seen flat from the front: a very dark teal "
      "recess with a thin gold rim catching light along the top edge. "
      "Centered, filling the frame, nothing else."),
+]
+
+# Pieces of the start screen. The vista and the cast are painted separately
+# so the characters can sit in front of the parallax rather than inside it,
+# and so either can be repainted without the other.
+SPLASH = [
+    ("splash_vista", 1280, 720,
+     "A sweeping fairytale valley at golden sunrise seen from a flowering "
+     "hilltop path: a tall blue-roofed castle among waterfalls on the left, "
+     "a dense town of steep tiled roofs and a clock tower on the right, "
+     "snow-capped mountains behind, hot air balloons in a bright blue sky "
+     "with soft clouds, a river and a stone bridge below, leafy branches "
+     "overhanging the top corners, flowers along the foreground path. "
+     "Nobody in the picture, no people, no characters."),
+    ("splash_cast", 1024, 768,
+     "Five cheerful cartoon children standing together in a row with a "
+     "small friendly blue dragon in the middle: a girl with long red hair "
+     "and round glasses, a boy with curly brown hair, the blue dragon "
+     "wearing a red scarf, a girl with dark curly hair in bunches, a boy "
+     "with black hair and glasses. All wearing adventure backpacks, all "
+     "smiling, full body, standing on nothing, centered on a plain flat "
+     "solid magenta background, the background one single even colour"),
+    ("logo_cartouche", 1024, 640,
+     "One ornate golden oval cartouche floating alone in the middle of the "
+     "picture, small, with a wide empty margin of flat magenta all around "
+     "it on every side: thick polished gold scrollwork with small star "
+     "points around the rim and a blue compass rose medallion mounted on "
+     "top centre. The inside of the oval is the same flat magenta. One "
+     "single even magenta colour everywhere except the gold. No outer "
+     "frame, no border, no background scenery, nothing written."),
 ]
 
 # The screen border is not a nine-patch: it is one painted overlay whose
@@ -323,15 +364,20 @@ def save_png(img: Image.Image, name: str) -> Path:
     return out
 
 
-def paint(pool: Pool, prompt: str, w: int, h: int) -> bytes | str:
+def style_for(name: str) -> str:
+    return CAST_STYLE if name == "splash_cast" else STYLE
+
+
+def paint(pool: Pool, prompt: str, w: int, h: int, style: str = "") -> bytes | str:
     """Tries each live account. Returns the PNG bytes, or a reason string."""
+    style = style or STYLE
     last = "no account available"
     for _ in range(max(3, len(pool.alive))):
         acc = pool.take()
         if acc is None:
             return "quota"
         try:
-            return request_image(acc, f"{STYLE} {prompt}", w, h)
+            return request_image(acc, f"{style} {prompt}", w, h)
         except urllib.error.HTTPError as e:
             detail = e.read()[:220].decode("utf-8", "replace").replace("\n", " ")
             if e.code == 429:
@@ -354,6 +400,15 @@ def jobs(only: str) -> list[tuple]:
         out.append(("plate", name, 768, 768, prompt, margin))
     for name, w, h, prompt in BORDERS:
         out.append(("border", name, w, h, prompt, 0.0))
+    for name, w, h, prompt in SPLASH:
+        # The vista is a plain painting; the cast and the cartouche are cut
+        # out so what is behind them shows through.
+        # A cutout is keyed and trimmed like an icon but kept at full size:
+        # the cast fills a third of the start screen, so shrinking it to
+        # icon size left it blurry.
+        kind = "scene" if name == "splash_vista" else (
+            "border" if name == "logo_cartouche" else "cutout")
+        out.append((kind, name, w, h, prompt, 0.0))
     for name, prompt in ICONS:
         out.append(("icon", f"icon_{name}", ICON_SIZE, ICON_SIZE,
                     f"{prompt}, centered on a plain flat solid magenta "
@@ -385,7 +440,7 @@ def main() -> int:
     if args.dry_run:
         for kind, name, w, h, prompt, margin in todo:
             print(f"--- {name} ({kind}, {w}x{h}, margin {margin})")
-            print(f"{STYLE} {prompt}\n")
+            print(f"{style_for(name)} {prompt}\n")
         return 0
 
     pool = Pool(load_accounts(Path(args.accounts)))
@@ -399,7 +454,7 @@ def main() -> int:
     painted = failed = 0
     for kind, name, w, h, prompt, margin in todo:
         print(f"  {name:22s} ", end="", flush=True)
-        result = paint(pool, prompt, w, h)
+        result = paint(pool, prompt, w, h, style_for(name))
         if result == "quota":
             print("— every account has spent its daily allowance; stopping")
             break
@@ -414,13 +469,17 @@ def main() -> int:
         img = Image.open(tmp).convert("RGB")
         tmp.unlink(missing_ok=True)
 
-        if kind == "plate":
+        if kind == "scene":
+            out = save_png(img, name)
+        elif kind == "plate":
             img = make_symmetric(img)
             out = save_png(img, name)
             margins[name] = margin
         elif kind == "border":
             keyed = hollow(img)
             out = save_png(keyed, name)
+        elif kind == "cutout":
+            out = save_png(trim(key_out(img, "corners", 42.0)), name)
         else:
             keyed = trim(key_out(img, "corners", 42.0))
             keyed.thumbnail((256, 256), Image.LANCZOS)
