@@ -22,6 +22,8 @@ var screen_edge: Control
 var _title_text: String = ""
 var _back_target: String = ""
 var _backdrop: String = "panel"
+## The glyph on the title plaque, as every panel of the sheet carries one.
+var _title_icon: String = "book"
 var _show_purse: bool = false
 
 ## Keeps the layout usable on a narrow phone without shrinking text below
@@ -64,8 +66,9 @@ func build_content() -> void:
 
 ## Called by subclasses before build_content() runs, from configure().
 func configure(title: String, back_to: String = "", backdrop: String = "panel",
-		show_purse: bool = false) -> void:
+		show_purse: bool = false, icon: String = "book") -> void:
 	_title_text = title
+	_title_icon = icon
 	_back_target = back_to
 	_backdrop = backdrop
 	_show_purse = show_purse
@@ -126,8 +129,11 @@ func _build_backdrop() -> void:
 	else:
 		Log.warn("Screen", "backdrop missing: %s" % path)
 
+	# Nearly opaque. In the sheet a panel screen sits on near-black with the
+	# painting only just readable behind it; at 0.58 the art competed with
+	# every hairline on top of it.
 	var wash := ColorRect.new()
-	wash.color = Color(Palette.NIGHT.r, Palette.NIGHT.g, Palette.NIGHT.b, 0.58)
+	wash.color = Color(Palette.NIGHT.r, Palette.NIGHT.g, Palette.NIGHT.b, 0.88)
 	wash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	background.add_child(wash)
@@ -136,37 +142,91 @@ func _build_backdrop() -> void:
 	# on a painting; the window itself has no frame, and the one that used
 	# to be here was the last thing left over from the ornate pass.
 
+## The top bar every panel of the sheet carries.
+##
+## Title at the START edge inside a dark plaque with its own icon; the purse
+## and the gear at the END edge. The sheet never centres a title — an
+## earlier version did, and every screen read as a dialog box rather than a
+## page of a game.
 func _build_header() -> void:
-	# Left corner: the way out.
-	if not _back_target.is_empty():
-		var back := Medallion.new("play", Palette.MEDALLION)
-		back.tooltip_text = "بازگشت"
-		# RTL: the play triangle already points the way back.
-		back.pressed.connect(func(): Router.go(_back_target))
-		header.add_child(back)
-
-	var left_gap := Control.new()
-	left_gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	header.add_child(left_gap)
-
-	# Centre: the title plaque, as every sheet draws it.
 	if not _title_text.is_empty():
-		header.add_child(Style.make_corner_plaque(_title_text))
+		header.add_child(_title_plaque())
 
-	var right_gap := Control.new()
-	right_gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right_gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	header.add_child(right_gap)
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	header.add_child(gap)
 
-	# Right corner: what the player owns, then the gear.
 	if _show_purse:
-		header.add_child(Style.make_chip("coin", GameState.coins, Palette.ORANGE))
-		header.add_child(Style.make_chip("gem", GameState.gems, Palette.BLUE))
-	var gear := Medallion.new("gear", Palette.MEDALLION)
-	gear.tooltip_text = "تنظیمات"
-	gear.pressed.connect(func(): Router.go("UI-13"))
+		header.add_child(_chip("coin", GameState.coins, Palette.GOLD_BRIGHT))
+		header.add_child(_chip("gem", GameState.gems, Palette.BLUE))
+
+	var gear := _disc_button("gear", "تنظیمات", "UI-13")
 	header.add_child(gear)
+
+	if not _back_target.is_empty():
+		header.add_child(_disc_button("play", "بازگشت", _back_target))
+
+## A dark plaque carrying an icon and the screen's name.
+func _title_plaque() -> Control:
+	var plaque := PanelContainer.new()
+	plaque.add_theme_stylebox_override("panel",
+		UiBox.make(UiBox.Kind.PANEL, 16, 9))
+	plaque.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var row := HBoxContainer.new()
+	row.layout_direction = Control.LAYOUT_DIRECTION_RTL
+	row.add_theme_constant_override("separation", Palette.PAD_SM)
+	plaque.add_child(row)
+	var badge := IconRect.new(_title_icon, 30.0, Palette.GOLD_BRIGHT)
+	badge.painted = false
+	badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(badge)
+	var l := Style.make_title(_title_text, Palette.FS_HEADING, Palette.SNOW)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	row.add_child(l)
+	return plaque
+
+func _chip(icon: String, amount: int, colour: Color) -> Control:
+	var chip := PanelContainer.new()
+	chip.add_theme_stylebox_override("panel",
+		UiBox.make(UiBox.Kind.PANEL_PLAIN, 14, 8).with_radius(999.0))
+	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var row := HBoxContainer.new()
+	row.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	row.add_theme_constant_override("separation", 6)
+	chip.add_child(row)
+	var badge := IconRect.new(icon, 28.0, colour)
+	badge.painted = false
+	row.add_child(badge)
+	var n := Style.make_body(Fa.num(amount), Palette.FS_LABEL, Palette.SNOW, false)
+	n.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(n)
+	return chip
+
+func _disc_button(icon: String, tip: String, ui_id: String) -> Button:
+	var b := Button.new()
+	b.custom_minimum_size = Vector2(RazinoUI.TOUCH_MIN, RazinoUI.TOUCH_MIN)
+	b.tooltip_text = tip
+	b.focus_mode = Control.FOCUS_ALL
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+		b.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+	var art := _Disc.new()
+	art.icon = icon
+	art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(art)
+	b.pressed.connect(func(): Router.go(ui_id))
+	return b
+
+class _Disc extends Control:
+	var icon: String = "gear"
+	func _draw() -> void:
+		var ci := get_canvas_item()
+		var centre := size * 0.5
+		var r := minf(size.x, size.y) * 0.5
+		RazinoUI.disc(ci, centre, r, Palette.PANEL_DEEP)
+		GameIcons.draw(ci, icon, centre, r * 0.48, Palette.SNOW)
 
 ## A scrollable area for screens with more content than fits.
 func make_scroll() -> VBoxContainer:

@@ -45,10 +45,10 @@ func _chapter_card(entry: Dictionary) -> Control:
 	col.add_child(facts)
 	facts.add_child(_fact("%s صحنه" % Fa.num(int(entry.get("scene_count", 0)))))
 	facts.add_child(_fact("%s قسمت" % Fa.num(int(entry.get("episode_count", 0)))))
-	facts.add_child(_chip("رایگان" if free else "خریدنی",
+	facts.add_child(_tag("رایگان" if free else "خریدنی",
 		Palette.TEAL if free else Palette.GOLD_DEEP))
 	if complete:
-		facts.add_child(_chip("تمام شد", Palette.EMERALD))
+		facts.add_child(_tag("تمام شد", Palette.EMERALD))
 
 	var action := VBoxContainer.new()
 	action.custom_minimum_size.x = 200
@@ -90,7 +90,9 @@ func _note(text: String) -> Label:
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	return l
 
-func _chip(text: String, colour: Color) -> Control:
+## A small coloured tag on a chapter card. Named apart from the shell's
+## own `_chip`, which carries an icon and a number instead.
+func _tag(text: String, colour: Color) -> Control:
 	var p := PanelContainer.new()
 	p.add_theme_stylebox_override("panel", OrnateBox.make(
 		OrnateBox.Kind.BUTTON, colour.lightened(0.14), colour.darkened(0.22),

@@ -543,22 +543,34 @@ func make_meter(ratio: float, width: float = 180.0,
 
 ## A row of tabs, as the inventory and profile screens use. Returns the
 ## buttons so the caller can connect them.
+## A row of tabs.
+##
+## The sheet gives the active tab a lit surface with a gold rail under it and
+## leaves the rest as bare text on the panel. Boxing every tab turned a
+## four-tab row into four competing buttons and hid which one you were on.
 func make_tabs(labels: Array, active: int = 0) -> Array:
 	var out: Array[Button] = []
 	for i in labels.size():
 		var b := Button.new()
 		b.text = String(labels[i])
-		b.custom_minimum_size = Vector2(120, 48)
+		b.custom_minimum_size = Vector2(110, 46)
 		b.focus_mode = Control.FOCUS_ALL
 		var on := i == active
-		var faces := button_faces(
-			Palette.BLUE if on else Palette.PANEL,
-			Palette.BLUE.darkened(0.35) if on else Palette.PANEL_DEEP,
-			Palette.R_MD)
-		for state in faces:
-			b.add_theme_stylebox_override(state, faces[state])
-		for key in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		# Through a StyleBox rather than a custom _draw: a Button paints its
+		# own label after _draw runs, so anything drawn there lands on top
+		# of the text and the active tab came out blank.
+		var box: StyleBox = UiBox.make(UiBox.Kind.PANEL_PLAIN, 12, 6) \
+			.with_radius(RazinoUI.RADIUS_BUTTON) if on else StyleBoxEmpty.new()
+		for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+			b.add_theme_stylebox_override(state, box)
+		for key in ["font_color", "font_hover_color", "font_pressed_color",
+				"font_focus_color"]:
 			b.add_theme_color_override(key, Palette.SNOW if on else Palette.SNOW_SOFT)
+		if on:
+			var rail := _Rail.new()
+			rail.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			rail.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			b.add_child(rail)
 		out.append(b)
 	return out
 
@@ -656,30 +668,59 @@ func make_control_row(icon: String, label: String, control: Control) -> PanelCon
 
 ## An entry in a left-hand navigation list. The chosen one is filled teal,
 ## the rest are flat — the settings sheet's left column.
+## One row of a side navigation column.
+##
+## The sheet draws the active row as a dark surface with a GOLD HAIRLINE and
+## a gold icon, and the inactive ones with the ordinary steel hairline. Gold
+## is the action colour here, so filling the active row with it would make
+## the navigation shout louder than whatever it is navigating to.
 func make_nav_item(icon: String, label: String, active: bool = false) -> Button:
 	var b := Button.new()
-	b.text = label
-	b.custom_minimum_size = Vector2(230, Palette.TOUCH_MIN)
+	b.custom_minimum_size = Vector2(0, RazinoUI.TOUCH_MIN + 6)
 	b.focus_mode = Control.FOCUS_ALL
-	b.alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	var faces := button_faces(
-		Palette.ACTION if active else Palette.PANEL,
-		Palette.ACTION_DEEP if active else Palette.NIGHT, Palette.R_MD)
-	for state in faces:
-		b.add_theme_stylebox_override(state, faces[state])
-	for key in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-		b.add_theme_color_override(key, Palette.GOLD_LIGHT if active else Palette.SNOW_SOFT)
-	var badge := IconRect.new(icon, 30.0,
+	var box := UiBox.make(UiBox.Kind.BUTTON, 14, 8)
+	b.add_theme_stylebox_override("normal", box)
+	b.add_theme_stylebox_override("hover", box.state(false, true))
+	b.add_theme_stylebox_override("focus", box.state(false, true))
+	b.add_theme_stylebox_override("pressed", box.state(true, false))
+	b.add_theme_stylebox_override("disabled", box)
+
+	var row := HBoxContainer.new()
+	row.layout_direction = Control.LAYOUT_DIRECTION_RTL
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 14
+	row.offset_right = -14
+	row.add_theme_constant_override("separation", Palette.PAD_SM)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(row)
+
+	var badge := IconRect.new(icon, 32.0,
 		Palette.GOLD_BRIGHT if active else Palette.SNOW_SOFT)
-	badge.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
-	badge.offset_left = -46
-	badge.offset_right = -16
-	badge.offset_top = -15
-	badge.offset_bottom = 15
-	b.add_child(badge)
-	for state in faces:
-		(faces[state] as StyleBox).content_margin_right = 56
+	badge.painted = false
+	badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(badge)
+
+	var l := make_body(label, Palette.FS_LABEL,
+		Palette.SNOW if active else Palette.SNOW_SOFT, false)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(l)
+
+	if active:
+		var rail := _Rail.new()
+		rail.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		rail.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(rail)
 	return b
+
+## The gold mark the sheet puts on whatever you are currently on: a rail
+## along the bottom. Drawn as a child rather than in the button's own _draw,
+## because a Button paints its label last and would bury it.
+class _Rail extends Control:
+	func _draw() -> void:
+		CI.rect(get_canvas_item(),
+			Rect2(6.0, size.y - 3.0, maxf(0.0, size.x - 12.0), 3.0),
+			Palette.GOLD_BRIGHT)
 
 ## A parchment list card: medallion, a title over a subtitle, a time on the
 ## end. The notifications, friends and mission lists are all this card.
@@ -727,19 +768,22 @@ func make_item_slot(icon: String, count: int = 0, side: float = 72.0) -> Control
 	var p := PanelContainer.new()
 	p.custom_minimum_size = Vector2(side, side)
 	var empty := icon.is_empty()
-	p.add_theme_stylebox_override("panel", _box(OrnateBox.Kind.PARCHMENT,
-		Palette.PARCHMENT if not empty else Palette.PARCHMENT_DIM.darkened(0.1),
-		Palette.PARCHMENT_DIM, Palette.R_SM, 2.0, 4, 4))
+	# Dark, like every other surface. Parchment is reserved for the dialogue
+	# box in this design, and a grid of cream tiles on a navy screen was the
+	# loudest thing left over from the old one.
+	var box := UiBox.make(UiBox.Kind.SLOT, 4, 4).with_radius(RazinoUI.RADIUS_SLOT)
+	p.add_theme_stylebox_override("panel", box)
 	if not empty:
-		var badge := IconRect.new(icon, side * 0.56, Palette.INK)
+		var badge := IconRect.new(icon, side * 0.54, Palette.GOLD_BRIGHT)
+		badge.painted = false
 		badge.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		p.add_child(badge)
 	if count > 0:
-		var n := make_body(Fa.num(count), Palette.FS_CAPTION, Palette.INK, false)
+		var n := make_title(Fa.num(count), Palette.FS_CAPTION, Palette.SNOW)
 		n.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
-		n.offset_left = -26
-		n.offset_top = -22
+		n.offset_left = -30
+		n.offset_top = -24
 		p.add_child(n)
 	return p
 
