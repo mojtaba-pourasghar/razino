@@ -54,7 +54,16 @@ func set_speaking(value: bool) -> void:
 		_speaking = value
 		queue_redraw()
 
+## Which painted mood each pose asks for. The content speaks in poses and the
+## art is filed by mood; this is the one place the two words meet.
+const MOOD_FOR := {
+	"idle": "neutral", "talk": "neutral", "happy": "happy",
+	"think": "thinking", "surprised": "surprised", "sad": "sad",
+}
+
 func _draw() -> void:
+	if _draw_painted():
+		return
 	# فندق is the group's fennec guide, not a child — drawn differently.
 	if character_id == "fandogh":
 		_draw_fennec()
@@ -172,6 +181,35 @@ func _draw_fennec() -> void:
 	draw_circle(head_c + Vector2(0, head_r * 0.42), head_r * 0.12, Palette.INK)
 	if _speaking:
 		draw_arc(head_c, head_r * 1.5, 0, TAU, 32, Palette.GOLD, 3.0)
+
+## Draws the painted figure when there is one, and says whether it did.
+##
+## The vector figures stay behind it rather than being deleted: ten of the
+## cast have no painting yet, and a minor character who vanishes mid-scene is
+## worse than a plain one. They go when the last sheet is painted.
+func _draw_painted() -> bool:
+	var tex := CastArt.figure(character_id, String(MOOD_FOR.get(pose, "neutral")))
+	if tex == null:
+		return false
+	var art := tex.get_size()
+	if art.x <= 0.0 or art.y <= 0.0:
+		return false
+
+	var bob := 0.0
+	if not Settings.reduce_motion and _speaking and pose in ["talk", "happy"]:
+		# The same small breath the drawn figures take while speaking, so a
+		# painted character and a drawn one in the same scene move alike.
+		bob = sin(_t * 3.0) * size.y * 0.006
+
+	# Fitted by height and stood on the bottom edge: a figure is placed in a
+	# scene by where its feet are, never by where its middle is.
+	var scale := size.y / art.y
+	var w := art.x * scale
+	var box := Rect2(Vector2(size.x * 0.5 - w * 0.5, bob), Vector2(w, size.y))
+	if _speaking:
+		draw_texture_rect(tex, box.grow(2.0), false, Palette.GOLD_BRIGHT * Color(1, 1, 1, 0.22))
+	draw_texture_rect(tex, box, false)
+	return true
 
 func _rounded(rect: Rect2, radius: float, colour: Color) -> void:
 	radius = minf(radius, minf(rect.size.x, rect.size.y) * 0.5)
