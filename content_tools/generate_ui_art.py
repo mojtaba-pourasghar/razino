@@ -106,13 +106,15 @@ SPLASH = [
      "overhanging the top corners, flowers along the foreground path. "
      "Nobody in the picture, no people, no characters."),
     ("splash_cast", 1024, 768,
-     "Five cheerful cartoon children standing together in a row with a "
-     "small friendly blue dragon in the middle: a girl with long red hair "
-     "and round glasses, a boy with curly brown hair, the blue dragon "
-     "wearing a red scarf, a girl with dark curly hair in bunches, a boy "
-     "with black hair and glasses. All wearing adventure backpacks, all "
-     "smiling, full body, standing on nothing, centered on a plain flat "
-     "solid magenta background, the background one single even colour"),
+     "Four cheerful cartoon children standing together in a row with a small "
+     "friendly orange fennec fox beside them: a girl with long red hair and "
+     "round glasses, a boy with curly brown hair, a girl with dark hair in "
+     "bunches, a boy with black hair and round glasses in a green shirt, and "
+     "the fox — bright orange fur, very large pointed ears, cream chest and "
+     "tail tip, big brown eyes, a blue scarf. The children wear adventure "
+     "backpacks and modern everyday clothes, all smiling, full body, "
+     "standing on nothing, centered on a plain flat solid magenta "
+     "background, the background one single even colour"),
     ("logo_cartouche", 1024, 640,
      "One ornate golden oval cartouche floating alone in the middle of the "
      "picture, small, with a wide empty margin of flat magenta all around "

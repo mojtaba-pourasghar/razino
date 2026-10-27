@@ -63,6 +63,23 @@ def scene(extra: str = "") -> str:
     ]))
 
 
+## What a figure painted for the stage must not carry, whoever it is: the
+## engine cuts it out and places it on a scene, so any frame, ground or
+## shadow in the painting arrives as a rectangle floating in the air.
+CUTOUT = (
+    "Centered on a plain flat solid magenta background, the background one "
+    "single even colour. No frame, no border, no ornament, no scenery, "
+    "no ground, no shadow."
+)
+
+
+def creature(extra: str = "") -> str:
+    """The brief for an animal character, which is not a child in a backpack."""
+    return _figure(
+        "a small friendly cartoon animal for a children's game, appealing and "
+        "rounded, with large expressive eyes", extra)
+
+
 def cast(extra: str = "") -> str:
     """The brief for a character.
 
@@ -71,12 +88,31 @@ def cast(extra: str = "") -> str:
     armour, not fantasy costume. Getting this wrong is expensive, because
     every one of a character's five mood cells is painted from their sheet.
     """
+    return _figure(
+        "a cheerful cartoon child of about ten, with large expressive eyes "
+        "and a friendly open face, in modern everyday clothes", extra)
+
+
+def _figure(who: str, extra: str) -> str:
+    """One figure, cut out, nothing else in the picture.
+
+    The subject leads and the style follows. An earlier version opened with
+    the house paragraph and the interface palette, and the model painted five
+    ornate empty picture frames: given gold and parchment before it was given
+    a child, it painted the gold and the parchment. The palette is left out
+    here on purpose — a character's colours are in their own description.
+    """
     return " ".join(filter(None, [
+        f"A full-body character cutout of {who}.", extra,
+        "The whole figure from head to toe, facing the viewer, filling the "
+        "frame, alone in the picture.",
+        "The background is ONE FLAT SOLID MAGENTA COLOUR behind the figure, "
+        "edge to edge, completely plain.",
         HOUSE,
-        "A character: a cheerful child of about ten, large expressive eyes, "
-        "friendly open face, modern everyday clothes and a school backpack. "
-        "Full body head to toe, filling the frame, facing the viewer.",
-        PALETTE, extra,
-        "No frame, no border, no ornament, no scenery, no ground, no shadow.",
+        "No picture frame, no ornamental border, no gold frame, no oval, "
+        "no portrait frame, no mirror, no arch, no scroll, "
+        "no parchment, no panel, no scenery, no furniture, no ground, "
+        "no floor, no shadow, nobody else. No white outline around the "
+        "figure, no sticker border, no die-cut edge, no glow.",
         NO_TEXT,
     ]))
