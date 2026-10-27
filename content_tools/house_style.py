@@ -16,13 +16,33 @@ is the bug.
 
 from __future__ import annotations
 
-## What every painting in this game shares, whoever asked for it.
+## What every drawing in this game shares, whoever asked for it.
+##
+## Razino is a FLAT 2D game. An earlier pass asked for "polished, like a
+## high-end animated film" and got back figures that read as 3D renders:
+## soft round shading, glossy highlights, subsurface skin. The interface
+## beside them is flat outlined shapes, and on one screen the two looked
+## like two different games stuck together.
+##
+## So the whole brief is built around the three things that make a drawing
+## flat, and every one of them has to be said, because a model's default for
+## "cartoon child" is a render:
+##
+##   · a bold dark OUTLINE around every shape
+##   · FLAT colour fills — one colour per area, plus at most one darker
+##     tone for shadow. No gradient inside a shape
+##   · no gloss, no rim light, no soft airbrushed blending, no depth of
+##     field, nothing that implies a camera
 HOUSE = (
-    "2D hand-painted storybook art for a premium children's adventure game, "
-    "in the polished style of a high-end animated film. Clean confident "
-    "edges, soft painterly shading, rich saturated colour, warm golden light "
-    "against deep teal and navy shadow. Cheerful and inviting, never grim, "
-    "never gritty, never photorealistic, never flat vector, never 3D render."
+    "Flat 2D vector cartoon illustration for a children's mobile adventure "
+    "game, in the style of modern 2D game art. Bold clean dark outlines "
+    "around every shape. Completely FLAT colour fills — one solid colour "
+    "per area with at most one darker tone for shadow. Cel shading with "
+    "hard-edged shadow shapes. Bright saturated colour, high contrast, "
+    "chunky confident shapes. "
+    "NOT a 3D render, NOT Pixar style, no soft airbrushed shading, no "
+    "gradients inside shapes, no glossy highlights, no rim lighting, "
+    "no realistic skin, no depth of field, no photographic lighting."
 )
 
 ## The colours the sheets actually use, named so a prompt cannot wander off

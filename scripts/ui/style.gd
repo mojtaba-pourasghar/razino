@@ -73,29 +73,44 @@ func rebuild() -> void:
 ## crumples — the notification list came out as unreadable gold scrollwork.
 ## Buttons, chips, plaques, cards and rows keep the drawn bevel, which holds
 ## its shape at any size; the sheets give those a thin gold edge anyway.
-const PLATE_FOR := {
-	OrnateBox.Kind.PANEL: "panel",
+## How each old box kind maps onto a clay surface.
+##
+## Every screen in the game asks for its panels through `_box`, so this one
+## table is where the whole interface changed style. Three chrome systems
+## came before this — an ornate gold frame, a carved metal one, a flat
+## outlined one — and all three are gone; keeping the call shape is what let
+## twenty-two screens follow without being rewritten one by one.
+const CLAY_FOR := {
+	OrnateBox.Kind.PANEL: ClayBox.Kind.SURFACE,
+	OrnateBox.Kind.WELL: ClayBox.Kind.WELL,
+	OrnateBox.Kind.PLAQUE: ClayBox.Kind.PLAQUE,
+	OrnateBox.Kind.BUTTON: ClayBox.Kind.BUTTON,
+	OrnateBox.Kind.PARCHMENT: ClayBox.Kind.SURFACE,
+	OrnateBox.Kind.BARE: ClayBox.Kind.SURFACE,
 }
 
-func _box(kind: OrnateBox.Kind, top: Color, bottom: Color, radius: float = Palette.R_LG,
-		frame: float = Palette.FRAME_W, h: int = Palette.PAD_MD, v: int = Palette.PAD_SM) -> StyleBox:
-	# A painted plate beats a drawn one wherever it exists; the drawn box
-	# stays as the fallback, because the art lands a few pieces at a time.
-	if PLATE_FOR.has(kind):
-		var painted := UiArt.box(String(PLATE_FOR[kind]), Color.WHITE, h, v)
-		if painted != null:
-			return painted
-	return OrnateBox.make(kind, top, bottom, radius, frame).with_margins(h, v)
+func _box(kind: OrnateBox.Kind, top: Color, bottom: Color, radius: float = Clay.RADIUS,
+		frame: float = Clay.BORDER, h: int = Palette.PAD_MD, v: int = Palette.PAD_SM) -> StyleBox:
+	# Clay takes one colour, not a gradient pair: the light comes from the
+	# two inner shadows, so a second colour has nothing to do.
+	var clay_kind: ClayBox.Kind = CLAY_FOR.get(kind, ClayBox.Kind.SURFACE)
+	return ClayBox.make(clay_kind, top, _radius_for(kind, radius), h, v)
 
-## A button's faces come from a painted plate when there is one, so the
-## variant picks the plate rather than a pair of colours.
+## Radius by kind rather than by caller. The database's claymorphism entry
+## fixes 16–24px, and leaving it to each caller is how the old interface
+## ended up with eleven different corner radii on one screen.
+func _radius_for(kind: OrnateBox.Kind, asked: float) -> float:
+	if asked >= Palette.R_PILL:
+		return Clay.RADIUS_PILL
+	match kind:
+		OrnateBox.Kind.WELL: return Clay.RADIUS_SM
+		OrnateBox.Kind.PLAQUE: return Clay.RADIUS_PILL
+		_: return Clay.RADIUS
+
 func _button_box(plate: String, tint: Color, radius: float, frame: float,
 		top: Color, bottom: Color) -> StyleBox:
-	var painted := UiArt.box(plate, tint, Palette.PAD_MD, Palette.PAD_SM)
-	if painted != null:
-		return painted
-	return OrnateBox.make(OrnateBox.Kind.BUTTON, top, bottom, radius, frame) \
-		.with_margins(Palette.PAD_MD, Palette.PAD_SM)
+	return ClayBox.make(ClayBox.Kind.BUTTON, tint, Clay.RADIUS,
+		Palette.PAD_MD, Palette.PAD_SM)
 
 func _flat(bg: Color, radius: float, border: Color = Color.TRANSPARENT, border_w: int = 0) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
@@ -112,23 +127,18 @@ func _flat(bg: Color, radius: float, border: Color = Color.TRANSPARENT, border_w
 
 ## The four faces of a button, in one place so every variant bevels alike.
 ## A press flips the gradient, which is what makes it feel physical.
-func button_faces(top: Color, bottom: Color, radius: float = Palette.R_MD,
+func button_faces(top: Color, bottom: Color, radius: float = Clay.RADIUS,
 		plate: String = "") -> Dictionary:
-	if not plate.is_empty() and UiArt.plate(plate) != null:
-		# A painted face is lit by its own paint, so hover and press shift
-		# its brightness rather than swapping two colours.
-		return {
-			"normal": UiArt.box(plate, Color.WHITE),
-			"hover": UiArt.box(plate, Color(1.14, 1.14, 1.14)),
-			"pressed": UiArt.box(plate, Color(0.82, 0.82, 0.82)),
-			"disabled": UiArt.box(plate, Color(0.55, 0.6, 0.64)),
-		}
+	# Clay does not light a press differently — it sinks. Swapping a pair of
+	# gradient stops, which is what the old bevelled buttons did, has nothing
+	# to act on here.
+	var base := ClayBox.make(ClayBox.Kind.BUTTON, top, Clay.RADIUS,
+		Palette.PAD_MD, Palette.PAD_SM)
 	return {
-		"normal": OrnateBox.make(OrnateBox.Kind.BUTTON, top, bottom, radius, 2.5).with_margins(Palette.PAD_MD, Palette.PAD_SM),
-		"hover": OrnateBox.make(OrnateBox.Kind.BUTTON, top.lightened(0.12), bottom.lightened(0.12), radius, 2.5).with_margins(Palette.PAD_MD, Palette.PAD_SM),
-		"pressed": OrnateBox.make(OrnateBox.Kind.BUTTON, bottom, top, radius, 2.5).with_margins(Palette.PAD_MD, Palette.PAD_SM),
-		"disabled": OrnateBox.make(OrnateBox.Kind.BUTTON, Palette.LOCKED.lightened(0.08),
-			Palette.LOCKED.darkened(0.35), radius, 2.0).with_margins(Palette.PAD_MD, Palette.PAD_SM),
+		"normal": base,
+		"hover": base.tinted(top.lightened(0.10)),
+		"pressed": base.as_pressed(),
+		"disabled": base.tinted(Palette.LOCKED),
 	}
 
 func _style_buttons() -> void:
@@ -155,8 +165,8 @@ func _style_buttons() -> void:
 	theme.set_color("font_color", "CheckButton", Palette.SNOW)
 	theme.set_color("font_hover_color", "CheckButton", Palette.SNOW)
 	theme.set_color("font_pressed_color", "CheckButton", Palette.GOLD_BRIGHT)
-	var on := WidgetArt.switch(true)
-	var off := WidgetArt.switch(false)
+	var on := ClayWidgets.switch(true)
+	var off := ClayWidgets.switch(false)
 	# In an RTL layout Godot reaches for the mirrored icons, so both sets have
 	# to be supplied or the engine's own grey switch shows through.
 	for key in ["checked", "checked_disabled", "checked_mirrored", "checked_disabled_mirrored"]:
@@ -202,10 +212,10 @@ func _style_inputs() -> void:
 		Palette.GOLD_BRIGHT, Palette.GOLD_DEEP, 9.0, 0.0, 0, 7))
 	theme.set_stylebox("grabber_area_highlight", "HSlider", _box(OrnateBox.Kind.BARE,
 		Palette.GOLD_BRIGHT, Palette.GOLD, 9.0, 0.0, 0, 7))
-	var knob := WidgetArt.knob(34)
+	var knob := ClayWidgets.knob(34)
 	theme.set_icon("grabber", "HSlider", knob)
 	theme.set_icon("grabber_highlight", "HSlider", knob)
-	theme.set_icon("grabber_disabled", "HSlider", WidgetArt.knob(28))
+	theme.set_icon("grabber_disabled", "HSlider", ClayWidgets.knob(28))
 
 func _style_misc() -> void:
 	theme.set_stylebox("background", "ProgressBar", _box(OrnateBox.Kind.BARE,

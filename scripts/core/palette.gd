@@ -11,22 +11,25 @@ extends RefCounted
 ## pass spent gold on both the frames and the buttons, and the screens read
 ## flat because nothing stood out against anything.
 
+## The 2D restyle. The colours still come from the approved sheets, but they
+## are used flat now: one fill, one lighter band, one darker lip. Nothing in
+## this palette is a gradient stop any more.
 # — surfaces (sampled from the approved sheets) ——————————
 const NIGHT         := Color("081420")  # behind everything, almost black
 const PANEL_DEEP    := Color("021F2F")  # the body of a framed panel
-const PANEL         := Color("06283A")  # rows and inset wells
-const PANEL_LIGHT   := Color("0B3146")  # title plaque, raised surfaces
+const PANEL         := Color("123A52")  # the body of a flat panel
+const PANEL_LIGHT   := Color("1B5673")  # raised surfaces, discs
 
 # — the action colour ——————————————————————————————————————
 ## Every call to action in the sheets is this petrol teal inside a gold
 ## frame: "شروع بازی", "ادامه", "ذخیره", "دریافت".
-const ACTION        := Color("0F666C")
-const ACTION_LIGHT  := Color("1B9298")
-const ACTION_DEEP   := Color("073B42")
+const ACTION        := Color("17A2A2")  # the one call to action
+const ACTION_LIGHT  := Color("49C9C4")
+const ACTION_DEEP   := Color("0B6A6C")
 
 # — gold (frames and plaques only) ————————————————————————
-const GOLD_BRIGHT   := Color("EABD65")  # the metal of the frames and plaques
-const GOLD          := Color("D9A94F")  # the lit band across a plaque
+const GOLD_BRIGHT   := Color("F3C356")  # flat gold, not metal
+const GOLD          := Color("E0A93C")
 const GOLD_DEEP     := Color("795D22")  # shadow side of the bevel
 const GOLD_DARK     := Color("3E2F10")  # the line that seats metal on panel
 

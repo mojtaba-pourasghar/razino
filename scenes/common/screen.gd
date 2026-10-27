@@ -17,7 +17,7 @@ var content: VBoxContainer
 var background: Control
 ## The gilded border, kept apart from `background` so a gameplay screen can
 ## hide the backdrop and still be framed.
-var screen_edge: ScreenEdge
+var screen_edge: Control
 
 var _title_text: String = ""
 var _back_target: String = ""
@@ -132,22 +132,10 @@ func _build_backdrop() -> void:
 	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	background.add_child(wash)
 
-	# A painted border beats a drawn one; the drawn ScreenEdge stays as the
-	# fallback until that piece is painted.
-	var painted_frame := UiArt.plate("screen_frame")
-	if painted_frame != null:
-		var frame := TextureRect.new()
-		frame.texture = painted_frame
-		frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		frame.stretch_mode = TextureRect.STRETCH_SCALE
-		frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		add_child(frame)
-	else:
-		screen_edge = ScreenEdge.new()
-		screen_edge.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		screen_edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		add_child(screen_edge)
+	# No painted border and no drawn one. Claymorphism has no frame: a
+	# surface is defined by its own thick edge and its two shadows, so a
+	# second frame around the whole window is one border too many — it was
+	# the last thing left over from the ornate pass.
 
 func _build_header() -> void:
 	# Left corner: the way out.

@@ -211,3 +211,49 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+# — portraits ————————————————————————————————————————————
+
+def face_crop(sheet: Image.Image, side: int = 384) -> Image.Image:
+    """A head-and-shoulders crop, for the round portrait medallions.
+
+    A medallion is a circle and a character sheet is a standing figure twice
+    as tall as it is wide. Dropping the whole figure into the circle squashed
+    it to a smear and cut the feet off, which is what the player badge and
+    the dialogue portrait both showed.
+
+    The head is found rather than assumed: the topmost opaque row is the top
+    of the hair, and the horizontal centre of mass of the upper fifth is the
+    middle of the face. Assuming the head is centred fails on every figure
+    standing with their weight on one leg, which is most of them.
+    """
+    sheet = sheet.convert("RGBA")
+    px = sheet.load()
+    w, h = sheet.size
+
+    top = 0
+    for y in range(h):
+        if any(px[x, y][3] > 40 for x in range(0, w, 2)):
+            top = y
+            break
+
+    band = max(1, int(h * 0.20))
+    total = 0
+    weighted = 0
+    for y in range(top, min(h, top + band)):
+        for x in range(w):
+            if px[x, y][3] > 40:
+                total += 1
+                weighted += x
+    centre_x = (weighted // total) if total else w // 2
+
+    # These are chibi proportions: the head alone is nearly a third of the
+    # figure, so a box of a third cut everyone off at the mouth. This takes
+    # the head and the shoulders under it, which is what makes a portrait
+    # rather than a pair of eyes.
+    box = int(h * 0.44)
+    left = max(0, min(w - box, centre_x - box // 2))
+    upper = max(0, top - int(box * 0.05))
+    crop = sheet.crop((left, upper, left + box, min(h, upper + box)))
+    return crop.resize((side, side), Image.LANCZOS)

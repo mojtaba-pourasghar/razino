@@ -21,6 +21,12 @@ static func figure(character_id: String, mood: String = "neutral") -> Texture2D:
 		return tex
 	return _load("%s_sheet" % character_id)
 
+## The head-and-shoulders crop, for the round portrait medallions. Falls
+## back to the full sheet so a character with no portrait yet still appears.
+static func face(character_id: String) -> Texture2D:
+	var tex := _load("%s_face" % character_id)
+	return tex if tex != null else figure(character_id)
+
 static func _load(file: String) -> Texture2D:
 	if _cache.has(file):
 		return _cache[file]

@@ -1,17 +1,17 @@
 extends Control
-## UI-04 — صفحهٔ اصلی, rebuilt in the language of the approved sheets.
+## UI-04 — صفحهٔ اصلی, in Razino's one 2D language.
 ##
-## The first version of this screen was a painted town with flat pills laid
-## over it, and it read as a generic dark theme — the thing that made the
-## sheets look expensive was missing from it entirely: the dark navy panels
-## with gold hairlines and corner brackets, the ivy over the outer frame, the
-## petrol-teal call to action lit from above, the soft glow behind anything
-## valuable. All of that is drawn here through Filigree.
+## An earlier pass drew this screen as embossed metal while the cast were
+## flat drawings, and on one screen that read as two games stuck together.
+## Everything here is Flat now: outlined shapes, flat fills, hard offset
+## shadows, no bevel and no gloss anywhere. The energy comes from contrast
+## and chunk, not from shine.
 ##
 ## GDD §5 screen 1 still rules the content: within a couple of seconds a
-## child must see where they are and where to carry on. So the largest thing
+## child must see where they are and where to carry on. So the biggest thing
 ## on the screen is the chapter they are in and the one button that resumes
-## it; everything else is smaller and to the side.
+## it, and the cast are standing on it — this is their game, and a main
+## screen without them on it is a menu, not a front door.
 
 const MENU := [
 	{"label": "نقشهٔ جهان", "icon": "compass", "ui": "UI-05"},
@@ -21,29 +21,27 @@ const MENU := [
 	{"label": "فروشگاه", "icon": "box", "ui": "UI-11"},
 ]
 
-## Kept off the child's main path, as the sheets keep them: small medallions
-## in the corner rather than another column of buttons.
 const SECONDARY := [
 	{"icon": "friend", "ui": "UI-17", "tip": "پروفایل"},
 	{"icon": "bell", "ui": "UI-18", "tip": "اعلان‌ها"},
 	{"icon": "star", "ui": "UI-12", "tip": "لباس‌ها"},
-	{"icon": "download", "ui": "UI-15", "tip": "دانلودها"},
 	{"icon": "shield", "ui": "UI-14", "tip": "بخش والدین"},
 ]
 
-const SAFE := 30
+const SAFE := 26
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	layout_direction = Control.LAYOUT_DIRECTION_RTL
 	Style.attach(self)
 	_build_backdrop()
+	_build_cast()
 	_build_top_bar()
 	_build_menu()
 	_build_hero()
 	_build_secondary()
 
-# — the painting behind everything ————————————————————————
+# — backdrop ———————————————————————————————————————————————
 
 func _build_backdrop() -> void:
 	var night := ColorRect.new()
@@ -52,9 +50,15 @@ func _build_backdrop() -> void:
 	night.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(night)
 
-	var town := UiArt.plate("splash_vista")
-	if town == null and ResourceLoader.exists("res://assets/art/backgrounds/ui_town.webp"):
-		town = load("res://assets/art/backgrounds/ui_town.webp")
+	# The plain town, not the start screen's vista: that one has an ornate
+	# gold frame painted into it, which is the old style showing through the
+	# new one at all four corners.
+	var town: Texture2D = null
+	for path in ["res://assets/art/backgrounds/ui_town.webp",
+			"res://assets/art/backgrounds/ui_splash.webp"]:
+		if ResourceLoader.exists(path):
+			town = load(path)
+			break
 	if town != null:
 		var art := TextureRect.new()
 		art.texture = town
@@ -62,27 +66,30 @@ func _build_backdrop() -> void:
 		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		# Knocked back so the flat shapes on top stay the loudest thing on
+		# the screen. A painting at full strength and flat graphics over it
+		# fight, and the graphics lose.
+		art.modulate = Color(0.62, 0.70, 0.78, 1.0)
 		add_child(art)
 
-	# A vignette rather than a flat wash. The sheets keep the middle of the
-	# picture bright and darken the edges, which is what lets white Persian
-	# text sit on the corners and the town still read as daylight.
-	var veil := _Vignette.new()
+	var veil := _Veil.new()
 	veil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(veil)
 
-	var frame := _Frame.new()
-	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(frame)
+## The cast standing on the main screen, behind the panels. This is the one
+## place in the game where all of them are together, and it is what tells a
+## child in one glance whose game this is.
+func _build_cast() -> void:
+	var band := _Cast.new()
+	band.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(band)
 
 # — top bar ————————————————————————————————————————————————
 
 func _build_top_bar() -> void:
 	var bar := HBoxContainer.new()
-	# The sheets fix this order — player left, purse right — and it is part
-	# of the design, not a consequence of reading direction.
 	bar.layout_direction = Control.LAYOUT_DIRECTION_LTR
 	bar.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	bar.offset_left = SAFE
@@ -100,110 +107,133 @@ func _build_top_bar() -> void:
 
 	bar.add_child(_purse("coin", GameState.coins, Palette.GOLD_BRIGHT))
 	bar.add_child(_purse("gem", GameState.gems, Palette.BLUE))
-	var gear := Medallion.new("gear", 58.0)
-	gear.tooltip_text = "تنظیمات"
-	gear.pressed.connect(func(): _go("UI-13"))
-	bar.add_child(gear)
+	bar.add_child(_disc_button("gear", "تنظیمات", "UI-13", 62.0))
 
-## The player, as the profile sheet draws them: portrait in a gold ring, name
-## on a plaque, level and the experience bar under it.
 func _player_card() -> Control:
 	var card := PanelContainer.new()
 	card.add_theme_stylebox_override("panel",
-		FiligreeBox.make(FiligreeBox.Kind.PANEL, 20.0, 14, 10))
+		ClayBox.make(ClayBox.Kind.SURFACE, Palette.PANEL, Clay.RADIUS, 12, 10))
 	var row := HBoxContainer.new()
 	row.layout_direction = Control.LAYOUT_DIRECTION_LTR
 	row.add_theme_constant_override("separation", Palette.PAD_SM)
 	card.add_child(row)
 
-	var face := Medallion.new("friend", 62.0, false)
-	face.portrait = CastArt.figure("player")
+	var face := _Portrait.new()
+	face.art = CastArt.face("player")
+	face.custom_minimum_size = Vector2(62, 62)
 	row.add_child(face)
 
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 3)
+	col.add_theme_constant_override("separation", 4)
 	col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(col)
 
-	var name_row := HBoxContainer.new()
-	name_row.layout_direction = Control.LAYOUT_DIRECTION_RTL
-	name_row.add_theme_constant_override("separation", Palette.PAD_XS)
-	col.add_child(name_row)
+	var line := HBoxContainer.new()
+	line.layout_direction = Control.LAYOUT_DIRECTION_RTL
+	line.add_theme_constant_override("separation", Palette.PAD_SM)
+	col.add_child(line)
 	var who := GameState.player_name if not GameState.player_name.is_empty() else "بازیکن"
-	name_row.add_child(Style.make_body(who, Palette.FS_LABEL, Palette.SNOW, false))
-	name_row.add_child(Style.make_body("سطح %s" % Fa.num(GameState.level),
-		Palette.FS_CAPTION, Palette.GOLD_BRIGHT, false))
+	line.add_child(Style.make_body(who, Palette.FS_LABEL, Palette.SNOW, false))
+	line.add_child(_pill("سطح %s" % Fa.num(GameState.level)))
 
 	var bar := _Meter.new()
 	bar.ratio = clampf(float(GameState.xp) / maxf(1.0, float(GameState.xp_for_next_level())), 0.0, 1.0)
-	bar.custom_minimum_size = Vector2(196, 13)
+	bar.custom_minimum_size = Vector2(190, 16)
 	col.add_child(bar)
 	return card
+
+func _pill(text: String) -> Control:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel",
+		ClayBox.make(ClayBox.Kind.SURFACE, Palette.GOLD, Clay.RADIUS_PILL, 12, 3))
+	p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	p.add_child(Style.make_body(text, Palette.FS_CAPTION, Palette.NIGHT, false))
+	return p
 
 func _purse(icon: String, amount: int, colour: Color) -> Control:
 	var chip := PanelContainer.new()
 	chip.add_theme_stylebox_override("panel",
-		FiligreeBox.make(FiligreeBox.Kind.PANEL, 999.0, 16, 7))
+		ClayBox.make(ClayBox.Kind.SURFACE, Palette.PANEL, Clay.RADIUS_PILL, 16, 8))
 	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var row := HBoxContainer.new()
 	row.layout_direction = Control.LAYOUT_DIRECTION_LTR
 	row.add_theme_constant_override("separation", Palette.PAD_XS)
 	chip.add_child(row)
-	var badge := _GlowIcon.new()
-	badge.icon = icon
-	badge.colour = colour
-	badge.custom_minimum_size = Vector2(34, 34)
+	var badge := IconRect.new(icon, 32.0, colour)
+	badge.painted = false
 	row.add_child(badge)
 	var n := Style.make_body(Fa.num(amount), Palette.FS_LABEL, Palette.SNOW, false)
 	n.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(n)
 	return chip
 
-# — the menu column ————————————————————————————————————————
-
-func _build_menu() -> void:
-	var column := VBoxContainer.new()
-	# Anchored by hand, so RTL must not mirror it: the sheets put the menu on
-	# the left and the chapter on the right, and that is the composition, not
-	# a consequence of reading direction. The Persian inside each row is
-	# still laid out right to left.
-	column.layout_direction = Control.LAYOUT_DIRECTION_LTR
-	column.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT)
-	column.offset_left = SAFE
-	column.offset_right = SAFE + 290
-	column.offset_top = -190
-	column.offset_bottom = 190
-	column.add_theme_constant_override("separation", 12)
-	add_child(column)
-	for entry: Dictionary in MENU:
-		column.add_child(_menu_button(entry))
-
-## One menu row: an icon in a gold ring, the Persian label beside it, on a
-## navy panel with a hairline and brackets. The sheets never put a label on
-## bare art, and this is why — a gold-edged plate is what makes it tappable.
-func _menu_button(entry: Dictionary) -> Button:
+func _disc_button(icon: String, tip: String, ui_id: String,
+		side: float) -> Button:
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(0, 62)
+	b.custom_minimum_size = Vector2(side, side)
+	b.tooltip_text = tip
 	b.focus_mode = Control.FOCUS_ALL
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
-		var box := FiligreeBox.make(FiligreeBox.Kind.PANEL, 16.0, 12, 8)
-		box.fill = Palette.PANEL if state == "hover" else Palette.PANEL_DEEP
-		b.add_theme_stylebox_override(state, box)
+		b.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+	var art := _Disc.new()
+	art.icon = icon
+	art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(art)
+	b.pressed.connect(func(): _go(ui_id))
+	return b
+
+# — menu ———————————————————————————————————————————————————
+
+func _build_menu() -> void:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel",
+		ClayBox.make(ClayBox.Kind.SURFACE, Palette.PANEL, Clay.RADIUS, 12, 14))
+	panel.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT)
+	panel.offset_left = SAFE
+	panel.offset_right = SAFE + 300
+	panel.offset_top = -200
+	panel.offset_bottom = 200
+	add_child(panel)
+
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 6)
+	panel.add_child(column)
+	for i in MENU.size():
+		column.add_child(_menu_row(MENU[i], i == 0))
+
+func _menu_row(entry: Dictionary, active: bool) -> Button:
+	var b := Button.new()
+	b.custom_minimum_size = Vector2(0, 66)
+	b.focus_mode = Control.FOCUS_ALL
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+		var lit: bool = active or state in ["hover", "focus"]
+		if lit or state == "pressed":
+			var box := ClayBox.make(ClayBox.Kind.BUTTON, Palette.ACTION if lit else Palette.PANEL_LIGHT, Clay.RADIUS, 12, 6)
+			if state == "pressed":
+				box = box.as_pressed()
+			b.add_theme_stylebox_override(state, box)
+		else:
+			b.add_theme_stylebox_override(state, StyleBoxEmpty.new())
 
 	var row := HBoxContainer.new()
 	row.layout_direction = Control.LAYOUT_DIRECTION_RTL
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	row.offset_left = 12
-	row.offset_right = -12
-	row.add_theme_constant_override("separation", Palette.PAD_SM)
+	row.offset_left = 18
+	row.offset_right = -18
+	row.offset_bottom = -6
+	row.add_theme_constant_override("separation", Palette.PAD_MD)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(row)
 
-	var medal := Medallion.new(String(entry["icon"]), 44.0, false)
-	medal.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(medal)
+	var icon := IconRect.new(String(entry["icon"]), 42.0,
+		Palette.NIGHT if active else Palette.GOLD_BRIGHT)
+	icon.painted = false
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(icon)
 
-	var label := Style.make_body(String(entry["label"]), Palette.FS_LABEL,
+	var label := Style.make_body(String(entry["label"]), Palette.FS_HEADING,
 		Palette.SNOW, false)
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -213,23 +243,20 @@ func _menu_button(entry: Dictionary) -> Button:
 	b.pressed.connect(func(): _go(ui_id))
 	return b
 
-# — the hero: where the child carries on ——————————————————
+# — hero ———————————————————————————————————————————————————
 
 func _build_hero() -> void:
 	var hero := PanelContainer.new()
 	hero.add_theme_stylebox_override("panel",
-		FiligreeBox.make(FiligreeBox.Kind.PANEL, 24.0, 22, 16))
+		ClayBox.make(ClayBox.Kind.SURFACE, Palette.PANEL, Clay.RADIUS, 20, 16))
 	hero.layout_direction = Control.LAYOUT_DIRECTION_LTR
 	hero.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	hero.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	hero.offset_left = SAFE + 320
+	hero.offset_left = SAFE + 316
 	hero.offset_right = -SAFE
 	hero.offset_bottom = -SAFE
 	add_child(hero)
 
-	# Picture on one side, words on the other: an empty dark panel is the
-	# thing that made the first pass look cheap, and the sheets never leave
-	# one.
 	var inside := HBoxContainer.new()
 	inside.layout_direction = Control.LAYOUT_DIRECTION_RTL
 	inside.add_theme_constant_override("separation", Palette.PAD_MD)
@@ -241,25 +268,22 @@ func _build_hero() -> void:
 	col.add_theme_constant_override("separation", Palette.PAD_SM)
 	inside.add_child(col)
 
-	var entry := _current_chapter()
 	var head := HBoxContainer.new()
 	head.layout_direction = Control.LAYOUT_DIRECTION_RTL
 	head.add_theme_constant_override("separation", Palette.PAD_SM)
 	col.add_child(head)
 
-	var plate := PanelContainer.new()
-	plate.add_theme_stylebox_override("panel",
-		FiligreeBox.make(FiligreeBox.Kind.PLAQUE, 0.0, 26, 6))
-	plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var plate_text := Style.make_title("فصل اول", Palette.FS_LABEL, Palette.GOLD_BRIGHT)
-	# Between two things that want the row's width, a wrapping label shrinks
-	# to one glyph per line — the plaque came out as a vertical stack of
-	# letters.
-	plate_text.autowrap_mode = TextServer.AUTOWRAP_OFF
-	plate.add_child(plate_text)
-	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	head.add_child(plate)
+	var plaque := PanelContainer.new()
+	plaque.add_theme_stylebox_override("panel",
+		ClayBox.make(ClayBox.Kind.PLAQUE, Palette.GOLD_BRIGHT, Clay.RADIUS, 24, 5))
+	plaque.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	plaque.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var ch := Style.make_title("فصل اول", Palette.FS_LABEL, Palette.NIGHT)
+	ch.autowrap_mode = TextServer.AUTOWRAP_OFF
+	plaque.add_child(ch)
+	head.add_child(plaque)
 
+	var entry := _current_chapter()
 	var title := Style.make_title(String(entry.get("title", "راز ساعت خاموش")),
 		Palette.FS_TITLE, Palette.SNOW)
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -270,41 +294,32 @@ func _build_hero() -> void:
 	var done := _chapter_progress()
 	var meter := _Meter.new()
 	meter.ratio = done
-	meter.custom_minimum_size = Vector2(0, 15)
+	meter.custom_minimum_size = Vector2(0, 18)
 	col.add_child(meter)
-
-	var line := Style.make_body(
+	col.add_child(Style.make_body(
 		"%s از مرحله‌های این فصل تمام شده." % Fa.percent(done),
-		Palette.FS_CAPTION, Palette.SNOW_SOFT)
-	col.add_child(line)
-
-	inside.add_child(_chapter_tile())
+		Palette.FS_CAPTION, Palette.SNOW_SOFT))
 
 	var go := Button.new()
 	go.text = "ادامهٔ بازی"
-	go.custom_minimum_size = Vector2(0, 68)
+	go.custom_minimum_size = Vector2(0, 86)
 	go.focus_mode = Control.FOCUS_ALL
 	for state in ["normal", "hover", "focus", "disabled"]:
 		go.add_theme_stylebox_override(state,
-			FiligreeBox.make(FiligreeBox.Kind.ACTION, 18.0, 20, 12))
+			ClayBox.make(ClayBox.Kind.BUTTON, Palette.ACTION, Clay.RADIUS, 20, 14))
 	go.add_theme_stylebox_override("pressed",
-		(FiligreeBox.make(FiligreeBox.Kind.ACTION, 18.0, 20, 12) as FiligreeBox).as_pressed())
+		ClayBox.make(ClayBox.Kind.BUTTON, Palette.ACTION, Clay.RADIUS, 20, 14).as_pressed())
 	for key in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
 		go.add_theme_color_override(key, Palette.SNOW)
 	go.add_theme_font_size_override("font_size", Style.scaled(Palette.FS_HEADING))
 	go.pressed.connect(func(): _go("UI-20", {"chapter_id": _chapter_id()}))
 	col.add_child(go)
 
-## The chapter's own painting in a gold-edged tile, with the fox leaning on
-## it. The tile is what gives the panel something to look at; the fox is what
-## makes it this game's panel and not any game's panel.
-func _chapter_tile() -> Control:
 	var tile := _Tile.new()
-	tile.custom_minimum_size = Vector2(190, 150)
+	tile.custom_minimum_size = Vector2(176, 158)
 	tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	tile.art = SceneArt.load_texture("BG_S01_CLOCK_TOWER", _chapter_id())
-	tile.figure = CastArt.figure("fandogh")
-	return tile
+	inside.add_child(tile)
 
 func _build_secondary() -> void:
 	var row := HBoxContainer.new()
@@ -312,16 +327,12 @@ func _build_secondary() -> void:
 	row.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	row.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	row.offset_left = SAFE
-	# Clear of the chapter panel, which starts at SAFE + 320 on this edge.
 	row.offset_bottom = -SAFE
 	row.add_theme_constant_override("separation", Palette.PAD_XS)
 	add_child(row)
 	for entry: Dictionary in SECONDARY:
-		var m := Medallion.new(String(entry["icon"]), 50.0)
-		m.tooltip_text = String(entry["tip"])
-		var ui_id := String(entry["ui"])
-		m.pressed.connect(func(): _go(ui_id))
-		row.add_child(m)
+		row.add_child(_disc_button(String(entry["icon"]), String(entry["tip"]),
+			String(entry["ui"]), 54.0))
 
 # — content ————————————————————————————————————————————————
 
@@ -335,7 +346,6 @@ func _current_chapter() -> Dictionary:
 			return entry
 	return {}
 
-## How much of the current chapter is behind the player, by stages finished.
 func _chapter_progress() -> float:
 	var stages: Array = StageEngine.stages
 	if stages.is_empty():
@@ -350,89 +360,77 @@ func _go(ui_id: String, payload: Dictionary = {}) -> void:
 	AudioManager.play_sfx("SFX_UI_TAP")
 	Router.go(ui_id, payload)
 
-# — small drawn pieces ————————————————————————————————————
+# — drawn pieces ——————————————————————————————————————————
 
-class _Frame extends Control:
-	func _draw() -> void:
-		Filigree.window_frame(get_canvas_item(), Rect2(Vector2.ZERO, size))
-
-class _Vignette extends Control:
+class _Veil extends Control:
 	func _draw() -> void:
 		var ci := get_canvas_item()
-		var bands := 22
-		var depth := minf(size.x, size.y) * 0.42
-		for i in bands:
-			var t := float(i) / float(bands - 1)
-			var inset := depth * t
-			var a := 0.5 * (1.0 - t) * (1.0 - t)
-			# Four edge strips rather than a ring, so the middle of the
-			# picture is never touched.
-			CI.rect(ci, Rect2(0, inset, size.x, depth / bands + 1.0),
-				Color(Palette.NIGHT.r, Palette.NIGHT.g, Palette.NIGHT.b, a))
-			CI.rect(ci, Rect2(0, size.y - inset - depth / bands, size.x, depth / bands + 1.0),
-				Color(Palette.NIGHT.r, Palette.NIGHT.g, Palette.NIGHT.b, a))
-			CI.rect(ci, Rect2(inset, 0, depth / bands + 1.0, size.y),
-				Color(Palette.NIGHT.r, Palette.NIGHT.g, Palette.NIGHT.b, a * 0.9))
-			CI.rect(ci, Rect2(size.x - inset - depth / bands, 0, depth / bands + 1.0, size.y),
-				Color(Palette.NIGHT.r, Palette.NIGHT.g, Palette.NIGHT.b, a * 0.9))
+		# One flat wash plus one flat band along the bottom, where the hero
+		# panel sits. Flat, not a ramp — a soft vignette under hard-edged
+		# shapes is the tell that two styles are in play.
+		CI.rect(ci, Rect2(Vector2.ZERO, size),
+			Color(Palette.NIGHT.r, Palette.NIGHT.g, Palette.NIGHT.b, 0.34))
+		CI.rect(ci, Rect2(0, size.y * 0.52, size.x, size.y * 0.48),
+			Color(Palette.NIGHT.r, Palette.NIGHT.g, Palette.NIGHT.b, 0.30))
 
-class _Tile extends Control:
+class _Cast extends Control:
+	func _draw() -> void:
+		# Standing along the bottom, largest in the middle, all of them
+		# cropped by the hero panel that sits over them — which is why they
+		# are drawn from the feet up rather than centred.
+		# They stand on the top edge of the hero panel, not on the bottom of
+		# the window. Standing on the window put everyone but their heads
+		# behind the panel, which is the opposite of the point of having
+		# them here.
+		var ground := size.y * 0.66
+		var who: Array[String] = ["mani", "raha", "arad", "player"]
+		var spots: Array[float] = [0.40, 0.54, 0.69, 0.84]
+		var heights: Array[float] = [0.40, 0.46, 0.45, 0.39]
+		for i in who.size():
+			var tex := CastArt.figure(who[i])
+			if tex == null:
+				continue
+			var h: float = size.y * heights[i]
+			var w: float = h * tex.get_size().x / tex.get_size().y
+			draw_texture_rect(tex, Rect2(
+				Vector2(size.x * spots[i] - w * 0.5, ground - h),
+				Vector2(w, h)), false)
+
+class _Portrait extends Control:
 	var art: Texture2D = null
-	var figure: Texture2D = null
-	func _draw() -> void:
-		var ci := get_canvas_item()
-		var r := Rect2(Vector2.ZERO, size)
-		Filigree.panel(ci, r, 14.0, Palette.NIGHT)
-		if art != null:
-			# Inset so the painting sits inside the metal rather than under
-			# it, which is how every framed picture in the sheets is set.
-			var inner := r.grow(-7.0)
-			draw_texture_rect(art, inner, false)
-			Filigree.outline(ci, inner, 9.0, Palette.GOLD_DEEP, 1.4)
-		if figure != null:
-			var h := size.y * 0.78
-			var w := h * figure.get_size().x / figure.get_size().y
-			draw_texture_rect(figure,
-				Rect2(Vector2(-w * 0.28, size.y - h), Vector2(w, h)), false)
-
-class _Meter extends Control:
-	var ratio: float = 0.0
-	func _draw() -> void:
-		var ci := get_canvas_item()
-		var r := Rect2(Vector2.ZERO, size)
-		var radius := size.y * 0.5
-		Filigree.outline(ci, r, radius, Palette.GOLD_DEEP, 3.0)
-		CI.poly(ci, Filigree._ring(r.grow(-2.0), radius), Palette.NIGHT)
-		if ratio <= 0.0:
-			return
-		var filled := r.grow(-3.0)
-		filled.size.x *= clampf(ratio, 0.0, 1.0)
-		if filled.size.x < filled.size.y:
-			filled.size.x = filled.size.y
-		# One rounded body, then a lit band inside the top edge. Drawing the
-		# gradient as a row of rounded segments turned the bar into a string
-		# of beads: each segment was narrower than its own corner radius.
-		CI.poly(ci, Filigree._ring(filled, minf(radius, filled.size.y * 0.5)),
-			Palette.ACTION_LIGHT)
-		var lit := filled.grow(-2.0)
-		lit.size.y *= 0.45
-		if lit.size.x > 2.0 and lit.size.y > 1.0:
-			CI.poly(ci, Filigree._ring(lit, minf(radius, lit.size.y * 0.5)),
-				Palette.ACTION_LIGHT.lerp(Palette.PARCHMENT, 0.55))
-		Filigree.outline(ci, r, radius, Palette.GOLD_BRIGHT, 1.6)
-
-class _GlowIcon extends Control:
-	var icon: String = "coin"
-	var colour: Color = Palette.GOLD_BRIGHT
 	func _draw() -> void:
 		var ci := get_canvas_item()
 		var centre := size * 0.5
 		var r := minf(size.x, size.y) * 0.5
-		Filigree.glow(ci, centre, r * 1.5, colour)
-		var painted := UiArt.icon(icon)
-		if painted != null:
-			var side := r * 1.9
-			draw_texture_rect(painted,
-				Rect2(centre - Vector2(side, side) * 0.5, Vector2(side, side)), false)
-		else:
-			GameIcons.draw(ci, icon, centre, r * 0.9, colour)
+		Clay.disc(ci, centre, r, Palette.PANEL_LIGHT)
+		if art != null:
+			var box := Rect2(centre - Vector2(r, r) * 0.88, Vector2(r, r) * 1.76)
+			draw_texture_rect(art, box, false)
+
+
+class _Disc extends Control:
+	var icon: String = "gear"
+	func _draw() -> void:
+		var ci := get_canvas_item()
+		var centre := size * 0.5
+		var r := minf(size.x, size.y) * 0.5
+		Clay.disc(ci, centre, r, Palette.PANEL)
+		# Outlined like every other shape in this style. A solid gold glyph
+		# at 54 pixels with nothing around it reads as a blob.
+		GameIcons.draw(ci, icon, centre, r * 0.50, Palette.GOLD_BRIGHT)
+
+class _Meter extends Control:
+	var ratio: float = 0.0
+	func _draw() -> void:
+		Clay.meter(get_canvas_item(), Rect2(Vector2.ZERO, size), ratio)
+
+class _Tile extends Control:
+	var art: Texture2D = null
+	func _draw() -> void:
+		var ci := get_canvas_item()
+		var r := Rect2(Vector2.ZERO, size)
+		Clay.well(ci, r, Clay.RADIUS, Palette.NIGHT)
+		if art != null:
+			var inner := r.grow(-8.0)
+			draw_texture_rect(art, inner, false)
+
