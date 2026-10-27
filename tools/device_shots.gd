@@ -13,7 +13,7 @@ const SHAPES := [
 	{"name": "tablet_4x3", "size": Vector2i(2048, 1536)},
 ]
 
-const SCREENS := ["UI-13", "UI-17", "UI-01"]
+const SCREENS := ["UI-04"]
 const OUT_DIR := "user://device"
 
 func _ready() -> void:

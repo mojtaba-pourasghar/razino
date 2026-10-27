@@ -12,23 +12,30 @@ extends RefCounted
 ## flat because nothing stood out against anything.
 
 # — surfaces (sampled from the approved sheets) ——————————
-const NIGHT         := Color("031E2D")  # behind everything
-const PANEL_DEEP    := Color("002136")  # the body of a framed panel
-const PANEL         := Color("012838")  # rows and inset wells
-const PANEL_LIGHT   := Color("003046")  # title plaque, raised surfaces
+const NIGHT         := Color("081420")  # behind everything, almost black
+const PANEL_DEEP    := Color("021F2F")  # the body of a framed panel
+const PANEL         := Color("06283A")  # rows and inset wells
+const PANEL_LIGHT   := Color("0B3146")  # title plaque, raised surfaces
 
 # — the action colour ——————————————————————————————————————
 ## Every call to action in the sheets is this petrol teal inside a gold
 ## frame: "شروع بازی", "ادامه", "ذخیره", "دریافت".
-const ACTION        := Color("006187")
-const ACTION_LIGHT  := Color("0A86A8")
-const ACTION_DEEP   := Color("013D55")
+const ACTION        := Color("0F666C")
+const ACTION_LIGHT  := Color("1B9298")
+const ACTION_DEEP   := Color("073B42")
 
 # — gold (frames and plaques only) ————————————————————————
-const GOLD_BRIGHT   := Color("FECC3B")  # the metal of the logo and frames
-const GOLD          := Color("F6CE90")  # the lit band across a plaque
-const GOLD_DEEP     := Color("B07E25")  # shadow side of the bevel
-const GOLD_DARK     := Color("5E4310")  # the line that seats metal on panel
+const GOLD_BRIGHT   := Color("EABD65")  # the metal of the frames and plaques
+const GOLD          := Color("D9A94F")  # the lit band across a plaque
+const GOLD_DEEP     := Color("795D22")  # shadow side of the bevel
+const GOLD_DARK     := Color("3E2F10")  # the line that seats metal on panel
+
+## The ivy that grows over every corner in the sheets. It is the signature
+## of this design and it was missing entirely from the first pass, which is
+## most of why the screens read as a generic dark theme with gold lines.
+const IVY           := Color("537D4A")
+const IVY_LIGHT     := Color("7CA863")
+const IVY_DEEP      := Color("2E4A2B")
 
 # — the seven accents from the mockup's palette strip ——————
 const BLUE          := Color("389AE0")  # selected, active tab
