@@ -27,6 +27,7 @@ import house_style
 
 import argparse
 import base64
+import io
 import json
 import os
 import sys
@@ -471,7 +472,14 @@ def main() -> int:
             keyed = hollow(img)
             out = save_png(keyed, name)
         elif kind == "cutout":
-            out = save_png(trim(key_out(img, "corners", 42.0)), name)
+            # A group of figures is lifted by the matting model, like the
+            # cast sheets. Keying it by colour left magenta in the gaps
+            # between the children, where the flood from the border could
+            # not reach, and a white rind around the whole group.
+            from generate_cast import cutout_figure
+            buf = io.BytesIO()
+            img.save(buf, format="PNG")
+            out = save_png(cutout_figure(buf.getvalue()), name)
         else:
             keyed = trim(key_out(img, "corners", 42.0))
             keyed.thumbnail((256, 256), Image.LANCZOS)

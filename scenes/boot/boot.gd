@@ -79,7 +79,10 @@ func _build() -> void:
 	column.add_theme_constant_override("separation", Palette.PAD_SM)
 	column.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT)
 	column.offset_left = 26
-	column.offset_right = 130
+	# Wide enough for the longest label to sit on one line. At the medallion's
+	# own width "تنظیمات" wrapped to one glyph per line and read as a column
+	# of unrelated letters.
+	column.offset_right = 190
 	column.offset_top = -150
 	column.offset_bottom = 150
 	add_child(column)
@@ -122,6 +125,7 @@ func _side_action(action: Dictionary) -> Control:
 	col.add_child(medal)
 	var label := Style.make_body(String(action["label"]), Palette.FS_CAPTION, Palette.SNOW, false)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	col.add_child(label)
 	return col
 

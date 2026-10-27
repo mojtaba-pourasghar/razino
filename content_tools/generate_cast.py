@@ -73,8 +73,62 @@ def cutout_figure(png: bytes) -> Image.Image:
     thing none of those have.
     """
     img = Image.open(io.BytesIO(png)).convert("RGBA")
-    cut = remove(img, session=_session())
-    return trim(cut)
+    return trim(_strip_rind(_clear_backdrop_colour(remove(img, session=_session()))))
+
+
+def _strip_rind(img: Image.Image, rounds: int = 16) -> Image.Image:
+    """Peels off the white sticker outline the painter draws around figures.
+
+    It paints figures as die-cut stickers — a pale rind following the whole
+    silhouette — whatever the prompt says, and the matting model keeps it
+    because it is part of the shape. Here it is eaten from the outside in: a
+    near-white pixel touching transparency is outline, not the figure.
+
+    Working inward from the edge is what makes this safe. A white shirt or a
+    pale tail tip is surrounded by the figure, never by transparency, so it
+    is never reached.
+    """
+    img = img.convert("RGBA")
+    w, h = img.size
+    px = img.load()
+    for _ in range(rounds):
+        doomed = []
+        for y in range(h):
+            for x in range(w):
+                r, g, b, a = px[x, y]
+                if a < 40 or r < 186 or g < 186 or b < 186:
+                    continue
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    nx, ny = x + dx, y + dy
+                    if nx < 0 or ny < 0 or nx >= w or ny >= h or px[nx, ny][3] < 40:
+                        doomed.append((x, y))
+                        break
+        if not doomed:
+            break
+        for x, y in doomed:
+            r, g, b, _a = px[x, y]
+            px[x, y] = (r, g, b, 0)
+    return img
+
+
+def _clear_backdrop_colour(img: Image.Image) -> Image.Image:
+    """Clears backdrop the matting model decided was part of the subject.
+
+    It keeps whatever is enclosed by the figures — the magenta showing
+    between two children standing shoulder to shoulder reads to it as inside
+    the group, so the group arrives with pink holes in it. Nothing anyone in
+    this cast wears is saturated magenta, so that colour can simply go,
+    wherever it is. Only the unmistakable version: a dull mauve in a shadow
+    stays, because this pass has no connectivity to protect it.
+    """
+    img = img.convert("RGBA")
+    px = img.load()
+    for y in range(img.height):
+        for x in range(img.width):
+            r, g, b, a = px[x, y]
+            if a and r > 95 and b > 70 and g < min(r, b) * 0.62:
+                px[x, y] = (r, g, b, 0)
+    return img
 
 
 _SESSION = None
