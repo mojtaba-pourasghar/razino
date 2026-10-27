@@ -21,7 +21,7 @@ var _text: RichTextLabel
 var _choices: VBoxContainer
 var _continue: Button
 var _replay: Button
-var _missing_vo: Label
+var _speaker_plate: Control
 
 var _full_text: String = ""
 var _revealed: float = 0.0
@@ -39,10 +39,21 @@ func _ready() -> void:
 	add_child(col)
 
 	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", Palette.PAD_SM)
 	col.add_child(top)
-	_speaker = Style.make_title("", Palette.FS_HEADING, Palette.GOLD_DEEP)
-	_speaker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(_speaker)
+	# The sheets set the speaker's name on a small gold plaque rather than
+	# loose on the parchment, which is also what keeps it from being read as
+	# the first word of the line.
+	var name_plate := Style.make_corner_plaque("", Palette.FS_HEADING)
+	name_plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_speaker = name_plate.get_child(0) as Label
+	_speaker_plate = name_plate
+	top.add_child(name_plate)
+
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top.add_child(gap)
 
 	_replay = Style.make_button("پخش دوباره", "quiet")
 	_replay.custom_minimum_size = Vector2(170, Palette.TOUCH_MIN)
@@ -63,12 +74,6 @@ func _ready() -> void:
 	_text.layout_direction = Control.LAYOUT_DIRECTION_RTL
 	_text.text_direction = Control.TEXT_DIRECTION_RTL
 	col.add_child(_text)
-
-	_missing_vo = Style.make_body("", Palette.FS_CAPTION, Palette.RUBY)
-	# An empty warning should take no room at all, or every line of dialogue
-	# carries a blank strip under it.
-	_missing_vo.visible = false
-	col.add_child(_missing_vo)
 
 	_choices = VBoxContainer.new()
 	_choices.add_theme_constant_override("separation", Palette.PAD_SM)
@@ -96,13 +101,19 @@ func show_line(line: Dictionary, speaker_name: String) -> void:
 	_continue.visible = true
 	_continue.text = "ادامه"
 	_speaker.text = speaker_name
+	_speaker_plate.visible = not speaker_name.strip_edges().is_empty()
 	_full_text = String(line.get("text", ""))
 	_current_audio = String(line.get("audio_id", ""))
 
-	var has_clip := AudioManager.missing_audio.has(_current_audio) == false and not _current_audio.is_empty()
-	_replay.visible = not _current_audio.is_empty()
-	_missing_vo.text = "" if has_clip else "صدای این خط هنوز ضبط نشده است."
-	_missing_vo.visible = not has_clip
+	# A line with no recording yet is a production fact, not something to tell
+	# a child in red letters on the dialogue box — it reads as the game being
+	# broken. It goes to the log, where the people recording can see it, and
+	# the replay button simply stays away.
+	var has_clip := not _current_audio.is_empty() \
+		and not AudioManager.missing_audio.has(_current_audio)
+	_replay.visible = has_clip
+	if not _current_audio.is_empty() and not has_clip:
+		Log.info("Dialogue", "no recording for %s yet" % _current_audio)
 
 	if Settings.subtitles_enabled:
 		_revealed = 0.0
