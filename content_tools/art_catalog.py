@@ -13,6 +13,8 @@ by the screens rather than by the story.
 
 from __future__ import annotations
 
+import house_style
+
 import argparse
 import json
 from pathlib import Path
@@ -25,16 +27,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # ten different days look like one game. The "no text" clauses are repeated
 # deliberately: these models love to paint fake Latin signage, which in a
 # Persian game is worse than a blank wall.
-STYLE = (
-    "Ornate 2D hand-painted storybook illustration for a children's mystery "
-    "adventure game. Painterly detail like a high-end animated film "
-    "background, clean edges, soft shading. Rich saturated colour, warm "
-    "golden lantern light against deep teal and navy shadows. "
-    "Absolutely no text, no letters, no words, no signage with writing, "
-    "no numbers, no watermark, no logo, no user interface, no frames, "
-    "no borders, no picture frame edges, no labels, no place names, "
-    "no captions, no map legend."
-)
+STYLE = house_style.scene()
 
 # Each chapter's own register, so a forest reads differently from a vault
 # without either leaving the palette.

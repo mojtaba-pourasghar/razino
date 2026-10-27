@@ -23,6 +23,8 @@ Two post-processing steps do the heavy lifting:
 
 from __future__ import annotations
 
+import house_style
+
 import argparse
 import base64
 import json
@@ -52,21 +54,9 @@ KEY_HINT = (255, 0, 255)
 ## Characters need a different brief from chrome. Asking for them under the
 ## interface style produced a tiny cast inside an ornate frame, because that
 ## style asks for frames.
-CAST_STYLE = (
-    "2D hand-painted cartoon character art for a children's adventure game, "
-    "bright friendly storybook style, clean outlines, soft shading, large "
-    "expressive eyes, full body head to toe, filling the frame. "
-    "No frame, no border, no ornament, no scenery, no ground, no shadow, "
-    "no text, no letters, no watermark."
-)
+CAST_STYLE = house_style.cast()
 
-STYLE = (
-    "Ornate hand-painted fantasy game interface art, the style of a "
-    "high-end children's adventure game. Polished gold metal with warm "
-    "highlights and deep shadow, deep teal and navy, soft painterly "
-    "shading, crisp edges. "
-    "No text, no letters, no words, no numbers, no watermark."
-)
+STYLE = house_style.interface()
 
 # — plates ————————————————————————————————————————————————
 #
