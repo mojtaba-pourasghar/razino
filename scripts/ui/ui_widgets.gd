@@ -1,14 +1,14 @@
-class_name ClayWidgets
+class_name UiWidgets
 extends RefCounted
 ## The few bits of the theme that must be textures rather than drawings.
 ##
 ## Godot takes slider grabbers and switch states as icons, not StyleBoxes, so
-## they cannot go through ClayBox. They are painted into an Image here —
+## they cannot go through UiBox. They are painted into an Image here —
 ## still from Palette, still at build time, so they match the drawn clay
 ## exactly and nothing has to ship as a file.
 ##
-## Clay rules apply the same as everywhere: a thick darker border in the
-## shape's own colour, a light band at the top and a shadow at the bottom.
+## The same rules as everywhere else in docs/DESIGN.md: a steel hairline, a
+## barely-there vertical gradient, and gold only where gold means "on".
 
 ## Anti-aliases by asking how far inside the shape each pixel is.
 static func _coverage(d: float) -> float:
@@ -19,8 +19,8 @@ static func _rrect_distance(p: Vector2, half: Vector2, radius: float) -> float:
 	var q := p.abs() - half + Vector2(radius, radius)
 	return Vector2(maxf(q.x, 0.0), maxf(q.y, 0.0)).length() + minf(maxf(q.x, q.y), 0.0) - radius
 
-## A clay knob: lit at the top, shadowed at the bottom, in a thick border
-## of its own darker shade.
+## A knob: lit at the top, shadowed at the bottom, ringed in its own
+## darker shade.
 static func knob(diameter: int = 34) -> ImageTexture:
 	var img := Image.create(diameter, diameter, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
@@ -36,7 +36,7 @@ static func knob(diameter: int = 34) -> ImageTexture:
 			var t := clampf((p.y - (c.y - r)) / (r * 2.0), 0.0, 1.0)
 			var col := Palette.GOLD_BRIGHT.lightened(0.25).lerp(Palette.GOLD, t)
 			# The outer two pixels are the dark seating ring.
-			if d > r - Clay.BORDER:
+			if d > r - 2.0:
 				col = Palette.GOLD_BRIGHT.darkened(0.45)
 			col.a = inside
 			img.set_pixel(x, y, col)

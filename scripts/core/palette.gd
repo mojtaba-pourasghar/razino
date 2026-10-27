@@ -15,22 +15,24 @@ extends RefCounted
 ## are used flat now: one fill, one lighter band, one darker lip. Nothing in
 ## this palette is a gradient stop any more.
 # — surfaces (sampled from the approved sheets) ——————————
-const NIGHT         := Color("081420")  # behind everything, almost black
-const PANEL_DEEP    := Color("021F2F")  # the body of a framed panel
-const PANEL         := Color("123A52")  # the body of a flat panel
-const PANEL_LIGHT   := Color("1B5673")  # raised surfaces, discs
+const NIGHT         := Color("01101C")  # behind everything, and bar tracks
+const PANEL_DEEP    := Color("02182A")  # the body of every panel
+const PANEL         := Color("052942")  # raised rows, item slots
+const PANEL_LIGHT   := Color("0A3A5C")  # the lit top of a gradient
+## The steel hairline around every panel and button in the sheets.
+const PANEL_EDGE    := Color("2E6E96")
 
 # — the action colour ——————————————————————————————————————
 ## Every call to action in the sheets is this petrol teal inside a gold
 ## frame: "شروع بازی", "ادامه", "ذخیره", "دریافت".
-const ACTION        := Color("17A2A2")  # the one call to action
-const ACTION_LIGHT  := Color("49C9C4")
-const ACTION_DEEP   := Color("0B6A6C")
+const ACTION        := Color("EEB43E")  # gold IS the action here
+const ACTION_LIGHT  := Color("F3C34F")
+const ACTION_DEEP   := Color("D68A1C")
 
 # — gold (frames and plaques only) ————————————————————————
-const GOLD_BRIGHT   := Color("F3C356")  # flat gold, not metal
-const GOLD          := Color("E0A93C")
-const GOLD_DEEP     := Color("795D22")  # shadow side of the bevel
+const GOLD_BRIGHT   := Color("EEB43E")
+const GOLD          := Color("EEB43E")
+const GOLD_DEEP     := Color("A46C23")  # corner brackets, gold edges
 const GOLD_DARK     := Color("3E2F10")  # the line that seats metal on panel
 
 ## The ivy that grows over every corner in the sheets. It is the signature
@@ -41,12 +43,12 @@ const IVY_LIGHT     := Color("7CA863")
 const IVY_DEEP      := Color("2E4A2B")
 
 # — the seven accents from the mockup's palette strip ——————
-const BLUE          := Color("389AE0")  # selected, active tab
+const BLUE          := Color("22749F")  # loading, experience, information
 const TEAL          := Color("22C3B4")  # toggles, progress, experience
 const GREEN         := Color("64D075")  # success, confirm
 const GOLD_LIGHT    := Color("FDD075")  # plaque text, emphasis
 const ORANGE        := Color("FCB34B")  # coins, soft warning
-const RUBY          := Color("D74148")  # hearts, danger, delete
+const RUBY          := Color("D3332A")  # hearts, health, danger
 const PURPLE        := Color("7448AF")  # gems, premium
 
 # Older names kept pointing at the measured colours, so the screens that
@@ -59,13 +61,13 @@ const AMETHYST      := PURPLE
 const SAPPHIRE      := BLUE
 
 # — parchment (anything the player reads) ————————————————
-const PARCHMENT     := Color("F8DCAA")
+const PARCHMENT     := Color("F6E3C5")
 const PARCHMENT_DIM := Color("E3C089")
 const INK           := Color("3A2A15")
 const INK_SOFT      := Color("6A5436")
 
 # — text on dark ————————————————————————————————————————————
-const SNOW          := Color("F6EFE2")
+const SNOW          := Color("F2F6FA")
 const SNOW_SOFT     := Color("A9BDC9")
 const LOCKED        := Color("6A7681")  # a locked card is pale, not hidden
 

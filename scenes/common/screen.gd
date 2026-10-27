@@ -132,10 +132,9 @@ func _build_backdrop() -> void:
 	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	background.add_child(wash)
 
-	# No painted border and no drawn one. Claymorphism has no frame: a
-	# surface is defined by its own thick edge and its two shadows, so a
-	# second frame around the whole window is one border too many — it was
-	# the last thing left over from the ornate pass.
+	# No border around the window. In the approved sheets a screen is panels
+	# on a painting; the window itself has no frame, and the one that used
+	# to be here was the last thing left over from the ornate pass.
 
 func _build_header() -> void:
 	# Left corner: the way out.

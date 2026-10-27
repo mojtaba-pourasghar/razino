@@ -129,14 +129,33 @@ func test_dialogue_panel_shows_a_persian_line():
 
 # — helpers ——————————————————————————————————————————————
 
+## A button carrying this text, wherever the text actually lives.
+##
+## A button's own `text` is one way to label it; a Label laid out inside it
+## is another, and the approved design needs the second — the sheets put an
+## icon at one end of a button and the words centred between, which Godot's
+## own button text cannot do. Looking only at `text` made this helper test
+## how a button was built rather than what it says.
 func _find_button_containing(node: Node, needle: String) -> Button:
-	if node is Button and (node as Button).text.contains(needle):
+	if node is Button and _label_of(node).contains(needle):
 		return node
 	for child in node.get_children():
 		var found := _find_button_containing(child, needle)
 		if found != null:
 			return found
 	return null
+
+## Everything a control says: its own text plus any Label inside it.
+func _label_of(node: Node) -> String:
+	var out := ""
+	if node is Button:
+		out = (node as Button).text
+	for child in node.get_children():
+		if child is Label:
+			out += " " + (child as Label).text
+		elif child is Container or child is Control:
+			out += " " + _label_of(child)
+	return out
 
 func _find_node_of_type(node: Node, type_name: String) -> Node:
 	if node.is_class(type_name):

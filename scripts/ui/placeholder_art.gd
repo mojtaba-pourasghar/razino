@@ -49,7 +49,8 @@ func _draw() -> void:
 	# instead of shouting over it.
 	var top := Color.from_hsv(h, 0.46, 0.22)
 	var low := Color.from_hsv(fposmod(h + 0.06, 1.0), 0.34, 0.46)
-	Clay.well(get_canvas_item(), Rect2(Vector2.ZERO, r), Clay.RADIUS, low)
+	RazinoUI.panel(get_canvas_item(), Rect2(Vector2.ZERO, r),
+		RazinoUI.RADIUS, low, false)
 
 	# Far silhouette, then near silhouette. The nearer layer drifts further,
 	# which is what reads as depth.
@@ -68,8 +69,8 @@ func _draw() -> void:
 		CI.arc(get_canvas_item(), centre, badge_r, 0.0, TAU, Palette.GOLD, 2.5)
 		GameIcons.draw(get_canvas_item(), "lamp", centre, badge_r * 0.56, Palette.GOLD_BRIGHT)
 
-	Clay.well(get_canvas_item(), Rect2(Vector2(2, 2), r - Vector2(4, 4)),
-		Clay.RADIUS, Palette.PANEL_DEEP)
+	RazinoUI.panel(get_canvas_item(), Rect2(Vector2(2, 2), r - Vector2(4, 4)),
+		RazinoUI.RADIUS, Palette.PANEL_DEEP)
 
 	if show_badge:
 		_draw_badge(r)
