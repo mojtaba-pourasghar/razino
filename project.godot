@@ -30,6 +30,7 @@ ClueJournal="*res://scripts/story_engine/clue_journal.gd"
 AvatarManager="*res://scripts/avatar/avatar_manager.gd"
 PurchaseManager="*res://scripts/purchases/purchase_manager.gd"
 ParentalSettings="*res://scripts/core/parental_settings.gd"
+Account="*res://scripts/core/account.gd"
 Style="*res://scripts/ui/style.gd"
 Router="*res://scripts/core/router.gd"
 

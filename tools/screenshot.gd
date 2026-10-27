@@ -31,6 +31,7 @@ const SHOTS := [
 	{"ui": "UI-20", "name": "20_stage_select", "payload": {"chapter_id": "season_01"}},
 	{"ui": "UI-21", "name": "21_loadout",
 	 "payload": {"chapter_id": "season_01", "stage_id": "S01-ST02"}},
+	{"ui": "UI-23", "name": "23_sign_in"},
 	{"ui": "UI-22", "name": "22_stage_result",
 	 "payload": {"chapter_id": "season_01", "stage_id": "S01-ST01",
 		"result": {"score": 0.78, "stars": 2, "clues_found": 1, "clues_total": 1,

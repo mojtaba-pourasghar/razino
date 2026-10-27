@@ -31,6 +31,9 @@ const SCREENS := {
 	"UI-20": "res://scenes/menus/stage_select.tscn",
 	"UI-21": "res://scenes/menus/loadout.tscn",
 	"UI-22": "res://scenes/menus/stage_result.tscn",
+	# Signing in. Nothing in chapter one needs it; it is what makes a bought
+	# chapter follow a child from a phone to a tablet.
+	"UI-23": "res://scenes/menus/sign_in.tscn",
 }
 
 const FADE_SECONDS := 0.22
