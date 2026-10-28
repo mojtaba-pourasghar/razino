@@ -780,11 +780,26 @@ func make_item_slot(icon: String, count: int = 0, side: float = 72.0) -> Control
 	var box := UiBox.make(UiBox.Kind.SLOT, 4, 4).with_radius(RazinoUI.RADIUS_SLOT)
 	p.add_theme_stylebox_override("panel", box)
 	if not empty:
-		var badge := IconRect.new(icon, side * 0.54, Palette.GOLD_BRIGHT)
-		badge.painted = false
-		badge.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		p.add_child(badge)
+		# The painted object when one exists, the drawn glyph until then.
+		# This is what the sheet's inventory is full of and what made the
+		# first version of this screen read as a grid of empty boxes.
+		var art := ItemArt.of_glyph(icon)
+		if art != null:
+			var pic := TextureRect.new()
+			pic.texture = art
+			pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			pic.custom_minimum_size = Vector2(side * 0.78, side * 0.78)
+			pic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			pic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			p.add_child(pic)
+		else:
+			var badge := IconRect.new(icon, side * 0.54, Palette.GOLD_BRIGHT)
+			badge.painted = false
+			badge.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			p.add_child(badge)
 	if count > 0:
 		var n := make_title(Fa.num(count), Palette.FS_CAPTION, Palette.SNOW)
 		n.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
