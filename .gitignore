@@ -19,6 +19,8 @@ dist/
 *.keystore
 *.jks
 *.key.private
+openai.key
+cf_accounts.json
 
 # OS noise.
 .DS_Store
