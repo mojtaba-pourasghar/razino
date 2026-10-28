@@ -20,21 +20,36 @@ func _ready() -> void:
 	configure("", "", "splash")
 	super._ready()
 
+## The card is sized by what is written on it and floated in the middle of
+## the screen. It used to expand to fill every pixel of height it was given,
+## which turned four short lines into a parchment slab taller than the
+## picture above it, with the paging dots stranded at the far bottom.
 func build_content() -> void:
+	var lift := Control.new()
+	lift.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(lift)
+
 	var card := Style.make_card()
-	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	content.add_child(card)
 
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", Palette.PAD_MD)
 	card.add_child(col)
 
-	col.add_child(Style.make_banner("BG_INTRO_RAZINO", 220))
+	col.add_child(Style.make_banner("BG_INTRO_RAZINO", 170))
 
+	# Both start at the right, where Persian is read from. The constant says
+	# LEFT because alignment is resolved against the layout direction, and
+	# this screen is laid out right to left -- asking for RIGHT here puts the
+	# heading on the left, which is where it used to sit, on the opposite
+	# side of the card from the sentence below it.
 	_title = Style.make_title("", Palette.FS_HEADING, Palette.INK)
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	col.add_child(_title)
 	_body = Style.make_body("", Palette.FS_BODY, Palette.INK_SOFT)
-	_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_body.custom_minimum_size.y = 76
 	col.add_child(_body)
 
 	_dots = HBoxContainer.new()
@@ -42,19 +57,27 @@ func build_content() -> void:
 	_dots.add_theme_constant_override("separation", Palette.PAD_SM)
 	col.add_child(_dots)
 
+	# One clear way on, one quiet way out, each the width of its own words.
+	# Stretching "بعدی" across the screen made a two-syllable button the
+	# largest thing on it.
 	var buttons := HBoxContainer.new()
+	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	buttons.add_theme_constant_override("separation", Palette.PAD_MD)
 	content.add_child(buttons)
 
-	_next = Style.make_button("بعدی")
-	_next.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_next = Style.make_button("بعدی", "primary", "play")
+	_next.custom_minimum_size.x = 240
 	_next.pressed.connect(_advance)
 	buttons.add_child(_next)
 
 	var skip := Style.make_button("رد کردن", "quiet")
-	skip.custom_minimum_size.x = 180
+	skip.custom_minimum_size.x = 150
 	skip.pressed.connect(_finish)
 	buttons.add_child(skip)
+
+	var drop := Control.new()
+	drop.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(drop)
 
 	_render()
 
