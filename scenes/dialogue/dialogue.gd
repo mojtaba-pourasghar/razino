@@ -15,14 +15,29 @@ func _ready() -> void:
 
 func build_content() -> void:
 	var payload := Router.take_payload()
+	# As the panel sheet draws it: the scene fills one framed window, the
+	# speakers stand large in it, and the parchment lies over the foot of
+	# the picture rather than under it.
+	var window := PanelContainer.new()
+	window.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	window.add_theme_stylebox_override("panel", UiBox.make(UiBox.Kind.PANEL, 10, 10))
+	content.add_child(window)
+	var room := Control.new()
+	room.clip_contents = true
+	window.add_child(room)
+
 	var stage := SceneStage.new()
-	stage.custom_minimum_size = Vector2(0, 180)
-	stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_child(stage)
+	stage.figure_height = 0.84
+	room.add_child(stage)
 
 	_panel = DialoguePanel.new()
-	_panel.size_flags_vertical = Control.SIZE_SHRINK_END
-	content.add_child(_panel)
+	_panel.anchor_left = 0.08
+	_panel.anchor_right = 0.92
+	_panel.anchor_top = 1.0
+	_panel.anchor_bottom = 1.0
+	_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_panel.offset_bottom = -14
+	room.add_child(_panel)
 
 	var scene_id := String(payload.get("scene_id", ""))
 	var chapter_id := String(payload.get("chapter_id", GameState.current_chapter))

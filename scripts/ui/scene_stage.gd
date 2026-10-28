@@ -13,6 +13,11 @@ const SLOTS := {
 	"far_left": 0.16, "left": 0.32, "center": 0.5, "right": 0.68, "far_right": 0.84,
 }
 
+const FIGURE_HALF_WIDTH := 0.12
+
+## How much of the stage's height a standing figure takes.
+var figure_height: float = 0.78
+
 var _bg: PlaceholderArt
 var _art: TextureRect
 var _figures: Control
@@ -24,6 +29,9 @@ var chapter_id: String = ""
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_PASS
+	# "left" and "right" in a scene are places in the picture, not reading
+	# order; an RTL layout would mirror every figure to the wrong side.
+	layout_direction = Control.LAYOUT_DIRECTION_LTR
 	_bg = PlaceholderArt.new()
 	add_child(_bg)
 	_art = TextureRect.new()
@@ -71,15 +79,18 @@ func _add_figure(entry: Dictionary) -> void:
 	fig.pose = String(entry.get("animation", "idle"))
 	var slot := String(entry.get("position", "center"))
 	var x := float(SLOTS.get(slot, 0.5))
-	fig.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	fig.anchor_left = x
-	fig.anchor_right = x
-	fig.anchor_top = 1.0
+	# Sized as a share of the stage rather than in pixels, so the cast stands
+	# as large in a full-screen conversation as the sheet draws them and
+	# still fits a small stage. Feet on the floor line; a figure is fitted
+	# by height inside its box, so the box only has to be wide enough.
+	fig.anchor_left = x - FIGURE_HALF_WIDTH
+	fig.anchor_right = x + FIGURE_HALF_WIDTH
+	fig.anchor_top = 1.0 - figure_height
 	fig.anchor_bottom = 1.0
-	fig.offset_left = -90
-	fig.offset_right = 90
-	fig.offset_top = -340
-	fig.offset_bottom = -20
+	fig.offset_left = 0
+	fig.offset_right = 0
+	fig.offset_top = 0
+	fig.offset_bottom = -6
 	_figures.add_child(fig)
 
 func highlight_speaker(speaker_id: String) -> void:

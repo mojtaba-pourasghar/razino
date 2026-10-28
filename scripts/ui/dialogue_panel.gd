@@ -32,38 +32,40 @@ func _ready() -> void:
 	Style.attach(self)
 	add_theme_stylebox_override("panel", OrnateBox.make(
 		OrnateBox.Kind.PARCHMENT, Color("FBF1DA"), Palette.PARCHMENT_DIM,
-		Palette.R_LG, 3.0).with_margins(Palette.PAD_LG, Palette.PAD_MD))
+		Palette.R_LG, 3.0).with_margins(Palette.PAD_LG, Palette.PAD_SM))
 
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", Palette.PAD_SM)
+	col.add_theme_constant_override("separation", 2)
 	add_child(col)
 
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", Palette.PAD_SM)
 	col.add_child(top)
-	# The sheets set the speaker's name on a small gold plaque rather than
-	# loose on the parchment, which is also what keeps it from being read as
+	# The speaker's name sits on a small navy plate centred over the text,
+	# as the panel sheet draws it, which also keeps it from being read as
 	# the first word of the line.
-	var name_plate := Style.make_corner_plaque("", Palette.FS_HEADING)
+	top.add_child(_spacer())
+	var name_plate := PanelContainer.new()
+	name_plate.add_theme_stylebox_override("panel", UiBox.make(UiBox.Kind.BUTTON, 28, 4))
+	name_plate.custom_minimum_size = Vector2(170, 38)
 	name_plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_speaker = name_plate.get_child(0) as Label
+	_speaker = Style.make_title("", Palette.FS_LABEL, Palette.GOLD_LIGHT)
+	_speaker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_speaker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_speaker.autowrap_mode = TextServer.AUTOWRAP_OFF
+	name_plate.add_child(_speaker)
 	_speaker_plate = name_plate
 	top.add_child(name_plate)
-
-	var gap := Control.new()
-	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	top.add_child(gap)
+	top.add_child(_spacer())
 
 	_replay = Style.make_button("پخش دوباره", "quiet")
-	_replay.custom_minimum_size = Vector2(170, Palette.TOUCH_MIN)
+	_replay.custom_minimum_size = Vector2(150, RazinoUI.TOUCH_MIN)
 	_replay.pressed.connect(_replay_line)
-	top.add_child(_replay)
 
 	_text = RichTextLabel.new()
 	_text.bbcode_enabled = false
 	_text.fit_content = true
-	_text.custom_minimum_size.y = 54
+	_text.custom_minimum_size.y = 40
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_text.add_theme_color_override("default_color", Palette.INK)
 	_text.add_theme_font_size_override("normal_font_size", Style.scaled(Palette.FS_BODY))
@@ -79,9 +81,18 @@ func _ready() -> void:
 	_choices.add_theme_constant_override("separation", Palette.PAD_SM)
 	col.add_child(_choices)
 
-	_continue = Style.make_button("ادامه")
+	# A small gold button at the end of the line, not a bar across the box:
+	# the box is for reading. The replay button, when a line is voiced,
+	# sits at the other end of the same row.
+	var bottom := HBoxContainer.new()
+	bottom.add_theme_constant_override("separation", Palette.PAD_SM)
+	col.add_child(bottom)
+	bottom.add_child(_replay)
+	bottom.add_child(_spacer())
+	_continue = Style.make_button("ادامه", "gold")
+	_continue.custom_minimum_size = Vector2(160, RazinoUI.TOUCH_MIN)
 	_continue.pressed.connect(_on_continue)
-	col.add_child(_continue)
+	bottom.add_child(_continue)
 
 	AudioManager.voice_finished.connect(_on_voice_finished)
 	set_process(false)
@@ -93,6 +104,12 @@ func _process(delta: float) -> void:
 		_finish_reveal()
 		return
 	_text.text = _full_text.substr(0, shown)
+
+func _spacer() -> Control:
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return gap
 
 func show_line(line: Dictionary, speaker_name: String) -> void:
 	_choices.visible = false

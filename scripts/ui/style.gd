@@ -549,36 +549,31 @@ func make_meter(ratio: float, width: float = 180.0,
 		fill, fill.darkened(0.3), Palette.R_PILL, 0.0, 0, 0))
 	return bar
 
-## A row of tabs, as the inventory and profile screens use. Returns the
-## buttons so the caller can connect them.
 ## A row of tabs.
 ##
-## The sheet gives the active tab a lit surface with a gold rail under it and
-## leaves the rest as bare text on the panel. Boxing every tab turned a
-## four-tab row into four competing buttons and hid which one you were on.
+## As the panel sheet draws them: every tab is a small plate, the active one
+## satin gold with dark ink and the rest matte navy, so the row reads as one
+## control and which tab you are on is the first thing you see.
 func make_tabs(labels: Array, active: int = 0) -> Array:
 	var out: Array[Button] = []
 	for i in labels.size():
 		var b := Button.new()
 		b.text = String(labels[i])
-		b.custom_minimum_size = Vector2(110, 46)
+		b.custom_minimum_size = Vector2(120, RazinoUI.TOUCH_MIN)
 		b.focus_mode = Control.FOCUS_ALL
 		var on := i == active
-		# Through a StyleBox rather than a custom _draw: a Button paints its
-		# own label after _draw runs, so anything drawn there lands on top
-		# of the text and the active tab came out blank.
-		var box: StyleBox = UiBox.make(UiBox.Kind.PANEL_PLAIN, 12, 6) \
-			.with_radius(RazinoUI.RADIUS_BUTTON) if on else StyleBoxEmpty.new()
-		for state in ["normal", "hover", "pressed", "disabled", "focus"]:
-			b.add_theme_stylebox_override(state, box)
+		var box := UiBox.make(UiBox.Kind.TAB_ON if on else UiBox.Kind.TAB_OFF, 18, 6)
+		b.add_theme_stylebox_override("normal", box)
+		b.add_theme_stylebox_override("disabled", box)
+		b.add_theme_stylebox_override("hover", box.state(false, true))
+		b.add_theme_stylebox_override("focus", box.state(false, true))
+		b.add_theme_stylebox_override("pressed", box.state(true, false))
+		var ink := Palette.INK if on else Palette.SNOW
 		for key in ["font_color", "font_hover_color", "font_pressed_color",
 				"font_focus_color"]:
-			b.add_theme_color_override(key, Palette.SNOW if on else Palette.SNOW_SOFT)
-		if on:
-			var rail := _Rail.new()
-			rail.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-			rail.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			b.add_child(rail)
+			b.add_theme_color_override(key, ink)
+		if on and font_bold != null:
+			b.add_theme_font_override("font", font_bold)
 		out.append(b)
 	return out
 

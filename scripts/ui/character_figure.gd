@@ -56,6 +56,11 @@ func set_speaking(value: bool) -> void:
 
 ## Which painted mood each pose asks for. The content speaks in poses and the
 ## art is filed by mood; this is the one place the two words meet.
+## How tall each character stands next to the children, as a share of a
+## figure's box. Fandogh is a little dino and comes up to their shoulders;
+## drawn at the children's height he would tower over them.
+const STATURE := {"fandogh": 0.66}
+
 const MOOD_FOR := {
 	"idle": "neutral", "talk": "neutral", "happy": "happy",
 	"think": "thinking", "surprised": "surprised", "sad": "sad",
@@ -203,9 +208,10 @@ func _draw_painted() -> bool:
 
 	# Fitted by height and stood on the bottom edge: a figure is placed in a
 	# scene by where its feet are, never by where its middle is.
-	var scale := size.y / art.y
+	var h := size.y * float(STATURE.get(character_id, 1.0))
+	var scale := h / art.y
 	var w := art.x * scale
-	var box := Rect2(Vector2(size.x * 0.5 - w * 0.5, bob), Vector2(w, size.y))
+	var box := Rect2(Vector2(size.x * 0.5 - w * 0.5, size.y - h + bob), Vector2(w, h))
 	if _speaking:
 		draw_texture_rect(tex, box.grow(2.0), false, Palette.GOLD_BRIGHT * Color(1, 1, 1, 0.22))
 	draw_texture_rect(tex, box, false)
