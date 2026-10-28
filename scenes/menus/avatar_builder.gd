@@ -39,10 +39,21 @@ func build_content() -> void:
 	pcol.add_child(_portrait)
 
 	# — controls —
+	#
+	# Inside a scroller, because this column is eight rows plus a paragraph
+	# and on a phone the last of them fell off the bottom of the screen: the
+	# note about the camera was cut mid-sentence and "شروع ماجرا" could not
+	# be reached at all.
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	columns.add_child(scroll)
+
 	var right := VBoxContainer.new()
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.add_theme_constant_override("separation", Palette.PAD_SM)
-	columns.add_child(right)
+	scroll.add_child(right)
 
 	_name_field = LineEdit.new()
 	_name_field.placeholder_text = "اسمت را بنویس (اختیاری)"
@@ -69,7 +80,10 @@ func build_content() -> void:
 			Palette.FS_CAPTION, Palette.SNOW_SOFT)
 		right.add_child(note)
 
-	var start := Style.make_button("شروع ماجرا")
+	# Outside the scroller, so the way onward is always on the screen.
+	var start := Style.make_button("شروع ماجرا", "primary", "play")
+	start.custom_minimum_size.x = 260
+	start.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	start.pressed.connect(_start)
 	content.add_child(start)
 
