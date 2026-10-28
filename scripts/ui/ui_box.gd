@@ -17,6 +17,7 @@ const PIECE := {
 	Kind.BUTTON: "button_dark",
 	Kind.PRIMARY: "button_gold",
 	Kind.SLOT: "slot",
+	Kind.PARCHMENT: "parchment",
 }
 
 ## A painted piece beats a drawn one wherever it exists. Returns the painted
@@ -58,6 +59,8 @@ func state(pressed_: bool, hovered_: bool) -> UiBox:
 	return copy
 
 func _draw(ci: RID, rect: Rect2) -> void:
+	if _draw_painted(ci, rect):
+		return
 	match kind:
 		Kind.PANEL: RazinoUI.panel(ci, rect, radius, fill, true)
 		Kind.PANEL_PLAIN: RazinoUI.panel(ci, rect, radius, fill, false)
@@ -66,3 +69,36 @@ func _draw(ci: RID, rect: Rect2) -> void:
 		Kind.SLOT: RazinoUI.slot(ci, rect, true)
 		Kind.PARCHMENT: RazinoUI.parchment(ci, rect, radius)
 		Kind.NONE: pass
+
+## Wears the kit piece for this kind when it has been painted, so a screen
+## that asks for a drawn panel gets the painted one without knowing.
+##
+## A nine-patch draws its corners at texture pixels, so a box smaller than
+## two corners would fold them over each other. Such a box is drawn at a
+## larger size and scaled down instead, which shrinks the corners with it.
+func _draw_painted(ci: RID, rect: Rect2) -> bool:
+	if not PIECE.has(kind):
+		return false
+	var name := String(PIECE[kind])
+	var tex := KitArt.piece(name)
+	var m := float(KitArt.margin(name))
+	if tex == null or m <= 0.0 or rect.size.x < 2.0 or rect.size.y < 2.0:
+		return false
+	var k := minf(1.0, minf(rect.size.x, rect.size.y) / (m * 2.0))
+	var tint := KitArt.tint(name)
+	if pressed:
+		tint *= Color(0.8, 0.78, 0.74)
+	elif hovered:
+		tint *= Color(1.15, 1.1, 1.02)
+	var at := Rect2(rect.position / k, rect.size / k)
+	if k < 1.0:
+		RenderingServer.canvas_item_add_set_transform(ci,
+			Transform2D(0.0, Vector2(k, k), 0.0, Vector2.ZERO))
+	RenderingServer.canvas_item_add_nine_patch(ci, at,
+		Rect2(Vector2.ZERO, tex.get_size()), tex.get_rid(),
+		Vector2(m, m), Vector2(m, m),
+		RenderingServer.NINE_PATCH_STRETCH, RenderingServer.NINE_PATCH_STRETCH,
+		true, tint)
+	if k < 1.0:
+		RenderingServer.canvas_item_add_set_transform(ci, Transform2D.IDENTITY)
+	return true
