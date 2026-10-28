@@ -186,33 +186,19 @@ func _menu_button(entry: Dictionary) -> Button:
 	b.custom_minimum_size = Vector2(0, RazinoUI.TOUCH_MIN)
 	b.disabled = true
 
-	var tex := _texture("button_gold.png" if primary else "button_navy.png")
-	if tex != null:
-		var base := StyleBoxTexture.new()
-		base.texture = tex
-		# Capsule plates: keep the rounded ends and their flourishes whole,
-		# stretch only the straight middle.
-		base.texture_margin_left = 46
-		base.texture_margin_right = 46
-		var lit := base.duplicate() as StyleBoxTexture
-		lit.modulate_color = Color(1.18, 1.12, 1.02)
-		var down := base.duplicate() as StyleBoxTexture
-		down.modulate_color = Color(0.8, 0.76, 0.7)
-		var off := base.duplicate() as StyleBoxTexture
-		off.modulate_color = Color(0.62, 0.62, 0.66, 0.9)
-		b.add_theme_stylebox_override("normal", base)
-		b.add_theme_stylebox_override("hover", lit)
-		b.add_theme_stylebox_override("focus", lit)
-		b.add_theme_stylebox_override("pressed", down)
-		b.add_theme_stylebox_override("disabled", off)
-	else:
-		var box := UiBox.make(UiBox.Kind.PRIMARY if primary else UiBox.Kind.BUTTON, 14, 8)
-		b.add_theme_stylebox_override("normal", box)
+	# The kit's plates (assets/art/kit), the same buttons every other screen
+	# wears; UiBox paints them and lights them on hover and press.
+	var base := UiBox.make(UiBox.Kind.PRIMARY if primary else UiBox.Kind.BUTTON, 14, 8)
+	b.add_theme_stylebox_override("normal", base)
+	b.add_theme_stylebox_override("hover", base.state(false, true))
+	b.add_theme_stylebox_override("focus", base.state(false, true))
+	b.add_theme_stylebox_override("pressed", base.state(true, false))
+	b.add_theme_stylebox_override("disabled", base.state(true, false))
 
 	var row := HBoxContainer.new()
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	row.offset_left = 34
-	row.offset_right = -34
+	row.offset_left = 18
+	row.offset_right = -18
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(row)
 

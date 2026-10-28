@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b4k1oxe2tnx5r"
-path="res://.godot/imported/button_navy.png-326a7579df74b1dfcefe39571de187ad.ctex"
+uid="uid://dq8hvn6tshxlm"
+path="res://.godot/imported/tab_idle.png-7085d25a119594e9931d3de3a12fc98f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/splash/button_navy.png"
-dest_files=["res://.godot/imported/button_navy.png-326a7579df74b1dfcefe39571de187ad.ctex"]
+source_file="res://assets/art/kit/tab_idle.png"
+dest_files=["res://.godot/imported/tab_idle.png-7085d25a119594e9931d3de3a12fc98f.ctex"]
 
 [params]
 

@@ -1,9 +1,10 @@
 {
   "panel": 56,
-  "button_gold": 40,
-  "button_dark": 40,
+  "button_gold": 22,
+  "button_dark": 22,
   "slot": 26,
-  "tab_active": 22,
+  "tab_active": 16,
   "parchment": 52,
-  "pill": 22
+  "pill": 22,
+  "tab_idle": 16
 }

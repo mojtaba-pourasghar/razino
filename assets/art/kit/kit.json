@@ -9,6 +9,7 @@
     "parchment",
     "pill",
     "slot",
-    "tab_active"
+    "tab_active",
+    "tab_idle"
   ]
 }

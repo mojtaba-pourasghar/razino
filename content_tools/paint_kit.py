@@ -95,33 +95,53 @@ PIECES: dict[str, dict] = {
             f"empty inside. {CUTOUT} {NO_TEXT}"),
     },
     "button_dark": {
-        "ask": (1536, 1024), "mirror": "h", "cut": (0, 56), "margin": 40,
+        "ask": (1536, 1024), "mirror": "h", "cut": (0, 56), "margin": 22,
+        "refs": ["menu_column", "tab_row"],
         "prompt": (
-            f"{LOOK} {FAMILY} One slim game button seen flat from the front: "
-            "a horizontal capsule about four times wider than tall with "
-            "fully rounded ends, a deep navy glassy face with a faint sheen "
-            "along its upper half, a fine gold rim and a tiny gold curl at "
-            f"each end. Empty face, centered, filling the width. {CUTOUT} "
-            f"{NO_TEXT}"),
+            f"{LOOK} {FRAME} Exactly the dark menu button of the reference "
+            "pictures, alone and much larger, seen flat from the front: a "
+            "wide rectangle about five times wider than tall with only "
+            "slightly rounded corners and a small notched step at the middle "
+            "of each short end; a MATTE muted navy face with a faint lighter "
+            "band near the top, framed by a thin steel-blue metal rim with a "
+            "hairline dark edge. Flat and quiet, no gloss, no ornaments. "
+            f"Empty face, centered, filling the width. {CUTOUT} {NO_TEXT}"),
     },
     "button_gold": {
-        "ask": (1536, 1024), "mirror": "h", "cut": (0, 56), "margin": 40,
+        "ask": (1536, 1024), "mirror": "h", "cut": (0, 56), "margin": 22,
+        "refs": ["menu_column", "tab_row"],
         "prompt": (
-            f"{LOOK} {FAMILY} One slim game button seen flat from the front: "
-            "a horizontal capsule about four times wider than tall with "
-            "fully rounded ends, a warm glossy amber-gold face lighter in "
-            "the middle with a glassy highlight along its upper half, a fine "
-            "bright gold rim and a tiny gold curl at each end. Empty face, "
-            f"centered, filling the width. {CUTOUT} {NO_TEXT}"),
+            f"{LOOK} Exactly the selected gold menu button of the reference "
+            "pictures, alone and much larger, seen flat from the front: a "
+            "wide rectangle about five times wider than tall with only "
+            "slightly rounded corners and a small gold cap at the middle of "
+            "each short end; a warm amber-gold face, a little lighter across "
+            "its upper half and deeper at the bottom, softly glowing, framed "
+            "by a thin bright polished-gold rim with a hairline dark edge. "
+            "Satin finish, not glassy. Empty face, centered, filling the "
+            f"width. {CUTOUT} {NO_TEXT}"),
     },
     "tab_active": {
-        "ask": (1536, 1024), "mirror": "h", "cut": (0, 44), "margin": 22,
+        "ask": (1536, 1024), "mirror": "h", "cut": (0, 44), "margin": 16,
+        "refs": ["tab_row"],
         "prompt": (
-            f"{LOOK} {FAMILY} One small selected-tab plate seen flat from "
-            "the front: a horizontal rounded rectangle about three times "
-            "wider than tall, with a warm soft amber-gold glowing face and a "
-            "fine bright gold rim, no ornaments. Empty face, centered, "
-            f"filling the width. {CUTOUT} {NO_TEXT}"),
+            f"{LOOK} Exactly the selected gold tab of the reference picture "
+            "('همه'), alone and much larger, seen flat from the front: a "
+            "rectangle about three times wider than tall with slightly "
+            "rounded corners and a small gold cap at the middle of each "
+            "short end, a warm amber-gold satin face and a thin bright gold "
+            f"rim. Empty face, centered, filling the width. {CUTOUT} {NO_TEXT}"),
+    },
+    "tab_idle": {
+        "ask": (1536, 1024), "mirror": "h", "cut": (0, 44), "margin": 16,
+        "refs": ["tab_row"],
+        "prompt": (
+            f"{LOOK} {FRAME} Exactly an unselected dark tab of the reference "
+            "picture, alone and much larger, seen flat from the front: a "
+            "rectangle about three times wider than tall with slightly "
+            "rounded corners and a small notch at the middle of each short "
+            "end, a matte muted navy face and a thin steel-blue rim. Empty "
+            f"face, centered, filling the width. {CUTOUT} {NO_TEXT}"),
     },
     "pill": {
         "ask": (1536, 1024), "mirror": "h", "cut": (0, 44), "margin": 22,
@@ -144,10 +164,32 @@ PIECES: dict[str, dict] = {
 }
 
 
+## Parts of the approved panel sheet shown to the model, as (box, scale).
+SHEET = ROOT / "assets" / "art" / "reference" / "panels_sheet.jpg"
+CROPS = {
+    "menu_column": ((695, 75, 820, 240), 4.0),
+    "tab_row": ((1020, 365, 1470, 410), 3.0),
+}
+
+
+def reference(name: str, raw: Path) -> Path:
+    box, scale = CROPS[name]
+    out = raw / "refs" / f"{name}.png"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    im = Image.open(SHEET).convert("RGB").crop(box)
+    im.resize((round(im.width * scale), round(im.height * scale)),
+              Image.LANCZOS).save(out)
+    return out
+
+
 def paint(name: str, raw: Path) -> str:
     p = PIECES[name]
     w, h = p["ask"]
-    result = openai_painter.paint(p["prompt"], w, h, True, quality="high")
+    refs = [reference(r, raw) for r in p.get("refs", [])]
+    if refs:
+        result = openai_painter.paint_from(p["prompt"], refs, w, h, True)
+    else:
+        result = openai_painter.paint(p["prompt"], w, h, True, quality="high")
     if isinstance(result, str):
         return f"{name}: FAILED — {result}"
     (raw / f"{name}.png").write_bytes(result)
@@ -191,17 +233,18 @@ def cut(name: str, raw: Path) -> str:
     return f"{name}: {cw}x{ch}"
 
 
-def write_manifest() -> None:
+def write_manifest(names: list[str]) -> None:
     margins_path = OUT / "nine_patch.json"
     margins = json.loads(margins_path.read_text()) if margins_path.exists() else {}
     for name, p in PIECES.items():
         if p["margin"] and (OUT / f"{name}.png").exists():
             margins[name] = p["margin"]
     margins_path.write_text(json.dumps(margins, indent=2) + "\n")
-    # The new pieces are painted in their final colours; no correction.
+    # A freshly painted piece starts with no colour correction; pieces not
+    # painted this run keep theirs.
     tints_path = OUT / "tint.json"
     tints = json.loads(tints_path.read_text()) if tints_path.exists() else {}
-    for name in PIECES:
+    for name in names:
         tints.pop(name, None)
     tints_path.write_text(json.dumps(tints, indent=2) + "\n")
     kit_path = OUT / "kit.json"
@@ -228,7 +271,7 @@ def main() -> int:
                 print(line, flush=True)
     for n in names:
         print(cut(n, raw))
-    write_manifest()
+    write_manifest(names)
     return 0
 
 
