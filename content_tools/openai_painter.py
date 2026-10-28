@@ -29,6 +29,7 @@ from pathlib import Path
 
 KEY_PATH = Path.home() / ".razino" / "openai.key"
 URL = "https://api.openai.com/v1/images/generations"
+EDIT_URL = "https://api.openai.com/v1/images/edits"
 
 ## The current image model. gpt-image-1 was retired in October 2026.
 MODEL = "gpt-image-1.5"
@@ -100,3 +101,51 @@ def usage_line(payload: dict) -> str:
     """What a call cost, when the API says."""
     u = payload.get("usage") or {}
     return ", ".join(f"{k}={v}" for k, v in u.items()) or "not reported"
+
+
+def paint_from(prompt: str, references: list[Path], width: int = 1024,
+               height: int = 1024, transparent: bool = False,
+               quality: str = "high") -> bytes | str:
+    """Like paint(), but the model sees reference pictures first.
+
+    This is how the cast stays the same children from picture to picture:
+    the approved character sheets go in as references, so the model draws
+    those faces rather than inventing four new ones from a description.
+    """
+    boundary = "----razino" + base64.b16encode(os.urandom(8)).decode()
+    fields: list[tuple[str, str]] = [
+        ("model", MODEL), ("prompt", prompt), ("n", "1"),
+        ("size", best_size(width, height)), ("quality", quality),
+        ("input_fidelity", "high"),
+    ]
+    if transparent:
+        fields += [("background", "transparent"), ("output_format", "png")]
+    body = bytearray()
+    for name, value in fields:
+        body += (f"--{boundary}\r\nContent-Disposition: form-data; "
+                 f"name=\"{name}\"\r\n\r\n{value}\r\n").encode()
+    for ref in references:
+        mime = "image/webp" if ref.suffix == ".webp" else "image/png"
+        body += (f"--{boundary}\r\nContent-Disposition: form-data; "
+                 f"name=\"image[]\"; filename=\"{ref.name}\"\r\n"
+                 f"Content-Type: {mime}\r\n\r\n").encode()
+        body += ref.read_bytes() + b"\r\n"
+    body += f"--{boundary}--\r\n".encode()
+
+    req = urllib.request.Request(
+        EDIT_URL, data=bytes(body),
+        headers={"Authorization": f"Bearer {_key()}",
+                 "Content-Type": f"multipart/form-data; boundary={boundary}"})
+    try:
+        with urllib.request.urlopen(req, timeout=300) as r:
+            payload = json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        detail = e.read()[:300].decode("utf-8", "replace").replace("\n", " ")
+        return f"HTTP {e.code}: {detail}"
+    except Exception as e:  # noqa: BLE001 — report, never end the batch
+        return f"{type(e).__name__}: {str(e)[:160]}"
+
+    data = payload.get("data") or []
+    if not data or "b64_json" not in data[0]:
+        return f"no image in the reply: {str(payload)[:200]}"
+    return base64.b64decode(data[0]["b64_json"])

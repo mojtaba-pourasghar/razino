@@ -5,7 +5,8 @@ extends Node
 ## Output goes to user://shots/ — the console prints the absolute paths.
 
 const SHOTS := [
-	{"ui": "UI-01", "name": "01_start"},
+	# The start screen animates in; capture it once it has arrived.
+	{"ui": "UI-01", "name": "01_start", "settle": 2.5},
 	{"ui": "UI-02", "name": "02_intro"},
 	{"ui": "UI-03", "name": "03_avatar_builder"},
 	{"ui": "UI-04", "name": "04_home"},
@@ -67,8 +68,11 @@ func _ready() -> void:
 		"completed": true, "score": 0.82, "stars": 2, "clues": 1, "no_hint": true})
 
 	await get_tree().process_frame
+	# `-- 01_start 04_home` captures only those shots.
+	var only := OS.get_cmdline_user_args()
 	for shot in SHOTS:
-		await _capture(shot)
+		if only.is_empty() or String(shot["name"]) in only:
+			await _capture(shot)
 	print("SCREENSHOTS WRITTEN TO: %s" % ProjectSettings.globalize_path(OUT_DIR))
 	get_tree().quit(0)
 
@@ -84,6 +88,8 @@ func _capture(shot: Dictionary) -> void:
 	# Several frames so fonts, layout and the first draw all settle.
 	for i in 8:
 		await get_tree().process_frame
+	if shot.has("settle"):
+		await get_tree().create_timer(float(shot["settle"])).timeout
 	await RenderingServer.frame_post_draw
 
 	var image := get_viewport().get_texture().get_image()
