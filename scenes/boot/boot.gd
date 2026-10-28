@@ -111,7 +111,7 @@ func _build() -> void:
 
 	# — the column —
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 9)
+	column.add_theme_constant_override("separation", 12)
 	_place(column, "menu")
 	for entry: Dictionary in MENU:
 		var b := _menu_button(entry)
@@ -190,7 +190,10 @@ func _menu_button(entry: Dictionary) -> Button:
 	if tex != null:
 		var base := StyleBoxTexture.new()
 		base.texture = tex
-		base.set_texture_margin_all(26)
+		# Capsule plates: keep the rounded ends and their flourishes whole,
+		# stretch only the straight middle.
+		base.texture_margin_left = 46
+		base.texture_margin_right = 46
 		var lit := base.duplicate() as StyleBoxTexture
 		lit.modulate_color = Color(1.18, 1.12, 1.02)
 		var down := base.duplicate() as StyleBoxTexture
@@ -208,8 +211,8 @@ func _menu_button(entry: Dictionary) -> Button:
 
 	var row := HBoxContainer.new()
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	row.offset_left = 20
-	row.offset_right = -20
+	row.offset_left = 34
+	row.offset_right = -34
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(row)
 

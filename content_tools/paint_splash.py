@@ -124,29 +124,32 @@ PIECES: dict[str, dict] = {
             f"filling the frame. Nothing below it. {CUTOUT} {NO_TEXT}"),
     },
     "button_gold": {
-        "size": (1536, 1024), "transparent": True, "refs": ["menu_panel"],
-        "height": 96,
+        "size": (1536, 1024), "transparent": True, "refs": [], "height": 64,
         "prompt": (
-            f"{LOOK} One game menu button exactly like the gold 'start' "
-            "button in the reference menu, seen flat from the front: a wide "
-            "rectangle about five times wider than tall with small rounded "
-            "corners, a glowing warm amber-gold face that is lighter in the "
-            "middle and slightly darker at the top and bottom edges, a thin "
-            "bright polished-gold rim and a faint golden outer glow. The "
-            "face is completely plain and empty. Symmetrical, centered, "
-            f"filling the width. {CUTOUT} {NO_TEXT}"),
+            f"{LOOK} One slim, elegant game menu button seen flat from the "
+            "front: a long horizontal capsule about seven times wider than "
+            "tall with fully rounded ends. A warm glossy amber-gold face, "
+            "lighter in the middle with a soft glassy highlight along its "
+            "upper half. A FINE, thin polished-gold rim with a hairline dark "
+            "edge, and at each rounded end a small delicate gold filigree "
+            "flourish — a tiny curl with one small leaf — that barely leaves "
+            "the outline. Refined jewellery-like detail, nothing chunky. The "
+            "face is completely plain and empty. Perfectly symmetrical, "
+            f"centered, filling the width. {CUTOUT} {NO_TEXT}"),
     },
     "button_navy": {
-        "size": (1536, 1024), "transparent": True, "refs": ["menu_panel"],
-        "height": 96,
+        "size": (1536, 1024), "transparent": True, "refs": [], "height": 64,
         "prompt": (
-            f"{LOOK} One game menu button exactly like the dark buttons in "
-            "the reference menu, seen flat from the front: a wide rectangle "
-            "about five times wider than tall with small rounded corners, a "
-            "deep navy-blue face with a very subtle lighter band across the "
-            "middle, and a thin muted gold rim. The face is completely plain "
-            f"and empty. Symmetrical, centered, filling the width. {CUTOUT} "
-            f"{NO_TEXT}"),
+            f"{LOOK} One slim, elegant game menu button seen flat from the "
+            "front: a long horizontal capsule about seven times wider than "
+            "tall with fully rounded ends. A deep navy-blue glassy face with "
+            "a faint lighter sheen along its upper half and a soft inner "
+            "glow. A FINE, thin polished-gold rim with a hairline dark edge, "
+            "and at each rounded end a small delicate gold filigree flourish "
+            "— a tiny curl with one small leaf — that barely leaves the "
+            "outline. Refined jewellery-like detail, nothing chunky. The "
+            "face is completely plain and empty. Perfectly symmetrical, "
+            f"centered, filling the width. {CUTOUT} {NO_TEXT}"),
     },
 }
 
