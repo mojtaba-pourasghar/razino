@@ -93,7 +93,7 @@ func build_content() -> void:
 		list.pressed.connect(func(): Router.go("UI-20", {"chapter_id": _chapter_id}))
 		buttons.add_child(list)
 	else:
-		var go := Style.make_button("مرحلهٔ بعد")
+		var go := Style.make_button("مرحلهٔ بعد", "gold")
 		go.pressed.connect(func(): Router.go("UI-21", {
 			"chapter_id": _chapter_id, "stage_id": next_id}))
 		buttons.add_child(go)

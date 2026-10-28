@@ -673,15 +673,13 @@ func make_control_row(icon: String, label: String, control: Control) -> PanelCon
 ## the rest are flat — the settings sheet's left column.
 ## One row of a side navigation column.
 ##
-## The sheet draws the active row as a dark surface with a GOLD HAIRLINE and
-## a gold icon, and the inactive ones with the ordinary steel hairline. Gold
-## is the action colour here, so filling the active row with it would make
-## the navigation shout louder than whatever it is navigating to.
+## As the panel sheet draws its side menus: the row you are on is a gold
+## plate with dark ink, the others matte navy.
 func make_nav_item(icon: String, label: String, active: bool = false) -> Button:
 	var b := Button.new()
 	b.custom_minimum_size = Vector2(0, RazinoUI.TOUCH_MIN + 6)
 	b.focus_mode = Control.FOCUS_ALL
-	var box := UiBox.make(UiBox.Kind.BUTTON, 14, 8)
+	var box := UiBox.make(UiBox.Kind.TAB_ON if active else UiBox.Kind.BUTTON, 14, 8)
 	b.add_theme_stylebox_override("normal", box)
 	b.add_theme_stylebox_override("hover", box.state(false, true))
 	b.add_theme_stylebox_override("focus", box.state(false, true))
@@ -698,30 +696,25 @@ func make_nav_item(icon: String, label: String, active: bool = false) -> Button:
 	b.add_child(row)
 
 	var badge := IconRect.new(icon, 32.0,
-		Palette.GOLD_BRIGHT if active else Palette.SNOW_SOFT)
+		Palette.INK if active else Palette.SNOW_SOFT)
 	badge.painted = false
 	badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(badge)
 
 	var l := make_body(label, Palette.FS_LABEL,
-		Palette.SNOW if active else Palette.SNOW_SOFT, false)
+		Palette.INK if active else Palette.SNOW, false)
+	if active and font_bold != null:
+		l.add_theme_font_override("font", font_bold)
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(l)
+	# The label keeps its own width and the rest of the row is space, so it
+	# sits beside its icon whichever way the row runs.
+	var rest := Control.new()
+	rest.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rest.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(rest)
 
-	if active:
-		var rail := _Rail.new()
-		rail.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		rail.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		b.add_child(rail)
 	return b
-
-## The gold mark the sheet puts on whatever you are currently on: a rail
-## along the bottom. Drawn as a child rather than in the button's own _draw,
-## because a Button paints its label last and would bury it.
-class _Rail extends Control:
-	func _draw() -> void:
-		RazinoUI.accent(get_canvas_item(), Rect2(Vector2.ZERO, size))
 
 ## A parchment list card: medallion, a title over a subtitle, a time on the
 ## end. The notifications, friends and mission lists are all this card.

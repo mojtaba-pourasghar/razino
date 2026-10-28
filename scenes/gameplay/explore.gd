@@ -32,6 +32,10 @@ var _used_interactions: Dictionary = {}
 func _ready() -> void:
 	configure("")
 	super._ready()
+	# This screen carries its own HUD — the purse and the pause gear in the
+	# top corner — so the shell's header would only put a second gear under
+	# the purse.
+	header.visible = false
 
 func build_content() -> void:
 	var payload := Router.take_payload()

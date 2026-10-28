@@ -61,7 +61,7 @@ func build_content() -> void:
 	_counts.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	content.add_child(_counts)
 
-	_start = Style.make_button("بزن بریم", "primary")
+	_start = Style.make_button("بزن بریم", "gold")
 	_start.pressed.connect(_go)
 	content.add_child(_start)
 

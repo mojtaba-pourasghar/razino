@@ -181,7 +181,7 @@ func _build_detail() -> void:
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_detail.add_child(spacer)
 
-	var use := Style.make_button("بررسی", "primary")
+	var use := Style.make_button("بررسی", "gold")
 	use.pressed.connect(func(): AudioManager.play_sfx("SFX_UI_TAP"))
 	_detail.add_child(use)
 

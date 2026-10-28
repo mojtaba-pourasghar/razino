@@ -60,7 +60,7 @@ func _ready() -> void:
 	buttons.add_theme_constant_override("separation", Palette.PAD_MD)
 	col.add_child(buttons)
 
-	_check = Style.make_button("بررسی")
+	_check = Style.make_button("بررسی", "gold")
 	_check.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_check.pressed.connect(_on_check)
 	buttons.add_child(_check)
