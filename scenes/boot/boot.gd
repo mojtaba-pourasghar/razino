@@ -7,9 +7,9 @@ extends Control
 ## over the gold name in the middle, and one column of buttons under it with
 ## the first one gold. Every piece is its own painting on transparent ground
 ## (content_tools/paint_splash.py), so each one comes in on its own and
-## keeps a little life once it has: the valley drifts, the crest floats, the
-## hero breathes, specks of sunlight rise. All of it stops when the player
-## has asked for reduced motion.
+## keeps a little life once it has: the valley drifts behind everything and
+## specks of sunlight rise. Nothing in front of the picture moves. All of
+## it stops when the player has asked for reduced motion.
 ##
 ## It is also the one place that decides where a returning player lands:
 ## straight back into their chapter if they have progress, the intro if they
@@ -323,10 +323,10 @@ func _enter() -> void:
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	t.tween_property(_title, "modulate:a", 1.0, 0.35).set_delay(0.35)
 	t.tween_property(_title, "scale", Vector2.ONE, 0.6).set_delay(0.35) \
-		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	t.tween_property(_crest, "modulate:a", 1.0, 0.4).set_delay(0.55)
 	t.tween_property(_crest, "position", crest_at, 0.7).set_delay(0.55) \
-		.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	for i in _buttons.size():
 		var b := _buttons[i]
 		b.modulate.a = 0.0
@@ -334,39 +334,39 @@ func _enter() -> void:
 		var at := 0.7 + 0.08 * i
 		t.tween_property(b, "modulate:a", 1.0, 0.3).set_delay(at)
 		t.tween_property(b, "scale", Vector2.ONE, 0.4).set_delay(at) \
-			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	t.chain().tween_callback(_idle)
 
-## The slow loops that keep the picture alive once everything has arrived.
+## The one slow loop that keeps the picture alive once everything arrives.
+##
+## There used to be three more: the crest bobbed five pixels every 2.2s, the
+## hero "breathed" at 1.01 scale — seven pixels of head travel every 1.9s
+## from a bottom pivot — and the start button pulsed at 1.04 every 0.9s,
+## the fastest beat on the fullest part of the screen. Four loops at four
+## tempos, none in step, read as the whole menu shaking rather than as life.
+##
+## What is left moves the painting behind everything by about two pixels a
+## second, which the eye reads as depth and never as motion. Anything the
+## player is trying to look at or press now holds perfectly still.
 func _idle() -> void:
 	var drift := create_tween().set_loops()
-	drift.tween_property(_backdrop, "scale", Vector2(1.04, 1.04), 20.0) \
+	drift.tween_property(_backdrop, "scale", Vector2(1.02, 1.02), 24.0) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	drift.tween_property(_backdrop, "scale", Vector2.ONE, 20.0) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-
-	var y := _crest.position.y
-	var bob := create_tween().set_loops()
-	bob.tween_property(_crest, "position:y", y - 5.0, 2.2) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	bob.tween_property(_crest, "position:y", y, 2.2) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-
-	var breathe := create_tween().set_loops()
-	breathe.tween_property(_hero, "scale", Vector2(1.0, 1.01), 1.9) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	breathe.tween_property(_hero, "scale", Vector2.ONE, 1.9) \
+	drift.tween_property(_backdrop, "scale", Vector2.ONE, 24.0) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 ## Once the game can start, the gold button says so.
 func _beckon() -> void:
 	if _calm or _buttons.is_empty():
 		return
+	# A glow, not a change of size. Scaling the gold button moved its edges
+	# six pixels every beat, which made the one thing the player is meant to
+	# press the least steady thing on the screen.
 	var start := _buttons[0]
 	var pulse := create_tween().set_loops()
-	pulse.tween_property(start, "scale", Vector2(1.04, 1.04), 0.9) \
+	pulse.tween_property(start, "modulate", Color(1.14, 1.12, 1.06), 1.4) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	pulse.tween_property(start, "scale", Vector2.ONE, 0.9) \
+	pulse.tween_property(start, "modulate", Color.WHITE, 1.4) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 # — start-up —————————————————————————————————————————————
