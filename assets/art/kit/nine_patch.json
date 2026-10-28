@@ -1,9 +1,7 @@
 {
-  "panel": 21,
-  "button_gold": 27,
-  "button_dark": 32,
-  "slot": 16,
-  "tab_active": 11,
-  "chip": 26,
-  "disc": 36
+  "panel": 70,
+  "button_gold": 34,
+  "button_dark": 33,
+  "slot": 20,
+  "tab_active": 25
 }

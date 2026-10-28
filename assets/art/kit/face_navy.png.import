@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cs177ahnyqtdu"
-path="res://.godot/imported/corner_gold.png-e8e700fa9a083ab5c2dc019cee277630.ctex"
+uid="uid://oavfba7swd0j"
+path="res://.godot/imported/face_navy.png-34a5c3eb59e1e934d52c311f5d5f4246.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/kit/corner_gold.png"
-dest_files=["res://.godot/imported/corner_gold.png-e8e700fa9a083ab5c2dc019cee277630.ctex"]
+source_file="res://assets/art/kit/face_navy.png"
+dest_files=["res://.godot/imported/face_navy.png-34a5c3eb59e1e934d52c311f5d5f4246.ctex"]
 
 [params]
 
