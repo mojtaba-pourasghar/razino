@@ -32,7 +32,9 @@ const TOUCH_GAP := 8.0
 ## A panel: dark body, barely-there gradient, steel hairline, gold brackets.
 static func panel(ci: RID, rect: Rect2, radius: float = RADIUS,
 		fill: Color = Palette.PANEL_DEEP, brackets_: bool = true) -> void:
-	_gradient(ci, rect, radius, fill.lightened(0.08), fill)
+	# A painted face when one has arrived, the drawn gradient until then.
+	if not KitArt.face(ci, rect, "face_navy"):
+		_gradient(ci, rect, radius, fill.lightened(0.08), fill)
 	_hairline(ci, rect, radius, Palette.PANEL_EDGE, HAIRLINE)
 	if brackets_:
 		brackets(ci, rect, radius)
@@ -42,8 +44,15 @@ static func panel(ci: RID, rect: Rect2, radius: float = RADIUS,
 ## keeps a screen of eight panels from reading as a wall of gold.
 static func brackets(ci: RID, rect: Rect2, radius: float,
 		colour: Color = Palette.GOLD_DEEP) -> void:
+	# Painted corners when they exist. They are mirrored from one piece at
+	# build time, so all four match, and the drawn rails below join them —
+	# an edge is a straight bar, which a model has nothing to add to and
+	# which drawing guarantees will meet the corners exactly.
 	var run := minf(BRACKET, minf(rect.size.x, rect.size.y) * 0.28)
 	if run < 6.0:
+		return
+	if KitArt.corners(ci, rect, "corner_gold", run * 2.2):
+		_rails(ci, rect, run * 2.2, colour)
 		return
 	var r := minf(radius, minf(rect.size.x, rect.size.y) * 0.5)
 	for corner: Array in [
@@ -59,6 +68,22 @@ static func brackets(ci: RID, rect: Rect2, radius: float,
 			colour, 2.4)
 		CI.polyline(ci, PackedVector2Array([c + ay * r, c + ay * r + ay * run]),
 			colour, 2.4)
+
+## The plain gold bands that run between painted corners.
+static func _rails(ci: RID, rect: Rect2, inset: float, colour: Color) -> void:
+	var w := 2.4
+	for bar: Rect2 in [
+		Rect2(rect.position.x + inset, rect.position.y + 2.0,
+			maxf(0.0, rect.size.x - inset * 2.0), w),
+		Rect2(rect.position.x + inset, rect.end.y - 2.0 - w,
+			maxf(0.0, rect.size.x - inset * 2.0), w),
+		Rect2(rect.position.x + 2.0, rect.position.y + inset, w,
+			maxf(0.0, rect.size.y - inset * 2.0)),
+		Rect2(rect.end.x - 2.0 - w, rect.position.y + inset, w,
+			maxf(0.0, rect.size.y - inset * 2.0)),
+	]:
+		if bar.size.x > 0.0 and bar.size.y > 0.0:
+			CI.rect(ci, bar, colour)
 
 ## A button. `primary` is the one gold thing on the screen; everything else
 ## is a dark surface with the same steel hairline as a panel.
