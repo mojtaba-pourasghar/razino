@@ -79,6 +79,13 @@ func rebuild() -> void:
 ## screens follow without being rewritten one by one.
 func _box(kind: OrnateBox.Kind, top: Color, bottom: Color, radius: float = RazinoUI.RADIUS,
 		frame: float = 0.0, h: int = Palette.PAD_MD, v: int = Palette.PAD_SM) -> StyleBox:
+	# The painted piece when the kit has it, the drawn one until then. Every
+	# screen comes through here, so a piece landing in assets/art/kit/
+	# changes the whole game without a line being edited.
+	var ui_kind: UiBox.Kind = OrnateBox.UI_KIND.get(kind, UiBox.Kind.PANEL)
+	var painted := UiBox.painted(ui_kind, h, v)
+	if painted != null:
+		return painted
 	return OrnateBox.make(kind, top, bottom, radius, frame).with_margins(h, v)
 
 func _button_box(plate: String, tint: Color, radius: float, frame: float,
@@ -87,8 +94,9 @@ func _button_box(plate: String, tint: Color, radius: float, frame: float,
 	# the primary one; everything else is a dark surface.
 	var primary := tint.is_equal_approx(Palette.ACTION) \
 		or tint.is_equal_approx(Palette.GOLD_BRIGHT)
-	return UiBox.make(UiBox.Kind.PRIMARY if primary else UiBox.Kind.BUTTON,
-		Palette.PAD_MD, Palette.PAD_SM)
+	var kind := UiBox.Kind.PRIMARY if primary else UiBox.Kind.BUTTON
+	var painted := UiBox.painted(kind, Palette.PAD_MD, Palette.PAD_SM)
+	return painted if painted != null else UiBox.make(kind, Palette.PAD_MD, Palette.PAD_SM)
 
 func _flat(bg: Color, radius: float, border: Color = Color.TRANSPARENT, border_w: int = 0) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
@@ -718,9 +726,7 @@ func make_nav_item(icon: String, label: String, active: bool = false) -> Button:
 ## because a Button paints its label last and would bury it.
 class _Rail extends Control:
 	func _draw() -> void:
-		CI.rect(get_canvas_item(),
-			Rect2(6.0, size.y - 3.0, maxf(0.0, size.x - 12.0), 3.0),
-			Palette.GOLD_BRIGHT)
+		RazinoUI.accent(get_canvas_item(), Rect2(Vector2.ZERO, size))
 
 ## A parchment list card: medallion, a title over a subtitle, a time on the
 ## end. The notifications, friends and mission lists are all this card.

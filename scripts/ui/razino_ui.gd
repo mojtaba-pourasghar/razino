@@ -29,61 +29,36 @@ const TOUCH_GAP := 8.0
 
 # — surfaces ——————————————————————————————————————————————
 
-## A panel: dark body, barely-there gradient, steel hairline, gold brackets.
+## A panel: dark body, a barely-there gradient, one thin steel hairline.
+##
+## Nothing else. The approved sheet has NO corner ornament anywhere — every
+## panel in it is a plain rounded rectangle with a single hairline, and the
+## gold is spent only on the one thing you are meant to press. An earlier
+## pass put gold brackets on all four corners of every panel and the screens
+## read as a wall of ornament with the content buried in it.
 static func panel(ci: RID, rect: Rect2, radius: float = RADIUS,
-		fill: Color = Palette.PANEL_DEEP, brackets_: bool = true) -> void:
-	# A painted face when one has arrived, the drawn gradient until then.
+		fill: Color = Palette.PANEL_DEEP, _unused: bool = true) -> void:
 	if not KitArt.face(ci, rect, "face_navy"):
 		_gradient(ci, rect, radius, fill.lightened(0.08), fill)
 	_hairline(ci, rect, radius, Palette.PANEL_EDGE, HAIRLINE)
-	if brackets_:
-		brackets(ci, rect, radius)
 
-## The short gold corner brackets. They stop well before the middle of any
-## edge — the sheets never run ornament along a whole side, which is what
-## keeps a screen of eight panels from reading as a wall of gold.
-static func brackets(ci: RID, rect: Rect2, radius: float,
-		colour: Color = Palette.GOLD_DEEP) -> void:
-	# Painted corners when they exist. They are mirrored from one piece at
-	# build time, so all four match, and the drawn rails below join them —
-	# an edge is a straight bar, which a model has nothing to add to and
-	# which drawing guarantees will meet the corners exactly.
-	var run := minf(BRACKET, minf(rect.size.x, rect.size.y) * 0.28)
-	if run < 6.0:
-		return
-	if KitArt.corners(ci, rect, "corner_gold", run * 2.2):
-		_rails(ci, rect, run * 2.2, colour)
-		return
-	var r := minf(radius, minf(rect.size.x, rect.size.y) * 0.5)
-	for corner: Array in [
-		[rect.position, Vector2(1, 0), Vector2(0, 1)],
-		[Vector2(rect.end.x, rect.position.y), Vector2(-1, 0), Vector2(0, 1)],
-		[Vector2(rect.position.x, rect.end.y), Vector2(1, 0), Vector2(0, -1)],
-		[rect.end, Vector2(-1, 0), Vector2(0, -1)],
-	]:
-		var c: Vector2 = corner[0]
-		var ax: Vector2 = corner[1]
-		var ay: Vector2 = corner[2]
-		CI.polyline(ci, PackedVector2Array([c + ax * r + ax * run, c + ax * r]),
-			colour, 2.4)
-		CI.polyline(ci, PackedVector2Array([c + ay * r, c + ay * r + ay * run]),
-			colour, 2.4)
-
-## The plain gold bands that run between painted corners.
-static func _rails(ci: RID, rect: Rect2, inset: float, colour: Color) -> void:
-	var w := 2.4
-	for bar: Rect2 in [
-		Rect2(rect.position.x + inset, rect.position.y + 2.0,
-			maxf(0.0, rect.size.x - inset * 2.0), w),
-		Rect2(rect.position.x + inset, rect.end.y - 2.0 - w,
-			maxf(0.0, rect.size.x - inset * 2.0), w),
-		Rect2(rect.position.x + 2.0, rect.position.y + inset, w,
-			maxf(0.0, rect.size.y - inset * 2.0)),
-		Rect2(rect.end.x - 2.0 - w, rect.position.y + inset, w,
-			maxf(0.0, rect.size.y - inset * 2.0)),
-	]:
-		if bar.size.x > 0.0 and bar.size.y > 0.0:
-			CI.rect(ci, bar, colour)
+## The soft gold bloom the sheet puts under whatever you are on — an active
+## tab, a selected row. It bleeds upward from the bottom edge rather than
+## sitting on it as a bar, which is the difference between an accent and a
+## border.
+static func accent(ci: RID, rect: Rect2, colour: Color = Palette.GOLD_BRIGHT) -> void:
+	var bands := 9
+	var reach := minf(rect.size.y * 0.42, 16.0)
+	for i in bands:
+		var t := float(i) / float(bands - 1)
+		var h := reach / float(bands) + 1.0
+		var inset := rect.size.x * 0.06 * t
+		CI.rect(ci, Rect2(rect.position.x + inset,
+			rect.end.y - 2.0 - reach * (1.0 - t),
+			maxf(0.0, rect.size.x - inset * 2.0), h),
+			Color(colour.r, colour.g, colour.b, 0.55 * t * t))
+	CI.rect(ci, Rect2(rect.position.x + rect.size.x * 0.08, rect.end.y - 3.0,
+		rect.size.x * 0.84, 2.2), colour)
 
 ## A button. `primary` is the one gold thing on the screen; everything else
 ## is a dark surface with the same steel hairline as a panel.
@@ -149,7 +124,6 @@ static func parchment(ci: RID, rect: Rect2, radius: float = 14.0) -> void:
 	_gradient(ci, rect, radius, Palette.PARCHMENT.lightened(0.06),
 		Palette.PARCHMENT.darkened(0.08))
 	_hairline(ci, rect, radius, Palette.GOLD_DEEP, 2.0)
-	brackets(ci, rect, radius, Palette.GOLD_DEEP)
 
 ## The soft outer light around a primary button. Drawn as a few expanding
 ## rounded rings; RenderingServer has no blur and at this softness nothing

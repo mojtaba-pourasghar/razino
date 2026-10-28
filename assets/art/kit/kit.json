@@ -1,6 +1,13 @@
 {
   "pieces": [
+    "button_dark",
+    "button_gold",
+    "chip",
     "corner_gold",
-    "item_potion_red"
+    "disc",
+    "item_potion_red",
+    "panel",
+    "slot",
+    "tab_active"
   ]
 }

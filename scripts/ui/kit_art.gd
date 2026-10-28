@@ -34,6 +34,62 @@ static func has(name: String) -> bool:
 static func forget() -> void:
 	_cache.clear()
 
+## The nine-patch margin for each piece, read from the kit's own manifest.
+##
+## It matters more than it looks. A nine-patch corner draws at its SOURCE
+## size, so a button painted 1024 tall and shown 56 tall has a corner four
+## times taller than the button — which is precisely how the first painted
+## plates in this project crumpled into unreadable scrollwork. Each piece is
+## scaled to roughly twice its drawn height before the margin is measured.
+static var _margins: Dictionary = {}
+static var _tints: Dictionary = {}
+
+static func margin(name: String) -> int:
+	if _margins.is_empty():
+		_margins = _read("nine_patch.json")
+	return int(_margins.get(name, 0))
+
+## The multiply that lands a piece on its specified colour.
+##
+## The model paints these brighter and bluer than it is told — given
+## #02182A it drew #0A2E60 — so each piece is measured at install time and
+## the correction stored. Tinting keeps the gradient and sheen it painted,
+## which are the part worth paying for, and moves only the base colour.
+static func tint(name: String) -> Color:
+	if _tints.is_empty():
+		_tints = _read("tint.json")
+	var t: Variant = _tints.get(name)
+	if t is Array and (t as Array).size() == 3:
+		return Color(float(t[0]), float(t[1]), float(t[2]))
+	return Color.WHITE
+
+static func _read(file: String) -> Dictionary:
+	var f := FileAccess.open(DIR + file, FileAccess.READ)
+	if f == null:
+		return {}
+	var parsed: Variant = JSON.parse_string(f.get_as_text())
+	return parsed if parsed is Dictionary else {}
+
+## A piece as a StyleBox, stretched by its nine-patch margins, or null when
+## that piece has not been painted yet.
+static func box(name: String, h_pad: int, v_pad: int) -> StyleBoxTexture:
+	var tex := piece(name)
+	if tex == null:
+		return null
+	var m := margin(name)
+	if m <= 0:
+		return null
+	var sb := StyleBoxTexture.new()
+	sb.texture = tex
+	sb.modulate_color = tint(name)
+	for side in [SIDE_LEFT, SIDE_RIGHT, SIDE_TOP, SIDE_BOTTOM]:
+		sb.set_texture_margin(side, m)
+	sb.content_margin_left = h_pad
+	sb.content_margin_right = h_pad
+	sb.content_margin_top = v_pad
+	sb.content_margin_bottom = v_pad
+	return sb
+
 ## Draws a painted corner into each corner of a rect, mirrored.
 ##
 ## Mirroring is what makes the four match. A model asked for four corners

@@ -10,6 +10,23 @@ enum Kind { PANEL, PANEL_PLAIN, BUTTON, PRIMARY, SLOT, PARCHMENT, NONE }
 @export var pressed: bool = false
 @export var hovered: bool = false
 
+## Which painted piece stands in for each kind, when it has arrived.
+const PIECE := {
+	Kind.PANEL: "panel",
+	Kind.PANEL_PLAIN: "panel",
+	Kind.BUTTON: "button_dark",
+	Kind.PRIMARY: "button_gold",
+	Kind.SLOT: "slot",
+}
+
+## A painted piece beats a drawn one wherever it exists. Returns the painted
+## StyleBox when the kit has that piece, and null otherwise, so the caller
+## falls back to drawing without having to know which pieces have landed.
+static func painted(kind_: Kind, h_pad: int, v_pad: int) -> StyleBox:
+	if not PIECE.has(kind_):
+		return null
+	return KitArt.box(String(PIECE[kind_]), h_pad, v_pad)
+
 static func make(kind_: Kind, h_pad: int = 18, v_pad: int = 14) -> UiBox:
 	var box := UiBox.new()
 	box.kind = kind_
