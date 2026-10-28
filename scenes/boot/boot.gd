@@ -1,60 +1,73 @@
 extends Control
-## UI-01 — the start screen.
+## UI-01 — the start screen, built as the approved sheet's main-menu panel
+## (assets/art/reference/screens.webp, top left).
 ##
-## Every piece is its own painting on transparent ground (see
-## content_tools/paint_splash.py): the town, the cast, the crest and the
-## plates. They are layered here rather than flattened into one picture, so
-## each can come in on its own and keep a little life once it has — the town
-## drifts, the crest floats, the cast breathes, motes of light rise. All of
-## that stops when the player has asked for reduced motion.
-##
-## The composition reads from right to left, as a Persian page does: the
-## name, the button and the side actions sit together on the right, where
-## the eye lands first, and the cast stands on the left looking on. The
-## anchors below are written as if for a left-to-right page; the screen is
-## RTL, so Godot mirrors every one of them.
+## A bright painted valley with the castle on the right, the hero and
+## Fandogh on their rock on the left looking towards it, the compass crest
+## over the gold name in the middle, and one column of buttons under it with
+## the first one gold. Every piece is its own painting on transparent ground
+## (content_tools/paint_splash.py), so each one comes in on its own and
+## keeps a little life once it has: the valley drifts, the crest floats, the
+## hero breathes, specks of sunlight rise. All of it stops when the player
+## has asked for reduced motion.
 ##
 ## It is also the one place that decides where a returning player lands:
 ## straight back into their chapter if they have progress, the intro if they
 ## do not. The warm-up runs while the player is still looking at the
-## picture, so the button is live by the time they reach for it.
+## picture, so the buttons are live by the time they reach for them.
 
 const ART := "res://assets/art/splash/"
 
-const SIDE_ACTIONS := [
-	{"icon": "gear", "label": "تنظیمات", "ui": "UI-13"},
-	{"icon": "friend", "label": "پروفایل", "ui": "UI-17"},
-	{"icon": "book", "label": "راهنما", "ui": "UI-02"},
+## Where each piece sits, as a fraction of the window, read off the sheet.
+## The screen itself is laid out left to right — these are places in the
+## picture, not reading order — and every text inside it is RTL on its own.
+const SPOT := {
+	"hero": Rect2(0.00, 0.16, 0.35, 0.86),
+	"crest": Rect2(0.44, 0.015, 0.12, 0.20),
+	"title": Rect2(0.36, 0.14, 0.28, 0.24),
+	"tagline": Rect2(0.36, 0.375, 0.28, 0.06),
+	"menu": Rect2(0.385, 0.455, 0.23, 0.455),
+	"status": Rect2(0.36, 0.92, 0.28, 0.05),
+	"version": Rect2(0.012, 0.93, 0.10, 0.05),
+}
+
+## The column, top to bottom. `needs_save` greys a button out until there
+## is a game to come back to.
+const MENU := [
+	{"id": "start", "label": "شروع بازی", "icon": "play", "primary": true},
+	{"id": "continue", "label": "ادامهٔ بازی", "icon": "map", "needs_save": true},
+	{"id": "settings", "label": "تنظیمات", "icon": "gear"},
+	{"id": "guide", "label": "راهنما", "icon": "book"},
+	{"id": "quit", "label": "خروج", "icon": "home"},
 ]
 
-## Where the title is written on the crest, as a fraction of the crest
-## painting: the empty navy field of its plaque.
-const PLAQUE := Rect2(0.17, 0.57, 0.66, 0.30)
-
-## Text on the gold button: dark enough to read on amber, warm enough not to
-## look printed.
+## Text and icon on the gold button: dark enough to read on amber, warm
+## enough not to look printed.
 const INK := Color("3A1E06")
 
-var _start: Button
 var _status: Label
 var _ready_to_play: bool = false
+var _calm: bool = false
 
 var _backdrop: TextureRect
-var _crest: Control
-var _cast: TextureRect
-var _left: Control
-var _calm: bool = false
+var _hero: TextureRect
+var _crest: TextureRect
+var _title: TextureRect
+var _buttons: Array[Button] = []
+var _needs_save: Array[Button] = []
+var _placed: Array[Dictionary] = []
 
 func _ready() -> void:
 	Log.info("Boot", "starting")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	layout_direction = Control.LAYOUT_DIRECTION_RTL
+	layout_direction = Control.LAYOUT_DIRECTION_LTR
 	_calm = Settings.reduce_motion
 	Style.attach(self)
 	_build()
-	resized.connect(_recentre)
+	resized.connect(_place_all)
+	_place_all()
 	await get_tree().process_frame
-	_recentre()
+	_pivots()
 	_enter()
 	await _warm_up()
 
@@ -65,101 +78,62 @@ func _build() -> void:
 	night.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(night)
 
-	# — the town —
-	_backdrop = _picture("splash_bg.webp", TextureRect.STRETCH_KEEP_ASPECT_COVERED)
+	# — the valley —
+	_backdrop = _picture("menu_bg.webp", TextureRect.STRETCH_KEEP_ASPECT_COVERED)
 	_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_backdrop)
 
-	# Two washes: one up from the floor so the cast's feet and the side
-	# actions sit on shade rather than bright grass, one in from the right so
-	# the button and its caption read against the town behind them. (A
-	# texture is not mirrored by RTL, so this one says "right" itself.)
-	add_child(_wash(true, 0.55, 0.45))
-	add_child(_wash(false, 0.45, 0.55))
-
-	# — the cast (mirrored to the left) —
-	_cast = _picture("splash_cast.png", TextureRect.STRETCH_KEEP_ASPECT)
-	_cast.anchor_left = 0.44
-	_cast.anchor_right = 1.0
-	_cast.anchor_top = 0.20
-	_cast.anchor_bottom = 1.0
-	_cast.offset_bottom = -6
-	add_child(_cast)
+	# A soft shade behind the middle column, darkest under the buttons, so
+	# the title and the labels hold against bright sky and forest. The sheet
+	# has no visible panel there and neither does this: only the light dips.
+	add_child(_shade())
 
 	if not _calm:
 		add_child(_motes())
 
-	# — the name, the button and the side actions (mirrored to the right) —
-	_left = Control.new()
-	_left.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_left.anchor_left = 0.03
-	_left.anchor_right = 0.50
-	_left.anchor_top = 0.0
-	_left.anchor_bottom = 1.0
-	add_child(_left)
+	# — the hero on his rock —
+	_hero = _picture("menu_hero.png", TextureRect.STRETCH_KEEP_ASPECT)
+	_place(_hero, "hero")
 
-	_crest = _Crest.new()
-	_crest.texture = _texture("splash_emblem.png")
-	_crest.title = "رازینو"
-	_crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_crest.anchor_right = 1.0
-	_crest.anchor_top = 0.04
-	_crest.anchor_bottom = 0.44
-	_left.add_child(_crest)
+	# — the crest and the name —
+	_title = _picture("menu_title.png", TextureRect.STRETCH_KEEP_ASPECT_CENTERED)
+	_place(_title, "title")
+	_crest = _picture("menu_crest.png", TextureRect.STRETCH_KEEP_ASPECT_CENTERED)
+	_place(_crest, "crest")
 
-	var tagline := Style.make_title("رازِ هر گوشه، ماجرایی تازه", Palette.FS_HEADING,
-		Palette.GOLD_LIGHT)
+	var tagline := Style.make_title("ماجرا آغاز می‌شود", Palette.FS_LABEL, Palette.SNOW)
 	tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tagline.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	tagline.autowrap_mode = TextServer.AUTOWRAP_OFF
-	tagline.add_theme_color_override("font_outline_color", Color(0.05, 0.03, 0.0, 0.9))
-	tagline.add_theme_constant_override("outline_size", 8)
-	tagline.anchor_right = 1.0
-	tagline.anchor_top = 0.45
-	tagline.anchor_bottom = 0.52
-	_left.add_child(tagline)
+	tagline.add_theme_color_override("font_outline_color", Color(0.03, 0.06, 0.14, 0.95))
+	tagline.add_theme_constant_override("outline_size", 9)
+	_place(tagline, "tagline")
 
-	var middle := VBoxContainer.new()
-	middle.alignment = BoxContainer.ALIGNMENT_CENTER
-	middle.add_theme_constant_override("separation", 6)
-	middle.anchor_right = 1.0
-	middle.anchor_top = 0.54
-	middle.anchor_bottom = 0.76
-	_left.add_child(middle)
+	# — the column —
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 9)
+	_place(column, "menu")
+	for entry: Dictionary in MENU:
+		var b := _menu_button(entry)
+		column.add_child(b)
+		_buttons.append(b)
+		if bool(entry.get("needs_save", false)):
+			_needs_save.append(b)
 
-	_start = _plate_button("شروع بازی", "button_gold.png", INK)
-	_start.custom_minimum_size = Vector2(430, 96)
-	_start.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_start.disabled = true
-	_start.pressed.connect(_play)
-	middle.add_child(_start)
-
-	_status = Style.make_body("در حال آماده‌سازی…", Palette.FS_CAPTION, Palette.SNOW)
+	_status = Style.make_body("در حال آماده‌سازی…", Palette.FS_CAPTION, Palette.SNOW, false)
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_status.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
 	_status.add_theme_constant_override("outline_size", 6)
-	middle.add_child(_status)
-
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 28)
-	row.anchor_right = 1.0
-	row.anchor_top = 0.77
-	row.anchor_bottom = 0.98
-	_left.add_child(row)
-	for action in SIDE_ACTIONS:
-		row.add_child(_side_action(action))
+	_place(_status, "status")
 
 	var version := Style.make_body("v%s" % ProjectSettings.get_setting(
 		"application/config/version", "0.1.0"), Palette.FS_CAPTION,
-		Palette.SNOW_SOFT, false)
-	version.layout_direction = Control.LAYOUT_DIRECTION_LTR
-	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
-	version.offset_left = -90
-	version.offset_top = -30
-	version.offset_right = -14
-	version.offset_bottom = -8
-	version.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	add_child(version)
+		Palette.SNOW, false)
+	version.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	version.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
+	version.add_theme_constant_override("outline_size", 5)
+	_place(version, "version")
 
 # — pieces ————————————————————————————————————————————————
 
@@ -175,116 +149,100 @@ func _picture(file: String, stretch: TextureRect.StretchMode) -> TextureRect:
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return rect
 
-## A wash of night: up from the floor when `from_floor`, otherwise in from
-## the right edge. `strength` is its alpha at the edge it starts from;
-## `reach` is how far across the screen it has faded to nothing.
-func _wash(from_floor: bool, strength: float, reach: float) -> TextureRect:
+## Night, faded radially out from the middle of the button column.
+func _shade() -> TextureRect:
+	var g := Gradient.new()
 	var dark := Palette.NIGHT
-	dark.a = strength
+	dark.a = 0.42
 	var clear := Palette.NIGHT
 	clear.a = 0.0
-	var g := Gradient.new()
 	g.set_color(0, dark)
 	g.set_color(1, clear)
-	g.set_offset(1, reach)
 	var tex := GradientTexture2D.new()
 	tex.gradient = g
-	tex.fill_from = Vector2(0.5, 1.0) if from_floor else Vector2(1.0, 0.5)
-	tex.fill_to = Vector2(0.5, 0.0) if from_floor else Vector2(0.0, 0.5)
-	tex.width = 64
-	tex.height = 64
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.62)
+	tex.fill_to = Vector2(0.5, 0.0)
+	tex.width = 128
+	tex.height = 128
 	var rect := TextureRect.new()
 	rect.texture = tex
 	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	rect.stretch_mode = TextureRect.STRETCH_SCALE
-	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	rect.anchor_left = 0.25
+	rect.anchor_right = 0.75
+	rect.anchor_bottom = 1.0
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return rect
 
-## A button drawn on a painted plate. The plate is cut at the height it is
-## drawn at, so only its rounded ends are kept and the middle stretches.
-func _plate_button(text: String, plate: String, ink: Color) -> Button:
-	var tex := _texture(plate)
-	if tex == null:
-		return Style.make_button(text)
+## One row of the column: the painted plate, the icon at the left edge and
+## the label centred in the button, as the sheet draws it.
+func _menu_button(entry: Dictionary) -> Button:
+	var primary := bool(entry.get("primary", false))
+	var ink := INK if primary else Palette.SNOW
 	var b := Button.new()
-	b.text = text
 	b.focus_mode = Control.FOCUS_ALL
-	var base := StyleBoxTexture.new()
-	base.texture = tex
-	base.texture_margin_left = 64
-	base.texture_margin_right = 64
-	base.content_margin_bottom = 8
-	var lit := base.duplicate() as StyleBoxTexture
-	lit.modulate_color = Color(1.12, 1.08, 1.0)
-	var down := base.duplicate() as StyleBoxTexture
-	down.modulate_color = Color(0.82, 0.78, 0.72)
-	down.content_margin_top = 4
-	var off := base.duplicate() as StyleBoxTexture
-	off.modulate_color = Color(0.7, 0.7, 0.7, 0.85)
-	b.add_theme_stylebox_override("normal", base)
-	b.add_theme_stylebox_override("hover", lit)
-	b.add_theme_stylebox_override("focus", lit)
-	b.add_theme_stylebox_override("pressed", down)
-	b.add_theme_stylebox_override("disabled", off)
+	b.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	b.custom_minimum_size = Vector2(0, RazinoUI.TOUCH_MIN)
+	b.disabled = true
+
+	var tex := _texture("button_gold.png" if primary else "button_navy.png")
+	if tex != null:
+		var base := StyleBoxTexture.new()
+		base.texture = tex
+		base.set_texture_margin_all(26)
+		var lit := base.duplicate() as StyleBoxTexture
+		lit.modulate_color = Color(1.18, 1.12, 1.02)
+		var down := base.duplicate() as StyleBoxTexture
+		down.modulate_color = Color(0.8, 0.76, 0.7)
+		var off := base.duplicate() as StyleBoxTexture
+		off.modulate_color = Color(0.62, 0.62, 0.66, 0.9)
+		b.add_theme_stylebox_override("normal", base)
+		b.add_theme_stylebox_override("hover", lit)
+		b.add_theme_stylebox_override("focus", lit)
+		b.add_theme_stylebox_override("pressed", down)
+		b.add_theme_stylebox_override("disabled", off)
+	else:
+		var box := UiBox.make(UiBox.Kind.PRIMARY if primary else UiBox.Kind.BUTTON, 14, 8)
+		b.add_theme_stylebox_override("normal", box)
+
+	var row := HBoxContainer.new()
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 20
+	row.offset_right = -20
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(row)
+
+	var icon := IconRect.new(String(entry["icon"]), 26.0, ink)
+	icon.painted = false
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(icon)
+
+	var label := Style.make_body(String(entry["label"]), Palette.FS_HEADING, ink, false)
 	if Style.font_bold != null:
-		b.add_theme_font_override("font", Style.font_bold)
-	b.add_theme_font_size_override("font_size", Style.scaled(Palette.FS_TITLE + 2))
-	for state in ["font_color", "font_hover_color", "font_pressed_color",
-			"font_focus_color"]:
-		b.add_theme_color_override(state, ink)
-	b.add_theme_color_override("font_disabled_color", ink.lerp(Color.GRAY, 0.4))
-	b.add_theme_color_override("font_outline_color", Color(1.0, 0.9, 0.6, 0.55))
-	b.add_theme_constant_override("outline_size", 3)
+		label.add_theme_font_override("font", Style.font_bold)
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.size_flags_vertical = Control.SIZE_FILL
+	row.add_child(label)
+
+	# Balances the icon's column so the label is centred in the button, not
+	# in what is left of it.
+	var pad := Control.new()
+	pad.custom_minimum_size.x = 26
+	pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(pad)
+
+	var id := String(entry["id"])
+	b.pressed.connect(func(): _choose(id))
 	return b
 
-func _side_action(action: Dictionary) -> Control:
-	var col := VBoxContainer.new()
-	col.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_theme_constant_override("separation", 2)
-
-	var medal := Button.new()
-	medal.custom_minimum_size = Vector2(80, 77)
-	medal.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	medal.tooltip_text = String(action["label"])
-	var face := _texture("medallion.png")
-	if face != null:
-		var box := StyleBoxTexture.new()
-		box.texture = face
-		box.set_content_margin_all(15)
-		var lit := box.duplicate() as StyleBoxTexture
-		lit.modulate_color = Color(1.15, 1.1, 1.0)
-		var down := box.duplicate() as StyleBoxTexture
-		down.modulate_color = Color(0.8, 0.78, 0.74)
-		medal.add_theme_stylebox_override("normal", box)
-		medal.add_theme_stylebox_override("hover", lit)
-		medal.add_theme_stylebox_override("focus", lit)
-		medal.add_theme_stylebox_override("pressed", down)
-	medal.icon = UiArt.icon(String(action["icon"]))
-	medal.expand_icon = true
-	medal.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	medal.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
-	var ui_id := String(action["ui"])
-	medal.pressed.connect(func():
-		if not _ready_to_play:
-			return
-		AudioManager.play_sfx("SFX_UI_TAP")
-		Router.go(ui_id))
-	col.add_child(medal)
-
-	var label := Style.make_body(String(action["label"]), Palette.FS_CAPTION, Palette.SNOW, false)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-	label.add_theme_constant_override("outline_size", 6)
-	col.add_child(label)
-	return col
-
-## Specks of warm light drifting up out of the meadow.
+## Specks of sunlight drifting up through the valley.
 func _motes() -> CPUParticles2D:
 	var g := Gradient.new()
-	g.set_color(0, Color(1.0, 0.92, 0.6, 1.0))
-	g.set_color(1, Color(1.0, 0.8, 0.3, 0.0))
+	g.set_color(0, Color(1.0, 0.97, 0.8, 1.0))
+	g.set_color(1, Color(1.0, 0.9, 0.5, 0.0))
 	var dot := GradientTexture2D.new()
 	dot.gradient = g
 	dot.fill = GradientTexture2D.FILL_RADIAL
@@ -296,87 +254,130 @@ func _motes() -> CPUParticles2D:
 	var fade := Gradient.new()
 	fade.set_color(0, Color(1, 1, 1, 0))
 	fade.set_color(1, Color(1, 1, 1, 0))
-	fade.add_point(0.2, Color(1, 1, 1, 0.9))
-	fade.add_point(0.8, Color(1, 1, 1, 0.6))
+	fade.add_point(0.2, Color(1, 1, 1, 0.8))
+	fade.add_point(0.8, Color(1, 1, 1, 0.5))
 
 	var p := CPUParticles2D.new()
 	p.name = "Motes"
 	p.texture = dot
-	p.amount = 36
-	p.lifetime = 7.0
-	p.preprocess = 7.0
+	p.amount = 30
+	p.lifetime = 8.0
+	p.preprocess = 8.0
 	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
-	p.direction = Vector2(0, -1)
+	p.direction = Vector2(0.2, -1)
 	p.spread = 25.0
 	p.gravity = Vector2.ZERO
-	p.initial_velocity_min = 12.0
-	p.initial_velocity_max = 30.0
-	p.scale_amount_min = 0.3
-	p.scale_amount_max = 1.0
+	p.initial_velocity_min = 10.0
+	p.initial_velocity_max = 26.0
+	p.scale_amount_min = 0.25
+	p.scale_amount_max = 0.9
 	p.color_ramp = fade
 	return p
 
-# — layout and motion —————————————————————————————————————
+# — placing by fraction ———————————————————————————————————
 
-func _recentre() -> void:
-	_backdrop.pivot_offset = _backdrop.size * 0.5
-	_cast.pivot_offset = Vector2(_cast.size.x * 0.5, _cast.size.y)
-	_start.pivot_offset = _start.size * 0.5
+func _place(control: Control, spot: String) -> void:
+	add_child(control)
+	_placed.append({"node": control, "spot": SPOT[spot]})
+
+## Everything is positioned as a fraction of the window rather than in
+## pixels, so the composition holds its proportions from a 19:9 phone to a
+## 4:3 tablet instead of drifting apart on each.
+func _place_all() -> void:
+	for entry: Dictionary in _placed:
+		var control: Control = entry["node"]
+		var f: Rect2 = entry["spot"]
+		control.set_anchors_preset(Control.PRESET_TOP_LEFT, false)
+		control.anchor_left = f.position.x
+		control.anchor_top = f.position.y
+		control.anchor_right = f.position.x + f.size.x
+		control.anchor_bottom = f.position.y + f.size.y
+		control.offset_left = 0.0
+		control.offset_top = 0.0
+		control.offset_right = 0.0
+		control.offset_bottom = 0.0
+	_pivots()
 	var motes := get_node_or_null("Motes") as CPUParticles2D
 	if motes != null:
-		motes.position = Vector2(size.x * 0.5, size.y * 0.92)
-		motes.emission_rect_extents = Vector2(size.x * 0.5, size.y * 0.06)
+		motes.position = Vector2(size.x * 0.5, size.y * 0.95)
+		motes.emission_rect_extents = Vector2(size.x * 0.5, size.y * 0.05)
+
+func _pivots() -> void:
+	if _backdrop == null:
+		return
+	_backdrop.pivot_offset = _backdrop.size * 0.5
+	_hero.pivot_offset = Vector2(_hero.size.x * 0.5, _hero.size.y)
+	_crest.pivot_offset = _crest.size * 0.5
+	_title.pivot_offset = _title.size * 0.5
+	for b in _buttons:
+		b.pivot_offset = b.size * 0.5
+
+# — motion ————————————————————————————————————————————————
 
 func _enter() -> void:
 	if _calm:
 		return
+	var hero_at := _hero.position
 	var crest_at := _crest.position
-	var cast_at := _cast.position
 	_backdrop.modulate.a = 0.0
+	_hero.modulate.a = 0.0
+	_hero.position = hero_at - Vector2(80, 0)
 	_crest.modulate.a = 0.0
-	_crest.position = crest_at - Vector2(0, 40)
-	_cast.modulate.a = 0.0
-	_cast.position = cast_at + Vector2(70, 0)
+	_crest.position = crest_at - Vector2(0, 50)
+	_title.modulate.a = 0.0
+	_title.scale = Vector2(0.75, 0.75)
 
 	var t := create_tween().set_parallel(true)
 	t.tween_property(_backdrop, "modulate:a", 1.0, 0.6)
-	t.tween_property(_crest, "modulate:a", 1.0, 0.5).set_delay(0.25)
-	t.tween_property(_crest, "position", crest_at, 0.7).set_delay(0.25) \
-		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	t.tween_property(_cast, "modulate:a", 1.0, 0.6).set_delay(0.45)
-	t.tween_property(_cast, "position", cast_at, 0.8).set_delay(0.45) \
+	t.tween_property(_hero, "modulate:a", 1.0, 0.6).set_delay(0.2)
+	t.tween_property(_hero, "position", hero_at, 0.8).set_delay(0.2) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	t.tween_property(_title, "modulate:a", 1.0, 0.35).set_delay(0.35)
+	t.tween_property(_title, "scale", Vector2.ONE, 0.6).set_delay(0.35) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(_crest, "modulate:a", 1.0, 0.4).set_delay(0.55)
+	t.tween_property(_crest, "position", crest_at, 0.7).set_delay(0.55) \
+		.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	for i in _buttons.size():
+		var b := _buttons[i]
+		b.modulate.a = 0.0
+		b.scale = Vector2(0.9, 0.9)
+		var at := 0.7 + 0.08 * i
+		t.tween_property(b, "modulate:a", 1.0, 0.3).set_delay(at)
+		t.tween_property(b, "scale", Vector2.ONE, 0.4).set_delay(at) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	t.chain().tween_callback(_idle)
 
 ## The slow loops that keep the picture alive once everything has arrived.
 func _idle() -> void:
 	var drift := create_tween().set_loops()
-	drift.tween_property(_backdrop, "scale", Vector2(1.05, 1.05), 18.0) \
+	drift.tween_property(_backdrop, "scale", Vector2(1.04, 1.04), 20.0) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	drift.tween_property(_backdrop, "scale", Vector2.ONE, 18.0) \
+	drift.tween_property(_backdrop, "scale", Vector2.ONE, 20.0) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 	var y := _crest.position.y
 	var bob := create_tween().set_loops()
-	bob.tween_property(_crest, "position:y", y - 6.0, 2.4) \
+	bob.tween_property(_crest, "position:y", y - 5.0, 2.2) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	bob.tween_property(_crest, "position:y", y, 2.4) \
+	bob.tween_property(_crest, "position:y", y, 2.2) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 	var breathe := create_tween().set_loops()
-	breathe.tween_property(_cast, "scale", Vector2(1.0, 1.012), 1.8) \
+	breathe.tween_property(_hero, "scale", Vector2(1.0, 1.01), 1.9) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	breathe.tween_property(_cast, "scale", Vector2.ONE, 1.8) \
+	breathe.tween_property(_hero, "scale", Vector2.ONE, 1.9) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
-## Once the game can start, the button says so.
+## Once the game can start, the gold button says so.
 func _beckon() -> void:
-	if _calm:
+	if _calm or _buttons.is_empty():
 		return
+	var start := _buttons[0]
 	var pulse := create_tween().set_loops()
-	pulse.tween_property(_start, "scale", Vector2(1.05, 1.05), 0.9) \
+	pulse.tween_property(start, "scale", Vector2(1.04, 1.04), 0.9) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	pulse.tween_property(_start, "scale", Vector2.ONE, 0.9) \
+	pulse.tween_property(start, "scale", Vector2.ONE, 0.9) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 # — start-up —————————————————————————————————————————————
@@ -394,61 +395,32 @@ func _warm_up() -> void:
 			_fail("پروندهٔ ذخیره خوانده نشد.", "save_unreadable")
 			return
 	_ready_to_play = true
-	_start.disabled = false
+	var resumable := _has_progress()
+	for b in _buttons:
+		b.disabled = b in _needs_save and not resumable
 	_status.text = ""
 	_beckon()
+
+func _has_progress() -> bool:
+	return SaveManager.has_save() and not GameState.current_chapter.is_empty()
 
 func _fail(message: String, reason: String) -> void:
 	_status.text = message
 	await get_tree().create_timer(1.2).timeout
 	Router.go("UI-16", {"reason": reason})
 
-func _play() -> void:
+func _choose(id: String) -> void:
+	if not _ready_to_play:
+		return
 	AudioManager.play_sfx("SFX_UI_TAP")
-	if SaveManager.has_save() and not GameState.current_chapter.is_empty():
-		Router.go("UI-04")
-	else:
-		Router.go("UI-02")
-
-# — the crest ——————————————————————————————————————————————
-
-class _Crest extends Control:
-	## The painted crest with the game's name written on its plaque.
-	##
-	## The name is set in type rather than painted, so it is real Persian in
-	## the game's own face — an image model cannot be trusted with Persian
-	## letters — and it can be changed without repainting anything.
-	var texture: Texture2D
-	var title: String = ""
-
-	func _draw() -> void:
-		if texture == null:
-			return
-		var ts := texture.get_size()
-		var k := minf(size.x / ts.x, size.y / ts.y)
-		var drawn := ts * k
-		var at := (size - drawn) * 0.5
-		draw_texture_rect(texture, Rect2(at, drawn), false)
-
-		var font: Font = Style.font_bold if Style.font_bold != null else Style.font_regular
-		if font == null or title.is_empty():
-			return
-		var field := Rect2(at + drawn * PLAQUE.position, drawn * PLAQUE.size)
-		var px := int(field.size.y * 0.80)
-		var w := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-		if w > field.size.x * 0.92:
-			px = int(px * field.size.x * 0.92 / w)
-			w = font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-		# draw_string takes a baseline: centre the glyphs' ascent-to-descent
-		# box in the field, not their top edge.
-		var base := field.position.y + (field.size.y
-			+ font.get_ascent(px) - font.get_descent(px)) * 0.5
-		var pos := Vector2(field.position.x + (field.size.x - w) * 0.5, base)
-		draw_string_outline(font, pos + Vector2(0, 3), title,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, px, 10, Color(0.02, 0.03, 0.08, 0.9))
-		draw_string_outline(font, pos, title, HORIZONTAL_ALIGNMENT_LEFT, -1, px,
-			6, Color("5A3609"))
-		draw_string(font, pos + Vector2(0, 2), title, HORIZONTAL_ALIGNMENT_LEFT,
-			-1, px, Palette.GOLD_DEEP)
-		draw_string(font, pos, title, HORIZONTAL_ALIGNMENT_LEFT, -1, px,
-			Palette.GOLD_LIGHT)
+	match id:
+		"start":
+			Router.go("UI-04" if _has_progress() else "UI-02")
+		"continue":
+			Router.go("UI-04")
+		"settings":
+			Router.go("UI-13")
+		"guide":
+			Router.go("UI-02")
+		"quit":
+			get_tree().quit()
