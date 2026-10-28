@@ -9,7 +9,7 @@ own painting with a real alpha channel, so Godot can place, scale and
 animate each one on its own:
 
     menu_bg          the valley, opaque, open in the middle
-    menu_hero        Arad and Fandogh on their rock, transparent
+    menu_hero        Arad and Fandogh (the dino) on their rock, transparent
     menu_crest       the compass crest above the name, transparent
     button_gold      the primary button plate, transparent, nine-patched
     button_navy      the other buttons' plate, transparent, nine-patched
@@ -54,6 +54,7 @@ CROPS = {
     "menu_hero": ("screens.webp", (0, 40, 300, 436), 2.0),
     "menu_logo": ("screens.webp", (300, 15, 525, 195), 3.0),
     "cast_hero": ("cast_sheet.webp", (0, 30, 85, 195), 4.0),
+    "cast_dino": ("cast_sheet.webp", (556, 33, 652, 184), 4.0),
 }
 
 ## The look of the approved sheet: painted fantasy key art, bright daylight,
@@ -92,20 +93,19 @@ PIECES: dict[str, dict] = {
     },
     "menu_hero": {
         "size": (1024, 1536), "transparent": True,
-        "refs": ["menu_hero", "char-arad.webp", "char-fandogh-concept.webp",
-                 "cast_hero"],
+        "refs": ["menu_hero", "cast_hero", "cast_dino"],
         "prompt": (
             f"{LOOK} The hero from the first reference picture, standing in "
             "the same pose on a mossy rock outcrop: a brave boy of about "
             "eleven seen from three-quarters behind, turned to the RIGHT, "
             "gazing towards a distant castle, one hand on the strap of his "
             "big leather adventurer's backpack with a rolled map tucked in "
-            "it, a flowing red cape, brown leather jerkin, sturdy boots. Give "
-            "him the face and curly dark brown hair of Arad from picture 2 "
-            "(seen in profile). No weapon. Beside his feet on the same rock "
-            "sits Fandogh, the little orange fox detective from picture 3, "
-            "in his brown deerstalker hat and cape, holding his magnifying "
-            "glass and also looking to the right. The rock is a compact "
+            "it, a flowing red cape, brown leather jerkin, sturdy boots. He "
+            "is the 'Hero' of picture 2 — the same tousled brown hair and "
+            "outfit — seen in profile. No weapon. Beside his feet on the "
+            "same rock stands Fandogh, the little round blue dino of picture "
+            "3 with his red neckerchief and small backpack, also looking to "
+            "the right with a happy open-mouthed smile. The rock is a compact "
             "chunk of grey stone with moss and a few grass tufts, flat at "
             "the bottom. Everything fully inside the picture with a little "
             "space all round. Copy ONLY the characters and their rock from "
