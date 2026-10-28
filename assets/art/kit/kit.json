@@ -1,3 +1,6 @@
 {
-  "pieces": []
+  "pieces": [
+    "corner_gold",
+    "item_potion_red"
+  ]
 }
