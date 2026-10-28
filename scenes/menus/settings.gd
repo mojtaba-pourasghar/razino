@@ -1,96 +1,158 @@
-extends Control
-## UI-13 — تنظیمات, built on the reference painting itself.
+extends RazinoScreen
+## UI-13 — تنظیمات, laid out as the approved sheet's settings panel.
 ##
-## The frame, the panels, the icons and every Persian label come from
-## assets/art/screens/settings.png, which is the approved design. Only what
-## the player can actually change is drawn on top of it: three sliders, three
-## switches, and invisible hit areas over the painted buttons.
+## A navigation column down the start side with the section you are in lit
+## gold, and beside it the rows for that section: a label over its control,
+## one under the other, with a hairline separating the two halves.
 ##
-## This is the right trade for this screen because none of its layout moves.
-## Its labels never change, its rows never grow, and its controls sit where
-## the painting puts them — so composing it out of stretchable panels bought
-## nothing and cost the exact look.
-##
-## The content is still what GDD §12.2 requires: three independent volumes,
-## plus the accessibility switches a child who is still learning needs.
+## The content is still what GDD §12.2 requires: three independent volumes
+## and the accessibility switches a child who is still learning needs.
 
-## Where each live control sits, as a fraction of the painting. Measured
-## against the plate, not guessed — see docs/UI_SPEC.md.
-const SPOTS := {
-	"close":    Rect2(0.915, 0.045, 0.060, 0.090),
-	"nav0":     Rect2(0.045, 0.150, 0.285, 0.130),
-	"nav1":     Rect2(0.045, 0.285, 0.285, 0.120),
-	"nav2":     Rect2(0.045, 0.410, 0.285, 0.120),
-	"nav3":     Rect2(0.045, 0.535, 0.285, 0.120),
-	"nav4":     Rect2(0.045, 0.660, 0.285, 0.130),
-	"slider0":  Rect2(0.590, 0.192, 0.250, 0.056),
-	"slider1":  Rect2(0.590, 0.297, 0.250, 0.056),
-	"drop":     Rect2(0.575, 0.390, 0.330, 0.100),
-	"toggle0":  Rect2(0.789, 0.507, 0.124, 0.080),
-	"toggle1":  Rect2(0.789, 0.612, 0.124, 0.080),
-	"toggle2":  Rect2(0.789, 0.717, 0.124, 0.080),
-	"save":     Rect2(0.455, 0.818, 0.285, 0.112),
-}
-
-## Which setting each painted row drives, in the order the painting draws
-## them. The labels are in the art, so only the keys live here.
-const ROWS := [
-	{"spot": "slider0", "key": "music_volume"},
-	{"spot": "slider1", "key": "sfx_volume"},
-	{"spot": "toggle0", "key": "auto_advance"},
-	{"spot": "toggle1", "key": "subtitles_enabled"},
-	{"spot": "toggle2", "key": "reduce_motion"},
+const SECTIONS := [
+	{"label": "گرافیک", "icon": "star"},
+	{"label": "صدا", "icon": "speaker"},
+	{"label": "بازی", "icon": "gear"},
+	{"label": "زبان", "icon": "globe"},
 ]
 
-var _plate: ScreenPlate
+var _section: int = 0
+var _nav: VBoxContainer
+var _rows: VBoxContainer
 
 func _ready() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	Style.attach(self)
-	_plate = ScreenPlate.new()
-	add_child(_plate)
-	_plate.plate = load("res://assets/art/screens/settings.png")
-	_build()
+	configure("تنظیمات", "UI-04", "panel", false, "gear")
+	super._ready()
 
-func _build() -> void:
-	for row: Dictionary in ROWS:
-		var key := String(row["key"])
-		var spot := String(row["spot"])
-		if spot.begins_with("slider"):
-			var s := PlateControls.slider(Settings.get(key))
-			s.value_changed.connect(func(v): Settings.set_value(key, v))
-			_plate.place(s, SPOTS[spot])
-		else:
-			var t := PlateControls.toggle(bool(Settings.get(key)))
-			t.toggled.connect(func(on): Settings.set_value(key, on))
-			_plate.place(t, SPOTS[spot])
+func build_content() -> void:
+	var body := HBoxContainer.new()
+	body.layout_direction = Control.LAYOUT_DIRECTION_RTL
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", Palette.PAD_MD)
+	content.add_child(body)
 
-	# The painted nav column: only the first group has rows behind it today,
-	# so the rest say so when tapped rather than pretending to switch.
-	for i in 5:
-		var hot := PlateControls.hotspot()
+	var left := PanelContainer.new()
+	left.add_theme_stylebox_override("panel", Style._box(
+		OrnateBox.Kind.PANEL, Palette.PANEL_DEEP, Palette.NIGHT,
+		RazinoUI.RADIUS, 0.0, 12, 14))
+	left.custom_minimum_size.x = 250
+	body.add_child(left)
+	_nav = VBoxContainer.new()
+	_nav.add_theme_constant_override("separation", 8)
+	left.add_child(_nav)
+
+	var right := PanelContainer.new()
+	right.add_theme_stylebox_override("panel", Style._box(
+		OrnateBox.Kind.PANEL, Palette.PANEL_DEEP, Palette.NIGHT,
+		RazinoUI.RADIUS, 0.0, 22, 18))
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_child(right)
+	_rows = VBoxContainer.new()
+	_rows.layout_direction = Control.LAYOUT_DIRECTION_RTL
+	_rows.add_theme_constant_override("separation", Palette.PAD_MD)
+	right.add_child(_rows)
+
+	_build_nav()
+	_build_rows()
+
+func _build_nav() -> void:
+	for child in _nav.get_children():
+		child.queue_free()
+	for i in SECTIONS.size():
+		var entry: Dictionary = SECTIONS[i]
+		var item := Style.make_nav_item(String(entry["icon"]),
+			String(entry["label"]), i == _section)
 		var index := i
-		hot.pressed.connect(func(): _nav(index))
-		_plate.place(hot, SPOTS["nav%d" % i])
+		item.pressed.connect(func():
+			_section = index
+			AudioManager.play_sfx("SFX_UI_TAP")
+			_build_nav()
+			_build_rows())
+		_nav.add_child(item)
 
-	var lang := PlateControls.hotspot("زبان")
-	lang.pressed.connect(func(): AudioManager.play_sfx("SFX_UI_TAP"))
-	_plate.place(lang, SPOTS["drop"])
+func _build_rows() -> void:
+	for child in _rows.get_children():
+		child.queue_free()
+	match _section:
+		0: _graphics()
+		1: _sound()
+		2: _play()
+		_: _language()
 
-	for spot in ["close", "save"]:
-		var leave := PlateControls.hotspot()
-		leave.pressed.connect(_leave)
-		_plate.place(leave, SPOTS[spot])
+func _graphics() -> void:
+	_rows.add_child(_choice("کیفیت گرافیک", ["بالا", "متوسط", "پایین"], 0))
+	_rows.add_child(_toggle("افکت‌های ویژه", not Settings.reduce_motion,
+		func(on): Settings.set_value("reduce_motion", not on)))
+	_rows.add_child(_toggle("حالت تمام‌صفحه",
+		DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN,
+		func(on): DisplayServer.window_set_mode(
+			DisplayServer.WINDOW_MODE_FULLSCREEN if on
+			else DisplayServer.WINDOW_MODE_WINDOWED)))
 
-func _nav(index: int) -> void:
-	AudioManager.play_sfx("SFX_UI_TAP")
-	match index:
-		3: Router.go("UI-17")
-		4: Router.go("UI-14")
-		_: pass
+func _sound() -> void:
+	for row: Array in [["صدای موسیقی", "music_volume"],
+			["صدای افکت‌ها", "sfx_volume"], ["صدای گویندگان", "voice_volume"]]:
+		_rows.add_child(_slider(String(row[0]), String(row[1])))
 
-func _leave() -> void:
-	# Settings save as they change, so both the tick and the cross simply
-	# leave; neither can discard anything.
-	AudioManager.play_sfx("SFX_UI_TAP")
-	Router.go("UI-04")
+func _play() -> void:
+	_rows.add_child(_toggle("رفتن خودکار به خط بعد", Settings.auto_advance,
+		func(on): Settings.set_value("auto_advance", on)))
+	_rows.add_child(_toggle("نمایش زیرنویس", Settings.subtitles_enabled,
+		func(on): Settings.set_value("subtitles_enabled", on)))
+
+func _language() -> void:
+	_rows.add_child(_choice("زبان بازی", ["فارسی"], 0))
+	_rows.add_child(Style.make_quote(
+		"بازی فعلاً فقط فارسی است. زبان‌های دیگر با فصل‌های تازه می‌آیند."))
+
+## A label with its control under it, the way the sheet stacks them.
+func _stacked(label: String, control: Control) -> Control:
+	var col := VBoxContainer.new()
+	col.layout_direction = Control.LAYOUT_DIRECTION_RTL
+	col.add_theme_constant_override("separation", 6)
+	col.add_child(Style.make_body(label, Palette.FS_LABEL, Palette.SNOW, false))
+	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_child(control)
+	return col
+
+## A row where the control sits beside its label, for switches — which is
+## how the sheet draws those and nothing else.
+func _beside(label: String, control: Control) -> Control:
+	var row := HBoxContainer.new()
+	row.layout_direction = Control.LAYOUT_DIRECTION_RTL
+	row.add_theme_constant_override("separation", Palette.PAD_MD)
+	var l := Style.make_body(label, Palette.FS_LABEL, Palette.SNOW, false)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(l)
+	control.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(control)
+	return row
+
+func _toggle(label: String, on: bool, when: Callable) -> Control:
+	var t := Style.make_toggle(on)
+	t.toggled.connect(func(v): when.call(v))
+	return _beside(label, t)
+
+func _slider(label: String, key: String) -> Control:
+	var s := HSlider.new()
+	s.min_value = 0.0
+	s.max_value = 1.0
+	s.step = 0.01
+	s.value = Settings.get(key)
+	s.custom_minimum_size.y = 28
+	s.value_changed.connect(func(v): Settings.set_value(key, v))
+	return _stacked(label, s)
+
+## The sheet's dropdown: a wide dark field with a chevron at its end.
+func _choice(label: String, options: Array, chosen: int) -> Control:
+	var b := OptionButton.new()
+	for o in options:
+		b.add_item(String(o))
+	b.selected = chosen
+	b.custom_minimum_size.y = RazinoUI.TOUCH_MIN
+	b.alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	var box := UiBox.painted(UiBox.Kind.BUTTON, 16, 10)
+	if box != null:
+		for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+			b.add_theme_stylebox_override(state, box)
+	return _stacked(label, b)
