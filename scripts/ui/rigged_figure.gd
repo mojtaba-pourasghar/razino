@@ -27,6 +27,23 @@ const LAND_SQUASH := 0.26
 const SPRING := 17.0
 const DAMP := 0.76
 
+## Standing still is still moving. A figure that freezes the moment it
+## stops reads as a cut-out propped against the scenery, and that one
+## moment undoes the whole walk.
+##
+## All of it is slow and none of it changes where anything is: this is
+## breathing, not the bouncing that made the start screen feel like an
+## earthquake. The chest rises about a hundredth of the figure's height
+## over nearly two seconds, the head lags behind it, and the weight
+## shifts from one foot to the other on a much longer count that does not
+## divide into the breath -- so the two never fall into step and the eye
+## never finds a loop.
+const BREATH_RATE := 0.55        ## breaths per second
+const BREATH_DEPTH := 0.012      ## of figure height
+const SWAY_RATE := 0.17          ## weight shifts per second
+const SWAY_DEGREES := 0.9
+const HEAD_LAG := 0.55
+
 var height: float = 220.0:
 	set(value):
 		height = value
@@ -41,6 +58,10 @@ var _scale: float = 1.0
 var _stride: float = 0.0
 var _squash: float = 0.0
 var _squash_vel: float = 0.0
+var _idle: float = 0.0
+## How much of the idle is showing. It fades out as the character starts
+## moving rather than cutting, so there is no frame where the breath stops.
+var _calm: float = 1.0
 
 
 func _init(name: String = "hero") -> void:
@@ -113,15 +134,22 @@ func drive(velocity: Vector2, on_floor: bool, delta: float) -> void:
 	_squash_vel *= DAMP
 	_squash += _squash_vel * delta
 
+	_idle += delta
+	var run := clampf(speed / Walker.RUN_SPEED, 0.0, 1.0)
+	_calm = move_toward(_calm, 1.0 - run, delta * 3.0)
+
 	var bob := 0.0
 	if on_floor:
-		var run := clampf(speed / Walker.RUN_SPEED, 0.0, 1.0)
 		var swing := sin(_stride) * SWING * run
+		var sway := sin(_idle * TAU * SWAY_RATE) * SWAY_DEGREES * _calm
+		var breath := sin(_idle * TAU * BREATH_RATE)
 		_turn("leg_front", swing)
 		_turn("leg_back", -swing)
-		_turn("body", -swing * BODY_COUNTER / SWING)
-		_turn("head", swing * 0.08)
-		bob = -absf(sin(_stride)) * BOB * height * run
+		_turn("body", -swing * BODY_COUNTER / SWING + sway)
+		_turn("head", swing * 0.08
+			- sin((_idle - HEAD_LAG) * TAU * SWAY_RATE) * SWAY_DEGREES * 0.7 * _calm)
+		bob = -absf(sin(_stride)) * BOB * height * run \
+			- breath * BREATH_DEPTH * height * _calm
 	else:
 		# In the air the legs hold a split rather than keep walking: a
 		# character pedalling through a jump looks weightless.

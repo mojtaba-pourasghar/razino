@@ -41,6 +41,11 @@ func _ready() -> void:
 func _build() -> void:
 	_backdrop = Sprite2D.new()
 	_backdrop.centered = false
+	# Nothing in this game is a still picture. The backdrop keeps its paint
+	# and gains motion in the parts that would move: water, lamps, lit glass.
+	var lit := ShaderMaterial.new()
+	lit.shader = load("res://assets/shaders/living_backdrop.gdshader")
+	_backdrop.material = lit
 	add_child(_backdrop)
 
 	# Everything in the scene that moves without being asked to. It goes in

@@ -74,8 +74,7 @@ func show_scene(scene: Dictionary) -> void:
 		_add_figure(c as Dictionary)
 
 func _add_figure(entry: Dictionary) -> void:
-	var fig := CharacterFigure.new()
-	fig.character_id = String(entry.get("character_id", ""))
+	var fig := StageFigure.new(String(entry.get("character_id", "")))
 	fig.pose = String(entry.get("animation", "idle"))
 	var slot := String(entry.get("position", "center"))
 	var x := float(SLOTS.get(slot, 0.5))
@@ -95,5 +94,6 @@ func _add_figure(entry: Dictionary) -> void:
 
 func highlight_speaker(speaker_id: String) -> void:
 	for child in _figures.get_children():
-		if child is CharacterFigure:
-			(child as CharacterFigure).set_speaking((child as CharacterFigure).character_id == speaker_id)
+		if child is StageFigure:
+			var fig := child as StageFigure
+			fig.set_speaking(fig.character_id == speaker_id)

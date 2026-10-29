@@ -124,6 +124,11 @@ func _paint_backdrop() -> void:
 		# of the room, not a picture: it is the same painting that hangs in
 		# the window, and if both are lit the same the window disappears.
 		art.modulate = Color(0.30, 0.34, 0.46)
+		var lit := ShaderMaterial.new()
+		lit.shader = load("res://assets/shaders/living_backdrop.gdshader")
+		lit.set_shader_parameter("shimmer_amount", 0.006)
+		lit.set_shader_parameter("glow_amount", 0.14)
+		art.material = lit
 		add_child(art)
 		break
 

@@ -123,6 +123,17 @@ func _build_backdrop() -> void:
 		art.texture = load(path)
 		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		# No picture in this game sits perfectly still. The shader moves
+		# only what would move -- water, lamps, lit glass -- and leaves the
+		# rest of the painting exactly as it was painted, so a menu behind
+		# a panel is alive without being distracting.
+		var lit := ShaderMaterial.new()
+		lit.shader = load("res://assets/shaders/living_backdrop.gdshader")
+		# Quieter than in a playfield: this is behind a panel someone is
+		# reading, not a street they are walking down.
+		lit.set_shader_parameter("shimmer_amount", 0.008)
+		lit.set_shader_parameter("glow_amount", 0.10)
+		art.material = lit
 		art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		background.add_child(art)
