@@ -1,84 +1,90 @@
-extends Control
-## UI-17 — پروفایل, built on the reference painting.
+extends RazinoScreen
+## UI-17 — پروفایل, built to docs/UI_SPEC.md §۱۰.
 ##
-## The portrait, the panels, the stat rows and their Persian labels come
-## from assets/art/screens/profile.png. The numbers beside them are the
-## player's real ones, drawn over the painted placeholders — a profile that
-## showed someone else's level would be worse than no profile at all.
-
-const SPOTS := {
-	"back":   Rect2(0.012, 0.035, 0.065, 0.100),
-	"gear":   Rect2(0.898, 0.035, 0.068, 0.100),
-	"edit":   Rect2(0.268, 0.398, 0.062, 0.082),
-	"more":   Rect2(0.735, 0.160, 0.198, 0.075),
-	"cont":   Rect2(0.388, 0.788, 0.392, 0.104),
-	"tab":    Rect2(0.012, 0.888, 0.175, 0.080),
-	"med0":   Rect2(0.022, 0.795, 0.074, 0.095),
-	"med1":   Rect2(0.102, 0.795, 0.074, 0.095),
-	"med2":   Rect2(0.182, 0.795, 0.074, 0.095),
-	"med3":   Rect2(0.262, 0.795, 0.074, 0.095),
-	# The painted numbers down the stat column, covered with the real ones.
-	# The second row is the experience bar, which the painting draws and
-	# nothing here replaces, so the rows skip it.
-	"level":  Rect2(0.282, 0.492, 0.080, 0.058),
-	"clues":  Rect2(0.282, 0.627, 0.080, 0.058),
-	"items":  Rect2(0.282, 0.689, 0.080, 0.058),
-	"done":   Rect2(0.282, 0.752, 0.080, 0.058),
-}
-
-var _plate: ScreenPlate
+## This screen used to be a full-screen painting with live controls pinned
+## over the places where the painter had drawn placeholder labels. Three
+## things were wrong with that, and only the first was cosmetic: it was
+## painted in a green-and-gold with ivy that belongs to no other screen in
+## the game; the real numbers sat in little boxes that overflowed the panel
+## they were meant to be inside, because nothing was laying them out; and
+## the painted Persian in it is misspelled — «ققط» for «فقط» — which no
+## image model is ever going to get right and which could not be corrected
+## without repainting the screen.
+##
+## Built from the kit instead, it costs nothing to change a word.
 
 func _ready() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	Style.attach(self)
-	_plate = ScreenPlate.new()
-	add_child(_plate)
-	_plate.plate = load("res://assets/art/screens/profile.png")
-	_build()
+	configure("پروفایل", "UI-04", "town", true, "friend")
+	super._ready()
 
-func _build() -> void:
-	var back := PlateControls.hotspot("بازگشت")
-	back.pressed.connect(func(): Router.go("UI-04"))
-	_plate.place(back, SPOTS["back"])
+func build_content() -> void:
+	content.add_child(_header())
 
-	var gear := PlateControls.hotspot("تنظیمات")
-	gear.pressed.connect(func(): Router.go("UI-13"))
-	_plate.place(gear, SPOTS["gear"])
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", Palette.PAD_SM)
+	for b: Button in Style.make_tabs(["آواتار", "آمار", "دستاوردها"], 0):
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tabs.add_child(b)
+	content.add_child(tabs)
 
-	var edit := PlateControls.hotspot("تغییر ظاهر")
-	edit.pressed.connect(func(): Router.go("UI-12"))
-	_plate.place(edit, SPOTS["edit"])
+	var tiles := HBoxContainer.new()
+	tiles.add_theme_constant_override("separation", Palette.PAD_MD)
+	tiles.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	for tile: Dictionary in _stats():
+		var t := Style.make_stat_tile(String(tile["icon"]), String(tile["label"]),
+			int(tile["value"]))
+		t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tiles.add_child(t)
+	content.add_child(tiles)
 
-	for spot in ["cont", "tab"]:
-		var leave := PlateControls.hotspot()
-		leave.pressed.connect(func(): Router.go("UI-04"))
-		_plate.place(leave, SPOTS[spot])
+	var go := Style.make_button("ادامهٔ بازی", "primary", "play")
+	go.custom_minimum_size.x = 280
+	go.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	go.pressed.connect(func() -> void:
+		AudioManager.play_sfx("SFX_UI_TAP")
+		Router.go("UI-04"))
+	content.add_child(go)
 
-	var more := PlateControls.hotspot("کوله‌پشتی")
-	more.pressed.connect(func(): Router.go("UI-19"))
-	_plate.place(more, SPOTS["more"])
+## The avatar, the name, the level and how far through it the player is.
+func _header() -> Control:
+	var card := Style.make_section()
+	var body: VBoxContainer = card.get_meta("body")
 
-	for i in 4:
-		var hot := PlateControls.hotspot()
-		var where: String = ["UI-19", "UI-08", "UI-11", "UI-15"][i]
-		hot.pressed.connect(func(): Router.go(where))
-		_plate.place(hot, SPOTS["med%d" % i])
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", Palette.PAD_MD)
+	body.add_child(row)
 
-	_value("level", Fa.num(GameState.level))
-	_value("clues", Fa.num(GameState.clues.size()))
-	_value("items", Fa.num(GameState.inventory.size()))
-	_value("done", Fa.num(_chapters_complete()))
+	var face := Medallion.new("friend", 96.0, false)
+	face.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(face)
 
-## Covers a painted number with the player's own, on a patch of the panel
-## colour so the placeholder underneath does not show through.
-func _value(spot: String, text: String) -> void:
-	var patch := PlateValue.new()
-	patch.text = text
-	_plate.place(patch, SPOTS[spot])
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	col.add_theme_constant_override("separation", 2)
+	row.add_child(col)
 
-func _chapters_complete() -> int:
-	var n := 0
-	for cid in GameState.chapter_progress.keys():
-		if GameState.is_chapter_complete(String(cid)):
-			n += 1
-	return n
+	var shown := GameState.player_name if not GameState.player_name.is_empty() \
+		else "بازیکن"
+	col.add_child(Style.make_title(shown, Palette.FS_TITLE, Palette.SNOW))
+	col.add_child(Style.make_body("سطح %s" % Fa.num(GameState.level),
+		Palette.FS_LABEL, Palette.SNOW_SOFT, false))
+
+	var need := GameState.xp_for_next_level()
+	col.add_child(Style.make_meter(float(GameState.xp) / maxf(float(need), 1.0), 320.0))
+	col.add_child(Style.make_body("%s / %s" % [Fa.num(GameState.xp), Fa.num(need)],
+		Palette.FS_CAPTION, Palette.SNOW_SOFT, false))
+	return card
+
+## Three counts the player can check against what they have actually done.
+## Nothing here is invented: each one is read off GameState.
+func _stats() -> Array[Dictionary]:
+	var done := 0
+	for record: Variant in GameState.stage_records.values():
+		if record is Dictionary and bool((record as Dictionary).get("complete", false)):
+			done += 1
+	return [
+		{"icon": "star", "label": "مأموریت‌ها", "value": done},
+		{"icon": "book", "label": "سرنخ‌ها", "value": GameState.clues.size()},
+		{"icon": "gem", "label": "وسایل", "value": GameState.inventory.size()},
+	]

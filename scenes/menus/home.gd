@@ -24,11 +24,12 @@ extends Control
 ## sets its own direction — the player capsule does, so its avatar stays
 ## ahead of its name — is not mirrored, so it alone flew to the far side.
 const SPOT := {
-	"player": Rect2(0.025, 0.035, 0.300, 0.110),
-	"purse": Rect2(0.660, 0.035, 0.315, 0.080),
-	"menu": Rect2(0.025, 0.270, 0.270, 0.460),
-	"chapter": Rect2(0.330, 0.735, 0.340, 0.110),
-	"resume": Rect2(0.355, 0.860, 0.290, 0.095),
+	"player": Rect2(0.022, 0.030, 0.270, 0.105),
+	"purse": Rect2(0.690, 0.030, 0.288, 0.075),
+	"rail": Rect2(0.030, 0.200, 0.092, 0.620),
+	"arch": Rect2(0.300, 0.110, 0.400, 0.640),
+	"chapter": Rect2(0.330, 0.775, 0.340, 0.095),
+	"resume": Rect2(0.370, 0.880, 0.260, 0.090),
 }
 
 ## The four ways into the game, in the order docs/UI_SPEC.md §۲ lists them.
@@ -70,13 +71,29 @@ func _build() -> void:
 	purse.add_child(gear)
 	_place(purse, "purse")
 
-	var menu := VBoxContainer.new()
-	menu.add_theme_constant_override("separation", Palette.PAD_SM)
+	# A rail of round medallions rather than a column of worded pills. The
+	# direction leans on the silhouette of the round buttons against the
+	# dark wall, and a stack of text plates reads as a web page beside it.
+	var rail := VBoxContainer.new()
+	rail.alignment = BoxContainer.ALIGNMENT_CENTER
+	rail.add_theme_constant_override("separation", Palette.PAD_MD)
 	for entry: Dictionary in MENU:
-		var b := Style.make_menu_button(String(entry["label"]), String(entry["icon"]))
-		b.pressed.connect(_go.bind(String(entry["ui"])))
-		menu.add_child(b)
-	_place(menu, "menu")
+		var m := Medallion.new(String(entry["icon"]), 72.0)
+		m.icon_colour = Palette.TEAL_LIGHT
+		m.tooltip_text = String(entry["label"])
+		m.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		m.pressed.connect(_go.bind(String(entry["ui"])))
+		rail.add_child(m)
+	_place(rail, "rail")
+
+	# The scene, seen through the pointed window the direction is built on.
+	var arch := ArchFrame.new()
+	for path in ["res://assets/art/backgrounds/ui_town.webp",
+			"res://assets/art/backgrounds/ui_splash.webp"]:
+		if ResourceLoader.exists(path):
+			arch.texture = load(path)
+			break
+	_place(arch, "arch")
 
 	_place(Style.make_two_line_plaque(_chapter_line(), _chapter_title()), "chapter")
 
@@ -84,8 +101,9 @@ func _build() -> void:
 	resume.pressed.connect(_resume)
 	_place(resume, "resume")
 
-## The painted town, edge to edge. It is the only thing on this screen that
-## is not a control, so it goes down first and never takes input.
+## The painted town, edge to edge and dimmed to a wall. It is the only thing
+## on this screen that is not a control, so it goes down first and never
+## takes input.
 func _paint_backdrop() -> void:
 	var night := ColorRect.new()
 	night.color = Palette.NIGHT
@@ -102,6 +120,10 @@ func _paint_backdrop() -> void:
 		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		# Pushed back hard. In the direction this is a wall at the far end
+		# of the room, not a picture: it is the same painting that hangs in
+		# the window, and if both are lit the same the window disappears.
+		art.modulate = Color(0.30, 0.34, 0.46)
 		add_child(art)
 		break
 

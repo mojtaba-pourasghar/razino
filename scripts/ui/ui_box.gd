@@ -70,7 +70,7 @@ func _draw(ci: RID, rect: Rect2) -> void:
 		Kind.PRIMARY: RazinoUI.button(ci, rect, true, pressed, hovered)
 		Kind.SLOT: RazinoUI.slot(ci, rect, true)
 		Kind.PARCHMENT: RazinoUI.parchment(ci, rect, radius)
-		Kind.TAB_ON: RazinoUI.button(ci, rect, true, pressed, hovered)
+		Kind.TAB_ON: RazinoUI.tab_on(ci, rect, pressed, hovered)
 		Kind.TAB_OFF: RazinoUI.panel(ci, rect, radius, fill, false)
 		Kind.NONE: pass
 

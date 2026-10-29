@@ -559,9 +559,10 @@ func make_meter(ratio: float, width: float = 180.0,
 
 ## A row of tabs.
 ##
-## As the panel sheet draws them: every tab is a small plate, the active one
-## satin gold with dark ink and the rest matte navy, so the row reads as one
-## control and which tab you are on is the first thing you see.
+## Every tab is a small plate: the one you are on is filled teal with dark
+## ink, the rest matte indigo, so the row reads as one control and which tab
+## you are on is the first thing you see. It is teal rather than amber
+## because amber marks the single action on a screen, not where you are.
 func make_tabs(labels: Array, active: int = 0) -> Array:
 	var out: Array[Button] = []
 	for i in labels.size():

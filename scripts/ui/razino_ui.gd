@@ -91,6 +91,27 @@ static func button(ci: RID, rect: Rect2, primary: bool = false,
 	_gradient(ci, body, RADIUS_BUTTON, face.lightened(0.12), face.darkened(0.18))
 	_hairline(ci, body, RADIUS_BUTTON, Palette.PANEL_EDGE, HAIRLINE)
 
+## The tab you are on: filled teal with a brighter rim.
+##
+## It is NOT the amber button. Amber is the one action on a screen, and a
+## tab row drawn with it put two amber things in front of the player at
+## once -- the tab they were already on competing with the thing they were
+## meant to press next. Teal is what this palette uses for "this is live",
+## so being on a tab reads as state rather than as an invitation.
+static func tab_on(ci: RID, rect: Rect2, pressed: bool = false,
+		hovered: bool = false) -> void:
+	var body := rect.grow(-1.5) if pressed else rect
+	var top := Palette.TEAL
+	var bottom := Palette.TEAL_DEEP
+	if pressed:
+		top = Palette.TEAL_DEEP
+		bottom = Palette.TEAL_DEEP.darkened(0.15)
+	elif hovered:
+		top = Palette.TEAL_LIGHT
+	_gradient(ci, body, RADIUS_BUTTON, top, bottom)
+	_hairline(ci, body, RADIUS_BUTTON, Palette.TEAL_LIGHT, 2.0)
+
+
 ## An item slot: a small square well with a hairline and nothing else.
 static func slot(ci: RID, rect: Rect2, filled: bool = false) -> void:
 	var face := Palette.PANEL if filled else Palette.PANEL_DEEP
