@@ -11,18 +11,20 @@ extends RefCounted
 ##
 ## What the sheets actually do, and all of it matters:
 ##
-##   · a panel is dark navy with a 1.5px STEEL hairline, not a gold frame
-##   · its only ornament is a short GOLD BRACKET at each corner
+##   · a panel is deep indigo with a 2px TEAL rim, not a gold frame. The rim
+##     is the one thing that marks every surface, so it has to be seen: at
+##     1.5px in a steel blue it disappeared into the body it was edging
+##   · its only ornament is a short bronze bracket at each corner
 ##   · gradients exist but are nearly invisible — a few per cent, top to
 ##     bottom. Flat fills read as paper; strong gradients read as plastic
-##   · GOLD IS THE ACTION. Exactly one thing per screen is filled with it,
+##   · AMBER IS THE ACTION. Exactly one thing per screen is filled with it,
 ##     and it carries an outer glow. That glow is what makes it primary
 ##   · nothing is embossed, bevelled, outlined in black or thickly bordered
 
 const RADIUS := 16.0
 const RADIUS_BUTTON := 12.0
 const RADIUS_SLOT := 10.0
-const HAIRLINE := 1.5
+const HAIRLINE := 2.0
 const BRACKET := 18.0      ## how far a corner bracket runs along each edge
 const TOUCH_MIN := 48.0    ## Android's minimum, from the UX database
 const TOUCH_GAP := 8.0

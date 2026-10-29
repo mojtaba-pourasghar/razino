@@ -113,13 +113,16 @@ func _flat(bg: Color, radius: float, border: Color = Color.TRANSPARENT, border_w
 
 ## The four faces of a button, in one place so every variant bevels alike.
 ## A press flips the gradient, which is what makes it feel physical.
+## `primary` is passed, never inferred. It used to be worked out by testing
+## whether `top` happened to equal the action colour, and the first palette
+## change that gave gold and the action two different values silently turned
+## every call-to-action in the game into a plain dark button with unreadable
+## dark text on it.
 func button_faces(top: Color, bottom: Color, radius: float = RazinoUI.RADIUS_BUTTON,
-		plate: String = "") -> Dictionary:
+		plate: String = "", primary: bool = false) -> Dictionary:
 	# The sheets have no pressed artwork to copy, so a press nudges inward
 	# and a hover lifts the fill — both handled inside UiBox, which is why
 	# this only has to name the four states.
-	var primary := top.is_equal_approx(Palette.ACTION) \
-		or top.is_equal_approx(Palette.GOLD_BRIGHT)
 	var base := UiBox.make(UiBox.Kind.PRIMARY if primary else UiBox.Kind.BUTTON,
 		Palette.PAD_MD, Palette.PAD_SM)
 	return {
@@ -132,7 +135,8 @@ func button_faces(top: Color, bottom: Color, radius: float = RazinoUI.RADIUS_BUT
 func _style_buttons() -> void:
 	# Primary action — petrol blue with a gold edge. Gold is reserved for
 	# frames and plaques, per docs/UI_SPEC.md.
-	var primary := button_faces(Palette.ACTION_LIGHT, Palette.ACTION_DEEP)
+	var primary := button_faces(Palette.ACTION_LIGHT, Palette.ACTION_DEEP,
+		RazinoUI.RADIUS_BUTTON, "", true)
 	for state in primary:
 		theme.set_stylebox(state, "Button", primary[state])
 	theme.set_stylebox("focus", "Button", _box(OrnateBox.Kind.WELL,
@@ -275,9 +279,13 @@ func make_button(text: String, variant: String = "primary", icon: String = "") -
 	var faces := {}
 	var ink := false
 	match variant:
-		"gold":
-			# The one gold button in the sheets: "continue" on the home screen.
-			faces = button_faces(Palette.GOLD, Palette.GOLD_DEEP)
+		"primary", "gold":
+			# The one amber button on the screen. "primary" is the default
+			# variant, and it used to fall through to the catch-all below
+			# and get no stylebox at all -- so the main action on most
+			# screens was drawn by the bare theme and read as a dark slab.
+			faces = button_faces(Palette.ACTION_LIGHT, Palette.ACTION_DEEP,
+				RazinoUI.RADIUS_BUTTON, "", true)
 			ink = true
 		"secondary":
 			faces = button_faces(Palette.TEAL, Palette.TEAL_DEEP)
