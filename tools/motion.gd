@@ -13,6 +13,8 @@ const SCRIPT := [
 	[3.4, 0.0, false],
 ]
 const SHOTS := [0.25, 0.60, 0.95, 1.15, 1.45, 1.75, 2.30, 2.70, 2.95, 3.60]
+## Motes drift on their own clock, so a couple of stills a second apart
+## show whether the scene is alive when nothing is being pressed.
 
 var _field: Playfield
 var _t: float = 0.0
@@ -34,6 +36,12 @@ func _ready() -> void:
 	_field.set_physics_process(false)
 	_field.setup(load("res://assets/art/backgrounds/ui_town.webp"),
 		CastArt.figure("arad"), VIEW)
+	# A ledge to climb and a gap to fall into, so the harness exercises the
+	# obstacle path and not only flat ground.
+	_field.build_obstacles([
+		{"kind": "ledge", "x": 0.34, "y": 0.74, "w": 0.12, "h": 0.02},
+		{"kind": "gap", "x": 0.52, "y": 0.0, "w": 0.07, "h": 0.0},
+	], VIEW)
 
 
 func _physics_process(delta: float) -> void:
@@ -47,6 +55,7 @@ func _physics_process(delta: float) -> void:
 		_next_step += 1
 	_field.figure.drive(_field.walker.velocity,
 		_field.walker.is_on_floor(), delta)
+	_field.catch_fall(VIEW)
 
 	if _next_shot < SHOTS.size() and _t >= float(SHOTS[_next_shot]):
 		await RenderingServer.frame_post_draw
