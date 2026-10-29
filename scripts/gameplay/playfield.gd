@@ -21,7 +21,7 @@ var ground_y: float = 0.92
 var figure_height: float = 0.26
 
 var walker: Walker
-var figure: FigureSprite
+var figure: RiggedFigure
 
 var _backdrop: Sprite2D
 var _camera: Camera2D
@@ -48,7 +48,8 @@ func _build() -> void:
 	walker.add_child(shape)
 	add_child(walker)
 
-	figure = FigureSprite.new()
+	# The rigged figure where one has been cut, so the legs actually swing.
+	figure = RiggedFigure.new("hero")
 	walker.add_child(figure)
 	walker.landed.connect(figure.land)
 	walker.jumped.connect(figure.leap)
@@ -63,7 +64,7 @@ func _build() -> void:
 
 ## Lays the field out for a scene: the painting, the floor under it, and
 ## where the character starts.
-func setup(backdrop: Texture2D, character: Texture2D, view: Vector2,
+func setup(backdrop: Texture2D, _character: Texture2D, view: Vector2,
 		ground: float = -1.0) -> void:
 	if ground > 0.0:
 		ground_y = ground
@@ -72,7 +73,6 @@ func setup(backdrop: Texture2D, character: Texture2D, view: Vector2,
 		var scale := view.y / float(backdrop.get_height())
 		_backdrop.scale = Vector2(scale, scale)
 		_world_width = backdrop.get_width() * scale
-	figure.figure = character
 	figure.height = view.y * figure_height
 
 	var floor_y := view.y * ground_y
