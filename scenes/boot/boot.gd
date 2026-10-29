@@ -28,7 +28,7 @@ const SPOT := {
 	"tagline": Rect2(0.36, 0.375, 0.28, 0.06),
 	"menu": Rect2(0.385, 0.455, 0.23, 0.455),
 	"status": Rect2(0.36, 0.92, 0.28, 0.05),
-	"version": Rect2(0.012, 0.93, 0.10, 0.05),
+	"version": Rect2(0.012, 0.93, 0.30, 0.05),
 }
 
 ## The column, top to bottom. `needs_save` greys a button out until there
@@ -127,8 +127,7 @@ func _build() -> void:
 	_status.add_theme_constant_override("outline_size", 6)
 	_place(_status, "status")
 
-	var version := Style.make_body("v%s" % ProjectSettings.get_setting(
-		"application/config/version", "0.1.0"), Palette.FS_CAPTION,
+	var version := Style.make_body(_build_line(), Palette.FS_CAPTION,
 		Palette.SNOW, false)
 	version.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	version.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
@@ -413,3 +412,19 @@ func _choose(id: String) -> void:
 			Router.go("UI-02")
 		"quit":
 			get_tree().quit()
+
+
+## The version, and the commit it was built from.
+##
+## Written by tools/stamp_build.sh, which is run before a push. It is here
+## because a screenshot of the game could not be matched to a commit, so
+## "I pulled and nothing changed" had to be argued about rather than
+## checked. Now the corner of the start screen settles it.
+func _build_line() -> String:
+	var version := String(ProjectSettings.get_setting(
+		"application/config/version", "0.1.0"))
+	var stamp := ""
+	var f := FileAccess.open("res://resources/build_stamp.txt", FileAccess.READ)
+	if f != null:
+		stamp = f.get_as_text().strip_edges()
+	return "v%s  %s" % [version, stamp] if not stamp.is_empty() else "v%s" % version
