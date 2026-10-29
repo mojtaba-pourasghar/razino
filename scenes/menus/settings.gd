@@ -150,7 +150,11 @@ func _choice(label: String, options: Array, chosen: int) -> Control:
 		b.add_item(String(o))
 	b.selected = chosen
 	b.custom_minimum_size.y = RazinoUI.TOUCH_MIN
-	b.alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	# LEFT is the edge Persian starts from once the control itself is laid
+	# out right to left, so the chosen option sits under the label above it
+	# instead of across the row from it.
+	b.layout_direction = Control.LAYOUT_DIRECTION_RTL
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	var box := UiBox.painted(UiBox.Kind.BUTTON, 16, 10)
 	if box != null:
 		for state in ["normal", "hover", "pressed", "disabled", "focus"]:

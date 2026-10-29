@@ -112,7 +112,9 @@ func _menu_button(entry: Dictionary, here: bool) -> Button:
 	if Style.font_bold != null:
 		label.add_theme_font_override("font", Style.font_bold)
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	# Alignment is left to Style, which gives every label its own right-to-
+	# left direction; setting RIGHT here flipped this one back to the far
+	# edge of the row, away from its icon.
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.size_flags_vertical = Control.SIZE_FILL
 	inner.add_child(label)

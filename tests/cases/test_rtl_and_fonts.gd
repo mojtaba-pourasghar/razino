@@ -49,8 +49,14 @@ func test_text_server_supports_the_arabic_script():
 	ok(ts.has_feature(TextServer.FEATURE_BIDI_LAYOUT), "and can lay out bidirectional text")
 
 func test_a_label_lays_out_right_to_left():
+	# This asserted RIGHT for a long time, which is how the bug it was
+	# written to catch survived in plain sight: alignment is resolved
+	# against the layout direction, so a right-to-left label asked for
+	# RIGHT is pushed to the far side of its panel, away from the edge
+	# Persian is read from. The test was enforcing the fault.
 	var label := Style.make_title(SAMPLE)
-	eq(label.horizontal_alignment, HORIZONTAL_ALIGNMENT_RIGHT, "headings align right")
+	eq(label.horizontal_alignment, HORIZONTAL_ALIGNMENT_LEFT,
+		"headings start at the reading edge")
 
 func test_buttons_meet_the_touch_target_minimum():
 	var b := Style.make_button("ادامهٔ ماجرا")
@@ -85,3 +91,35 @@ func _has_persian(s: String) -> bool:
 		if (c >= 0x0600 and c <= 0x06FF) or (c >= 0xFB50 and c <= 0xFDFF):
 			return true
 	return false
+
+## Every label the game makes must read right to left on its own.
+##
+## This is the regression that keeps coming back, because it is invisible
+## where it matters least. A long wrapped sentence fills its line and so
+## starts at the right whatever alignment it was given; only a short label
+## — a name, a level, a count — shows the mistake, and those are scattered
+## one per panel where nobody is looking for them.
+func test_labels_carry_their_own_rtl():
+	for l: Label in [Style.make_title("سلام"), Style.make_body("سلام"),
+			Style.make_body("سلام", Palette.FS_CAPTION, Palette.SNOW, false)]:
+		eq(l.layout_direction, Control.LAYOUT_DIRECTION_RTL,
+			"برچسب جهت راست‌به‌چپ خودش را دارد")
+		eq(l.text_direction, Control.TEXT_DIRECTION_RTL,
+			"متن برچسب راست‌به‌چپ چیده می‌شود")
+		# LEFT, not RIGHT: alignment is resolved against the layout
+		# direction, so under a right-to-left label LEFT is the edge that
+		# reading starts from. Asking for RIGHT pins it to the far side.
+		eq(l.horizontal_alignment, HORIZONTAL_ALIGNMENT_LEFT,
+			"چینش به لبهٔ شروعِ خواندن است")
+
+## A label dropped into a row that is laid out left to right — the player
+## capsule is one, so its avatar stays ahead of its name — must still read
+## right to left.
+func test_label_keeps_rtl_inside_an_ltr_row():
+	var row := HBoxContainer.new()
+	row.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	var l := Style.make_title("نگار")
+	row.add_child(l)
+	eq(l.layout_direction, Control.LAYOUT_DIRECTION_RTL,
+		"برچسب داخل ردیف چپ‌به‌راست هم راست‌به‌چپ می‌ماند")
+	row.queue_free()

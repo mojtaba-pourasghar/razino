@@ -243,6 +243,32 @@ func _shade_for_background(l: Label, colour: Color) -> void:
 	l.add_theme_constant_override("shadow_outline_size", 2)
 
 
+## Makes a label read right to left wherever it is put.
+##
+## Three things have to agree and all three are set here rather than at the
+## call sites, because getting one of them wrong is invisible on a long
+## wrapped sentence -- which fills its line and so starts at the right
+## whatever you ask for -- and obvious on a short one, which is why names,
+## levels and counts were the labels that kept ending up on the wrong edge.
+##
+##  · the label's OWN layout direction is right to left, so it does not
+##    depend on whatever container it is dropped into. Some rows are laid
+##    out left to right on purpose, the player capsule among them so its
+##    avatar stays ahead of its name, and a label inside one of those must
+##    still read right to left.
+##  · alignment is LEFT, which sounds wrong and is not: alignment is
+##    resolved against the layout direction, so under a right-to-left
+##    label LEFT means the edge reading starts from. Asking for RIGHT here
+##    is what pinned every short label to the far side of its panel.
+##  · the text direction is right to left, so a line that begins with a
+##    digit or a latin word still lays out as Persian.
+static func _rtl(l: Label) -> Label:
+	l.layout_direction = Control.LAYOUT_DIRECTION_RTL
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	l.text_direction = Control.TEXT_DIRECTION_RTL
+	return l
+
+
 ## A heading that reads as a heading on every screen.
 func make_title(text: String, size: int = Palette.FS_TITLE, color: Color = Palette.GOLD_BRIGHT) -> Label:
 	var l := Label.new()
@@ -251,7 +277,7 @@ func make_title(text: String, size: int = Palette.FS_TITLE, color: Color = Palet
 	l.add_theme_color_override("font_color", color)
 	if font_bold != null:
 		l.add_theme_font_override("font", font_bold)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_rtl(l)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_shade_for_background(l, color)
 	return l
@@ -262,7 +288,7 @@ func make_body(text: String, size: int = Palette.FS_BODY, color: Color = Palette
 	l.text = text
 	l.add_theme_font_size_override("font_size", scaled(size))
 	l.add_theme_color_override("font_color", color)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_rtl(l)
 	# A wrapping label inside a row can shrink to a single glyph per line, so
 	# anything laid out horizontally asks for wrap = false.
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if wrap else TextServer.AUTOWRAP_OFF
@@ -530,13 +556,11 @@ func make_player_badge(player_name: String, level: int, xp: int, xp_max: int) ->
 
 	var shown := player_name if not player_name.is_empty() else "بازیکن"
 	var name_label := make_title(shown, Palette.FS_LABEL, Palette.SNOW)
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	name_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	name_label.custom_minimum_size.x = 170
 	col.add_child(name_label)
 
 	var lvl := make_body("سطح %s" % Fa.num(level), Palette.FS_CAPTION, Palette.SNOW_SOFT, false)
-	lvl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	col.add_child(lvl)
 
 	col.add_child(make_meter(float(xp) / maxf(float(xp_max), 1.0), 170.0))
