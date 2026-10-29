@@ -332,7 +332,8 @@ func _build_field(scene: Dictionary) -> bool:
 	var view := Vector2(get_viewport_rect().size)
 	_viewport.size = Vector2i(view)
 	_field.setup(SceneArt.load_texture(String(scene.get("background_id", "")),
-		_chapter_id), null, view, float(scene.get("ground_y", 0.92)))
+		_chapter_id), null, view, float(scene.get("ground_y", 0.92)),
+		String(scene.get("near_layer", "")), int(scene.get("near_seed", 1)))
 	_field.build_obstacles(obstacles as Array, view)
 
 	for entry: Variant in scene.get("interactions", []):

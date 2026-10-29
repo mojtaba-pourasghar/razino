@@ -208,6 +208,63 @@ MUSIC = {
 }
 
 
+## The chord a track moves through, as scale degrees from its root, and
+## the melody's shape over them. Minor-ish sequences for the mysteries,
+## open fifths for the wide places.
+PROGRESSION = {
+    "dark":  ((0, 0, 0, 0), (-5, -5, 0, 0), (-7, -7, -5, -5), (0, 0, -2, -2)),
+    "warm":  ((0, 0, 0, 0), (5, 5, 5, 5), (-3, -3, 2, 2), (0, 0, 0, 0)),
+    "open":  ((0, 0, 0, 0), (7, 7, 7, 7), (2, 2, 5, 5), (0, 0, -5, -5)),
+}
+## Which shape each place takes, and the notes its melody may use.
+VOICE_OF = {
+    "MUS_TOWN_DAY": ("warm", [0, 2, 4, 7, 9]),
+    "MUS_SCHOOL_MYSTERY": ("dark", [0, 3, 5, 7, 10]),
+    "MUS_TOWER": ("dark", [0, 3, 7, 10, 14]),
+    "MUS_LIBRARY": ("open", [0, 5, 7, 12, 14]),
+    "MUS_FOREST_MYSTERY": ("dark", [0, 3, 5, 10, 12]),
+    "MUS_LAKE": ("open", [0, 7, 12, 16, 19]),
+    "MUS_UNDERCITY": ("dark", [0, 3, 6, 10, 12]),
+    "MUS_WORKSHOP": ("warm", [0, 4, 7, 10, 12]),
+    "MUS_OBSERVATORY": ("open", [0, 5, 10, 14, 17]),
+    "MUS_SYMBOL_HALL": ("dark", [0, 3, 8, 12, 15]),
+    "MUS_FESTIVAL": ("warm", [0, 4, 7, 9, 12]),
+    "MUS_PUZZLE_CALM": ("open", [0, 7, 12, 14, 19]),
+    "MUS_REVEAL": ("warm", [0, 5, 9, 12, 16]),
+}
+
+
+def melody(root: float, notes: list[int], moves: tuple, length: float,
+           n: int, brightness: float, seed: int) -> np.ndarray:
+    """A tune over the progression, built from the chord's own notes.
+
+    Picked rather than composed, but picked under rules that keep it from
+    wandering: it only ever steps to a neighbouring note of the scale, it
+    rests as often as it plays, and it is the same every run for a given
+    track, so a player who comes back to a place hears the place.
+    """
+    rng = np.random.default_rng(seed)
+    out = np.zeros(n)
+    bars = len(moves)
+    beats = bars * 8
+    step = n // beats
+    at = len(notes) // 2
+    for b in range(beats):
+        if rng.random() < 0.38:          # rests are half the tune
+            continue
+        at = int(np.clip(at + rng.integers(-1, 2), 0, len(notes) - 1))
+        shift = moves[(b // 8) % bars][0]
+        f = root * 2.0 ** ((notes[at] + shift) / 12.0) * 2.0
+        f = max(1.0, round(f * length) / length)   # whole cycles, for the loop
+        hold = step * int(rng.integers(1, 3))
+        seg = tone(f, hold / RATE, (1.0, 0.3, 0.12, 0.05))
+        seg = seg * env(len(seg), 0.012, 0.10, 0.25, 0.55)
+        start = b * step
+        end = min(n, start + len(seg))
+        out[start:end] += seg[:end - start] * 0.55
+    return lowpass(out, 1800.0 + 2600.0 * brightness, circular=True)
+
+
 def bed(root: float, chord: tuple[int, ...], seconds: float,
         brightness: float) -> np.ndarray:
     """A slow pad that loops without a seam.
@@ -247,6 +304,65 @@ def bed(root: float, chord: tuple[int, ...], seconds: float,
     return fit(out, 0.26)
 
 
+def track(name: str, root: float, chord: tuple[int, ...], seconds: float,
+          brightness: float) -> np.ndarray:
+    """The pad, the progression moving under it, and a tune on top."""
+    pad = bed(root, chord, seconds, brightness)
+    n = len(pad)
+    length = n / RATE
+    shape, notes = VOICE_OF.get(name, ("open", [0, 5, 7, 12]))
+    moves = PROGRESSION[shape]
+    tune = melody(root, notes, moves, length, n, brightness,
+                  abs(hash(name)) % 100000)
+    return fit(pad * 0.78 + tune * 0.42, 0.28)
+
+
+# — voices ——————————————————————————————————————————————————
+#
+# Not speech. Each character gets a short sound that plays once per few
+# letters as their line types out, which is how a 2D game gives a cast
+# voices without recording any: the ear takes the pitch and timbre as the
+# character and reads the words off the screen.
+#
+# Synthesised Persian speech was the obvious alternative and is rejected on
+# purpose. It would be worse than silence here -- a machine reading Persian
+# badly to a nine-year-old is the thing a parent switches off -- and it
+# would also quietly take the place of the studio recording the real lines
+# are meant to come from, so nobody would notice it was still missing.
+#
+# id -> (pitch in Hz, shape, length in seconds)
+# A lower, rounder sound is an adult; a quick bright one is a child; the
+# dinosaur is a warble nobody else has.
+VOICES = {
+    "VOICE_ARAD":    (392.0, "round", 0.055),
+    "VOICE_RAHA":    (523.0, "bright", 0.050),
+    "VOICE_MANI":    (466.0, "round", 0.048),
+    "VOICE_PLAYER":  (494.0, "bright", 0.052),
+    "VOICE_FANDOGH": (640.0, "warble", 0.060),
+    "VOICE_AZIMI":   (311.0, "round", 0.065),
+    "VOICE_MODIR":   (262.0, "round", 0.070),
+    "VOICE_NARRATOR": (349.0, "soft", 0.075),
+}
+
+
+def voice(freq: float, shape: str, seconds: float) -> np.ndarray:
+    n = int(seconds * RATE)
+    t = np.arange(n) / RATE
+    if shape == "bright":
+        body = tone(freq, seconds, (1.0, 0.45, 0.22, 0.1))
+    elif shape == "round":
+        body = tone(freq, seconds, (1.0, 0.18, 0.06))
+    elif shape == "warble":
+        # The pitch moves inside the blip, which is what makes it read as
+        # a creature rather than as a person with an odd voice.
+        f = freq * (1.0 + 0.22 * np.sin(2.0 * math.pi * 26.0 * t))
+        body = np.sin(2.0 * math.pi * np.cumsum(f) / RATE)
+    else:
+        body = tone(freq, seconds, (1.0, 0.1))
+    body = body * env(n, 0.004, seconds * 0.45, 0.0, seconds * 0.5)
+    return fit(body, 0.30)
+
+
 # — writing ————————————————————————————————————————————————
 
 def write_ogg(samples: np.ndarray, path: Path, quality: str) -> None:
@@ -278,10 +394,21 @@ def main() -> int:
         write_ogg(make(), args.out / "sfx" / f"{name}.ogg", "4")
         print(f"sfx    {name}")
         made += 1
+    for name, (freq, shape, seconds) in VOICES.items():
+        if args.only and args.only not in ("voices", name):
+            continue
+        # Written beside the sound effects, because to the engine that is
+        # what they are: short sounds played on an event. The vo/ folder
+        # stays empty for the real recordings, so nothing here can quietly
+        # take their place in the path the game looks for them on.
+        write_ogg(voice(freq, shape, seconds),
+                  args.out / "sfx" / f"{name}.ogg", "4")
+        print(f"voice  {name}")
+        made += 1
     for name, (root, chord, seconds, bright) in MUSIC.items():
         if args.only and args.only not in ("music", name):
             continue
-        write_ogg(bed(root, chord, seconds, bright),
+        write_ogg(track(name, root, chord, seconds, bright),
                   args.out / "music" / f"{name}.ogg", "3")
         print(f"music  {name}")
         made += 1

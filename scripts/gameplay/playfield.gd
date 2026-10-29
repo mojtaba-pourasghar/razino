@@ -32,6 +32,12 @@ signal marker_reached(marker_id: String)
 signal marker_left(marker_id: String)
 
 var life: SceneLife
+var near: Parallax2D
+## Which silhouette passes in front, and the seed that shapes it. A scene
+## sets both, so the branch over a schoolyard is not the branch over a
+## library even though neither was drawn by hand.
+var near_kind: NearLayer.Kind = NearLayer.Kind.BRANCH
+var near_seed: int = 1
 var _markers: Dictionary = {}
 var _near: String = ""
 var _gaps: Array[Vector2] = []
@@ -86,7 +92,13 @@ func _build() -> void:
 ## Lays the field out for a scene: the painting, the floor under it, and
 ## where the character starts.
 func setup(backdrop: Texture2D, _character: Texture2D, view: Vector2,
-		ground: float = -1.0) -> void:
+		ground: float = -1.0, near_art: String = "", seed_: int = 1) -> void:
+	near_seed = seed_
+	match near_art:
+		"railing": near_kind = NearLayer.Kind.RAILING
+		"grass": near_kind = NearLayer.Kind.GRASS
+		"arch": near_kind = NearLayer.Kind.ARCH
+		_: near_kind = NearLayer.Kind.BRANCH
 	if ground > 0.0:
 		ground_y = ground
 	_backdrop.texture = backdrop
@@ -97,6 +109,17 @@ func setup(backdrop: Texture2D, _character: Texture2D, view: Vector2,
 	figure.height = view.y * figure_height
 	life.setup({}, view, _world_width)
 	life.derive_far_layer(backdrop, view, _world_width, self)
+
+	# In front of everything, including the player: the near layer is what
+	# the character walks BEHIND, and a branch the character passes over
+	# instead of under is not a near layer at all.
+	near = Parallax2D.new()
+	near.scroll_scale = Vector2(NearLayer.SPEED, 1.0)
+	near.repeat_size = Vector2(_world_width, 0.0)
+	var silhouette := NearLayer.new()
+	silhouette.build(near_kind, view, _world_width, near_seed)
+	near.add_child(silhouette)
+	add_child(near)
 
 	_view = view
 	var floor_y := view.y * ground_y

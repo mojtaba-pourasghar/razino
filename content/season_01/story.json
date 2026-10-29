@@ -431,7 +431,9 @@
      "h": 0.2
     }
    ],
-   "ground_y": 0.92
+   "ground_y": 0.92,
+   "near_layer": "branch",
+   "near_seed": 115
   },
   {
    "scene_id": "S01-E01-SC04",
@@ -717,7 +719,9 @@
      "h": 0.0
     }
    ],
-   "ground_y": 0.9
+   "ground_y": 0.9,
+   "near_layer": "arch",
+   "near_seed": 143
   },
   {
    "scene_id": "S01-E02-SC02",
@@ -1048,7 +1052,9 @@
      "h": 0.02
     }
    ],
-   "ground_y": 0.9
+   "ground_y": 0.9,
+   "near_layer": "railing",
+   "near_seed": 178
   },
   {
    "scene_id": "S01-E03-SC02",
@@ -1242,7 +1248,9 @@
      "h": 0.42
     }
    ],
-   "ground_y": 0.88
+   "ground_y": 0.88,
+   "near_layer": "branch",
+   "near_seed": 192
   },
   {
    "scene_id": "S01-E03-SC04",
@@ -1477,7 +1485,9 @@
      "h": 0.0
     }
    ],
-   "ground_y": 0.9
+   "ground_y": 0.9,
+   "near_layer": "arch",
+   "near_seed": 213
   },
   {
    "scene_id": "S01-E04-SC02",

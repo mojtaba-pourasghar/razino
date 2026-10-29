@@ -97,6 +97,25 @@ func _ready() -> void:
 	AudioManager.voice_finished.connect(_on_voice_finished)
 	set_process(false)
 
+## Which short sound stands in for each character's voice while their line
+## types out. This is not speech and is not meant to pass for it: the ear
+## takes the pitch as the character and reads the words off the screen,
+## which is how a 2D game gives a cast voices without recording any. The
+## real lines are recorded by people, and when a recording exists for a
+## line it plays instead of this.
+const VOICE_OF := {
+	"arad": "VOICE_ARAD", "raha": "VOICE_RAHA", "mani": "VOICE_MANI",
+	"player": "VOICE_PLAYER", "fandogh": "VOICE_FANDOGH",
+	"azimi": "VOICE_AZIMI", "modir": "VOICE_MODIR",
+}
+## One blip every few letters. Every letter is a machine-gun; every word is
+## too sparse to connect to the text.
+const LETTERS_PER_BLIP := 3
+
+var _blipped: int = 0
+var _speaker_id: String = ""
+
+
 func _process(delta: float) -> void:
 	_revealed += delta * REVEAL_CHARS_PER_SECOND * (1.6 if Settings.reduce_motion else 1.0)
 	var shown := int(_revealed)
@@ -104,6 +123,23 @@ func _process(delta: float) -> void:
 		_finish_reveal()
 		return
 	_text.text = _full_text.substr(0, shown)
+	_blip(shown)
+
+
+## Sounds a letter, unless this line has a real recording playing over it,
+## or the letter is a space — a blip on a gap between words sounds like a
+## stutter rather than a voice.
+func _blip(shown: int) -> void:
+	if shown <= _blipped or _replay.visible:
+		return
+	_blipped = shown
+	if shown % LETTERS_PER_BLIP != 0 or shown <= 0:
+		return
+	var letter := _full_text.substr(shown - 1, 1)
+	if letter.strip_edges().is_empty():
+		return
+	var id := String(VOICE_OF.get(_speaker_id, "VOICE_NARRATOR"))
+	AudioManager.play_sfx(id)
 
 func _spacer() -> Control:
 	var gap := Control.new()
@@ -121,6 +157,8 @@ func show_line(line: Dictionary, speaker_name: String) -> void:
 	_speaker_plate.visible = not speaker_name.strip_edges().is_empty()
 	_full_text = String(line.get("text", ""))
 	_current_audio = String(line.get("audio_id", ""))
+	_speaker_id = String(line.get("speaker_id", ""))
+	_blipped = 0
 
 	# A line with no recording yet is a production fact, not something to tell
 	# a child in red letters on the dialogue box — it reads as the game being

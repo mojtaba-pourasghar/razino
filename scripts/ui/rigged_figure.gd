@@ -44,6 +44,35 @@ const SWAY_RATE := 0.17          ## weight shifts per second
 const SWAY_DEGREES := 0.9
 const HEAD_LAG := 0.55
 
+## A pose the rig holds instead of standing.
+##
+## This is what the game needed, and it is worth saying why it is not more
+## camera angles. A side-scroller shows a character from one side; left and
+## right are the same figure mirrored, and a back view is only needed by a
+## game that walks into the screen, which this one does not. What it does
+## need is for the same figure to reach for a thing, be surprised by one,
+## and sit down — and those are poses, which the rig can hold, rather than
+## views, which would have to be painted.
+enum Pose { STAND, REACH, LOOK, SIT, CARRY }
+
+## pose -> degrees for each part. Small numbers: these are chibi figures
+## and a limb turned far enough to read as a gesture on a tall character
+## dislocates a short one.
+const POSES := {
+	Pose.STAND: {},
+	Pose.REACH: {"arm_front": -62.0, "arm_back": 8.0, "body": -4.0, "head": -6.0},
+	Pose.LOOK:  {"head": -12.0, "body": -2.0, "arm_front": -10.0},
+	Pose.SIT:   {"leg_front": 68.0, "leg_back": 58.0, "body": 6.0},
+	Pose.CARRY: {"arm_front": -34.0, "arm_back": -30.0, "head": -3.0},
+}
+## How long a pose takes to reach. Fast enough to answer a press, slow
+## enough not to snap.
+const POSE_BLEND := 7.0
+
+var pose: Pose = Pose.STAND:
+	set(value):
+		pose = value
+
 var height: float = 220.0:
 	set(value):
 		height = value
@@ -59,6 +88,8 @@ var _stride: float = 0.0
 var _squash: float = 0.0
 var _squash_vel: float = 0.0
 var _idle: float = 0.0
+## How far into the pose the figure currently is, per part.
+var _held: Dictionary = {}
 ## How much of the idle is showing. It fades out as the character starts
 ## moving rather than cutting, so there is no frame where the breath stops.
 var _calm: float = 1.0
@@ -159,10 +190,29 @@ func drive(velocity: Vector2, on_floor: bool, delta: float) -> void:
 		_turn("body", 0.0)
 		_turn("head", 0.0)
 
+	_blend_pose(delta)
+
 	_root.scale = Vector2(
 		_scale * (1.0 + _squash * 0.5) * float(facing),
 		_scale * (1.0 - _squash))
 	_root.position = Vector2(0.0, bob)
+
+
+## Eases each part towards the pose and adds it on top of whatever the walk
+## and the idle already did, rather than replacing them: a character
+## reaching for something while walking should still be walking.
+func _blend_pose(delta: float) -> void:
+	var want: Dictionary = POSES.get(pose, {})
+	for part: String in _parts:
+		var target: float = float(want.get(part, 0.0))
+		var now: float = float(_held.get(part, 0.0))
+		if is_equal_approx(now, target) and is_zero_approx(target):
+			continue
+		now = lerpf(now, target, minf(1.0, delta * POSE_BLEND))
+		_held[part] = now
+		var s: Sprite2D = _parts[part]
+		if s != null:
+			s.rotation_degrees += now
 
 
 func land(fall_speed: float) -> void:
