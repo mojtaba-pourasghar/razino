@@ -49,8 +49,11 @@ static func switch(on: bool, w: int = 72, h: int = 38) -> ImageTexture:
 	img.fill(Color(0, 0, 0, 0))
 	var half := Vector2(w, h) * 0.5 - Vector2(1, 1)
 	var radius := h * 0.5 - 1.0
-	var track_top := Palette.ACTION.lightened(0.25) if on else Palette.PANEL.lightened(0.10)
-	var track_bottom := Palette.ACTION.darkened(0.15) if on else Palette.PANEL.darkened(0.15)
+	# Teal when on, not amber. Amber marks the single action on a screen, and
+	# a settings page with four switches was putting five amber things in
+	# front of the player at once.
+	var track_top := Palette.TEAL.lightened(0.20) if on else Palette.PANEL.lightened(0.10)
+	var track_bottom := Palette.TEAL_DEEP if on else Palette.PANEL.darkened(0.15)
 	var knob_centre := Vector2(w - radius - 3.0 if on else radius + 3.0, h * 0.5)
 	var knob_r := radius - 4.0
 	for y in h:
@@ -63,13 +66,13 @@ static func switch(on: bool, w: int = 72, h: int = 38) -> ImageTexture:
 			var col := track_top.lerp(track_bottom, t)
 			# A gold rim, then the knob on top of the track.
 			if _rrect_distance(p, half, radius) > -2.5:
-				col = Palette.GOLD
+				col = Palette.TEAL_LIGHT if on else Palette.PANEL_EDGE
 			var kd := Vector2(x + 0.5, y + 0.5).distance_to(knob_centre)
 			if kd < knob_r:
 				var kt := clampf((y - (knob_centre.y - knob_r)) / (knob_r * 2.0), 0.0, 1.0)
-				col = Palette.GOLD_BRIGHT.lerp(Palette.GOLD_DEEP, kt)
+				col = Palette.SNOW.lerp(Palette.SNOW_SOFT, kt)
 				if kd > knob_r - 2.0:
-					col = (Palette.ACTION if on else Palette.PANEL).darkened(0.45)
+					col = (Palette.TEAL_DEEP if on else Palette.PANEL).darkened(0.45)
 			col.a = cover
 			img.set_pixel(x, y, col)
 	return ImageTexture.create_from_image(img)

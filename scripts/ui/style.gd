@@ -156,7 +156,7 @@ func _style_buttons() -> void:
 		Palette.PANEL_DEEP, Palette.PANEL, Palette.R_MD))
 	theme.set_color("font_color", "CheckButton", Palette.SNOW)
 	theme.set_color("font_hover_color", "CheckButton", Palette.SNOW)
-	theme.set_color("font_pressed_color", "CheckButton", Palette.GOLD_BRIGHT)
+	theme.set_color("font_pressed_color", "CheckButton", Palette.TEAL_LIGHT)
 	var on := UiWidgets.switch(true)
 	var off := UiWidgets.switch(false)
 	# In an RTL layout Godot reaches for the mirrored icons, so both sets have

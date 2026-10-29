@@ -79,7 +79,7 @@ func _build() -> void:
 	add_child(night)
 
 	# — the valley —
-	_backdrop = _picture("menu_bg.webp", TextureRect.STRETCH_KEEP_ASPECT_COVERED)
+	_backdrop = _picture("menu_bg_night.webp", TextureRect.STRETCH_KEEP_ASPECT_COVERED)
 	_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_backdrop)
 

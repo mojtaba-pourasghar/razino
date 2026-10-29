@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bjjmk0k0twmsc"
-path="res://.godot/imported/tab_active.png-7a338af996fa53cb417e9704133dce79.ctex"
+uid="uid://csrdryd28i701"
+path="res://.godot/imported/menu_bg_night.webp-50392ec73c1108a7efc2383f5fc64859.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/kit/tab_active.png"
-dest_files=["res://.godot/imported/tab_active.png-7a338af996fa53cb417e9704133dce79.ctex"]
+source_file="res://assets/art/splash/menu_bg_night.webp"
+dest_files=["res://.godot/imported/menu_bg_night.webp-50392ec73c1108a7efc2383f5fc64859.ctex"]
 
 [params]
 

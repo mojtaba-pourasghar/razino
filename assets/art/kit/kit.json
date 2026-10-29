@@ -1,15 +1,5 @@
 {
   "pieces": [
-    "button_dark",
-    "button_gold",
-    "disc",
-    "face_navy",
-    "medallion",
-    "panel",
-    "parchment",
-    "pill",
-    "slot",
-    "tab_active",
-    "tab_idle"
+    "parchment"
   ]
 }

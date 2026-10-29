@@ -12,8 +12,14 @@ extends RazinoScreen
 
 var _chapter_id: String = ""
 
-## Which tab the list is filtered by, as the sheet's quest panel filters.
-const TABS := ["اصلی", "فرعی", "تکمیل‌شده"]
+## Which tab the list is filtered by.
+##
+## These used to read «اصلی / فرعی / تکمیل‌شده» — main, side, completed —
+## while the filter behind them was really open, locked and done. A chapter
+## has no side quests, so "فرعی" was where every locked stage went, and a
+## player on a fresh save saw one lonely row under "اصلی" with no sign that
+## nine more stages existed. The labels now say what the filter does.
+const TABS := ["همه", "در دسترس", "تمام‌شده"]
 
 var _tab: int = 0
 var _tab_row: HBoxContainer
@@ -65,10 +71,10 @@ func _build_list() -> void:
 		var id := String(stage.get("stage_id", ""))
 		var done := GameState.is_stage_complete(id)
 		var open := StageEngine.is_open(id)
-		# Tab 0 is what is in front of the player, tab 1 what is still shut,
-		# tab 2 what is behind them.
-		var keep := (_tab == 0 and open and not done) \
-			or (_tab == 1 and not open) or (_tab == 2 and done)
+		# Tab 0 is the whole chapter, so the road ahead is visible from the
+		# first minute; tab 1 is what can be played now; tab 2 is behind.
+		var keep := _tab == 0 \
+			or (_tab == 1 and open and not done) or (_tab == 2 and done)
 		if not keep:
 			continue
 		_list.add_child(_quest_row(stage, open, done))
