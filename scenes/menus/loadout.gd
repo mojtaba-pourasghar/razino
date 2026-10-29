@@ -115,9 +115,15 @@ func _companion_card(c: Dictionary) -> Control:
 func _card(icon: String, name: String, line: String, chosen: bool,
 		owned: bool, note: String = "") -> Button:
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(164, 168)
+	# Tall enough for a medallion, a name and the line that explains what
+	# the tool does. At 168 the explanation ran out of the bottom of the
+	# card and every tile ended mid-sentence.
+	b.custom_minimum_size = Vector2(176, 214)
 	b.focus_mode = Control.FOCUS_ALL
-	var tint := Palette.ACTION if chosen else Palette.PANEL_DEEP
+	# Teal marks what is picked. Amber is the one action on the screen,
+	# and a rack with two tools and a companion chosen was putting four
+	# amber things next to the single amber button.
+	var tint := Palette.TEAL_DEEP if chosen else Palette.PANEL_DEEP
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		b.add_theme_stylebox_override(state, OrnateBox.make(
 			OrnateBox.Kind.BUTTON,
@@ -149,6 +155,11 @@ func _card(icon: String, name: String, line: String, chosen: bool,
 		Palette.SNOW_SOFT if owned else Palette.LOCKED)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# Cut with an ellipsis rather than spilling past the card: a tool whose
+	# description is one line longer than the rest must not change the
+	# height of the whole rack.
+	sub.max_lines_visible = 3
+	sub.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	col.add_child(sub)
 
 	if chosen:
