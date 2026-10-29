@@ -21,11 +21,15 @@ const DEPTH := {"far": 0.35, "mid": 1.0, "near": 1.45}
 var motes: int = 26
 var leaves: int = 0
 var lamp_flicker: bool = false
+## People crossing the far end of the street who never look over. More than
+## anything else here, this is what stops a place feeling built for you.
+var passers: int = 2
 
 var _layers: Dictionary = {}
 var _motes: Array[Dictionary] = []
 var _leaves: Array[Dictionary] = []
 var _lamps: Array[CanvasItem] = []
+var _passers: Array[Dictionary] = []
 var _view: Vector2 = Vector2(1280, 720)
 var _rng := RandomNumberGenerator.new()
 var _t: float = 0.0
@@ -61,6 +65,61 @@ func setup(paintings: Dictionary, view: Vector2, world_width: float) -> void:
 		_motes.append(_spawn_mote(world_width, true))
 	for i in leaves:
 		_leaves.append(_spawn_leaf(world_width, true))
+	_add_passers(world_width)
+
+
+## A far layer derived from the painting rather than painted.
+##
+## A second painting of every scene does not exist and cannot be made here.
+## What CAN be done is honest about itself: the same picture, pushed back —
+## dimmed towards the night colour, scaled up a little so its edges are off
+## screen, and moved at a third of the camera's speed. It is not real depth
+## and it would not survive a long sideways pan, but over the width of one
+## scene the eye reads it as distance, and it costs nothing.
+##
+## The moment real far and near paintings arrive they go in `paintings`
+## under their own names and this is skipped.
+## `behind` is the node the layer is parented to, and it is not this one:
+## scene life is drawn in FRONT of the backdrop, because motes and passers
+## belong there, so a far layer added here would cover the painting it is
+## supposed to sit behind.
+func derive_far_layer(painting: Texture2D, view: Vector2,
+		world_width: float, behind: Node) -> void:
+	if painting == null or _layers.has("far"):
+		return
+	var layer := Parallax2D.new()
+	layer.scroll_scale = Vector2(float(DEPTH["far"]), 1.0)
+	layer.repeat_size = Vector2(world_width, 0.0)
+	var art := Sprite2D.new()
+	art.texture = painting
+	art.centered = false
+	if painting.get_height() > 0:
+		var s := view.y / float(painting.get_height()) * 1.12
+		art.scale = Vector2(s, s)
+	art.position = Vector2(-view.x * 0.06, -view.y * 0.06)
+	art.modulate = Color(0.34, 0.40, 0.56)
+	layer.add_child(art)
+	behind.add_child(layer)
+	behind.move_child(layer, 0)
+	_layers["far"] = layer
+
+
+## Figures walking across the far end, dimmed to the depth they stand at.
+func _add_passers(world_width: float) -> void:
+	var cast := ["raha", "mani", "player", "azimi", "modir"]
+	for i in passers:
+		var who: String = cast[_rng.randi_range(0, cast.size() - 1)]
+		var fig := RiggedFigure.new(who)
+		fig.height = _view.y * 0.14
+		fig.modulate = Color(0.46, 0.52, 0.66)
+		fig.position = Vector2(_rng.randf_range(0.0, world_width),
+			_view.y * 0.80)
+		add_child(fig)
+		_passers.append({
+			"fig": fig,
+			"v": _rng.randf_range(34.0, 62.0) * (1.0 if _rng.randf() > 0.5 else -1.0),
+			"world": world_width,
+		})
 
 
 func _spawn_mote(world: float, anywhere: bool) -> Dictionary:
@@ -120,6 +179,20 @@ func _process(delta: float) -> void:
 			l["v"] = fresh["v"]
 		else:
 			l["p"] = p
+	for w: Dictionary in _passers:
+		var fig: RiggedFigure = w["fig"]
+		if not is_instance_valid(fig):
+			continue
+		var v: float = float(w["v"])
+		fig.position.x += v * delta
+		var span: float = float(w["world"])
+		if fig.position.x < -120.0:
+			fig.position.x = span + 120.0
+		elif fig.position.x > span + 120.0:
+			fig.position.x = -120.0
+		# Driven with their own speed, so they walk rather than slide.
+		fig.drive(Vector2(v, 0.0), true, delta)
+
 	if lamp_flicker:
 		# Two waves that do not divide into each other, so the flicker never
 		# settles into a rhythm the eye can predict.

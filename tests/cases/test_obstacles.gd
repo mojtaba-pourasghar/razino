@@ -84,3 +84,54 @@ func _story() -> Dictionary:
 		return {}
 	var parsed: Variant = JSON.parse_string(f.get_as_text())
 	return parsed if parsed is Dictionary else {}
+
+## The playfield has to actually build from a scene's own data: the
+## obstacles, the ground line and a marker for each thing worth reaching.
+## Everything above checks the numbers in the file; this checks that the
+## engine makes a world out of them.
+func test_a_playfield_builds_from_scene_data():
+	var scene := _explore_scene_with_obstacles()
+	ok(not scene.is_empty(), "صحنه‌ای با مانع پیدا شد")
+	if scene.is_empty():
+		return
+
+	# A test case is a RefCounted, not a node, so the field is parented to
+	# the running scene tree. Without a parent its _ready never fires and
+	# nothing it builds exists.
+	var field := Playfield.new()
+	var root: Node = (Engine.get_main_loop() as SceneTree).get_root()
+	root.add_child(field)
+	field.setup(null, null, VIEW, float(scene.get("ground_y", 0.92)))
+	field.build_obstacles(scene.get("obstacles", []), VIEW)
+
+	var placed := 0
+	for entry: Variant in scene.get("interactions", []):
+		if not entry is Dictionary:
+			continue
+		var it := entry as Dictionary
+		var rect: Array = it.get("rect", [0.4, 0.45, 0.2, 0.2])
+		field.add_marker(String(it.get("interaction_id", "")),
+			float(rect[0]) + float(rect[2]) * 0.5,
+			float(rect[1]) + float(rect[3]) * 0.5)
+		placed += 1
+
+	ok(placed > 0, "دست‌کم یک نشانه در دنیا گذاشته شد")
+	ok(field.walker != null, "بازیکن ساخته شد")
+	ok(field.figure != null, "پیکرهٔ مفصل‌بندی‌شده ساخته شد")
+	ok(field.life != null, "لایهٔ زندهٔ صحنه ساخته شد")
+	ok(field.near_marker().is_empty(),
+		"در شروع، بازیکن کنار هیچ نشانه‌ای نیست")
+
+	root.remove_child(field)
+	field.queue_free()
+
+func _explore_scene_with_obstacles() -> Dictionary:
+	for entry: Variant in _story().get("scenes", []):
+		if not entry is Dictionary:
+			continue
+		var scene := entry as Dictionary
+		var obstacles: Variant = scene.get("obstacles", [])
+		if obstacles is Array and not (obstacles as Array).is_empty() \
+				and not (scene.get("interactions", []) as Array).is_empty():
+			return scene
+	return {}

@@ -8,6 +8,10 @@ extends RazinoScreen
 ## the story feeling continuous rather than like a stack of menus.
 
 var _stage: SceneStage
+var _field_host: SubViewportContainer
+var _viewport: SubViewport
+var _field: Playfield
+var _prompt: Control
 var _hotspots: Control
 var _dialogue: DialoguePanel
 var _puzzle: PuzzlePanel
@@ -54,6 +58,23 @@ func build_content() -> void:
 	_stage.chapter_id = _chapter_id
 	add_child(_stage)
 	move_child(_stage, 0)
+
+	# The walkable version of the same scene. It only takes over where the
+	# content says there is something to get past; a scene with no
+	# obstacles is a place to look at, and dropping a platformer into it
+	# would mean walking from one end of a picture to the other for nothing.
+	_field_host = SubViewportContainer.new()
+	_field_host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_field_host.stretch = true
+	_field_host.visible = false
+	_field_host.mouse_filter = Control.MOUSE_FILTER_PASS
+	add_child(_field_host)
+	move_child(_field_host, 1)
+	_viewport = SubViewport.new()
+	_viewport.transparent_bg = false
+	_viewport.handle_input_locally = false
+	_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_field_host.add_child(_viewport)
 
 	_hotspots = Control.new()
 	_hotspots.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -289,9 +310,90 @@ func _on_clue_discovered(clue_id: String) -> void:
 
 # — interactions ———————————————————————————————————————————
 
+## Builds the walkable scene, when the content gives one.
+##
+## Returns true when it took over, so the caller knows not to lay hotspots
+## over a scene the player is now standing in.
+func _build_field(scene: Dictionary) -> bool:
+	var obstacles: Variant = scene.get("obstacles", [])
+	if not obstacles is Array or (obstacles as Array).is_empty():
+		_field_host.visible = false
+		if _field != null:
+			_field.queue_free()
+			_field = null
+		return false
+
+	_stage.visible = false
+	_field_host.visible = true
+	if _field != null:
+		_field.queue_free()
+	_field = Playfield.new()
+	_viewport.add_child(_field)
+	var view := Vector2(get_viewport_rect().size)
+	_viewport.size = Vector2i(view)
+	_field.setup(SceneArt.load_texture(String(scene.get("background_id", "")),
+		_chapter_id), null, view, float(scene.get("ground_y", 0.92)))
+	_field.build_obstacles(obstacles as Array, view)
+
+	for entry: Variant in scene.get("interactions", []):
+		if not entry is Dictionary:
+			continue
+		var it := entry as Dictionary
+		var iid := String(it.get("interaction_id", ""))
+		if bool(it.get("once", false)) and _used_interactions.has(iid):
+			continue
+		if not StoryEngine.evaluate(it.get("conditions", {})):
+			continue
+		var rect: Array = it.get("rect", [0.4, 0.45, 0.2, 0.2])
+		_field.add_marker(iid,
+			float(rect[0]) + float(rect[2]) * 0.5,
+			float(rect[1]) + float(rect[3]) * 0.5)
+	_field.marker_reached.connect(_on_marker_reached.bind(scene))
+	_field.marker_left.connect(_on_marker_left)
+	return true
+
+
+## The label that appears when the player is standing next to something.
+## It is a prompt, not a button: the thing is used by pressing on, which is
+## the same press that jumps, so a child never has to find a second control.
+func _on_marker_reached(marker_id: String, scene: Dictionary) -> void:
+	_on_marker_left(marker_id)
+	for entry: Variant in scene.get("interactions", []):
+		if not entry is Dictionary:
+			continue
+		var it := entry as Dictionary
+		if String(it.get("interaction_id", "")) != marker_id:
+			continue
+		_prompt = Style.make_plaque(String(it.get("label", "")))
+		_prompt.set_anchors_preset(Control.PRESET_CENTER_TOP)
+		_prompt.anchor_left = 0.3
+		_prompt.anchor_right = 0.7
+		_prompt.anchor_top = 0.12
+		_prompt.anchor_bottom = 0.2
+		_prompt.offset_left = 0
+		_prompt.offset_right = 0
+		_prompt.offset_top = 0
+		_prompt.offset_bottom = 0
+		_prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_prompt)
+		AudioManager.play_sfx("SFX_UI_CHOICE")
+		_use_interaction(it)
+		return
+
+
+func _on_marker_left(_marker_id: String) -> void:
+	if _prompt != null and is_instance_valid(_prompt):
+		_prompt.queue_free()
+	_prompt = null
+
+
 func _rebuild_hotspots(scene: Dictionary) -> void:
 	for c in _hotspots.get_children():
 		c.queue_free()
+	if _build_field(scene):
+		_hotspots.visible = false
+		return
+	_hotspots.visible = true
 	for entry in scene.get("interactions", []):
 		var it: Dictionary = entry
 		var iid := String(it.get("interaction_id", ""))

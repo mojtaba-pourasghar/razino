@@ -27,7 +27,13 @@ var _backdrop: Sprite2D
 var _camera: Camera2D
 var _world_width: float = 2400.0
 var _touch_steer: int = 0
+## Emitted as the player walks into and out of reach of something.
+signal marker_reached(marker_id: String)
+signal marker_left(marker_id: String)
+
 var life: SceneLife
+var _markers: Dictionary = {}
+var _near: String = ""
 var _gaps: Array[Vector2] = []
 var _ground: Node2D = null
 var _view: Vector2 = Vector2(1280, 720)
@@ -90,6 +96,7 @@ func setup(backdrop: Texture2D, _character: Texture2D, view: Vector2,
 		_world_width = backdrop.get_width() * scale
 	figure.height = view.y * figure_height
 	life.setup({}, view, _world_width)
+	life.derive_far_layer(backdrop, view, _world_width, self)
 
 	_view = view
 	var floor_y := view.y * ground_y
@@ -189,6 +196,65 @@ func catch_fall(view: Vector2 = Vector2.ZERO) -> void:
 	AudioManager.play_sfx("SFX_UI_SOFT_NO")
 
 
+## Something in the world worth walking to.
+##
+## This is what replaces a hotspot drawn over a painting. A hotspot is
+## reached by pointing at it, which costs the player nothing and so means
+## nothing; a marker has to be arrived at, and whatever is between the
+## player and it — a ledge, a gap, a wall — is the game.
+##
+## `x` and `y` are fractions of the world and the view, matching the rects
+## the content already uses for its interactions, so a scene's existing
+## data places these without being rewritten.
+func add_marker(marker_id: String, x: float, y: float) -> void:
+	var area := Area2D.new()
+	area.position = Vector2(x * _world_width, y * _view.y)
+	area.monitoring = false       # the walker moves, not this
+	var shape := CollisionShape2D.new()
+	var circle := CircleShape2D.new()
+	# Generous: a child aiming a thumb at a moving character should not
+	# have to stop on an exact pixel to be allowed to look at something.
+	circle.radius = 96.0
+	shape.shape = circle
+	area.add_child(shape)
+	add_child(area)
+	_markers[marker_id] = area
+
+
+## The marker the player is standing closest to, within reach, or "".
+func near_marker() -> String:
+	return _near
+
+
+func _update_markers() -> void:
+	var best := ""
+	var best_distance := 1.0e20
+	for marker_id: String in _markers:
+		var area: Area2D = _markers[marker_id]
+		if not is_instance_valid(area):
+			continue
+		var d := area.position.distance_to(walker.position)
+		if d < 110.0 and d < best_distance:
+			best = marker_id
+			best_distance = d
+	if best == _near:
+		return
+	if not _near.is_empty():
+		marker_left.emit(_near)
+	_near = best
+	if not _near.is_empty():
+		marker_reached.emit(_near)
+
+
+func clear_markers() -> void:
+	for marker_id: String in _markers:
+		var area: Area2D = _markers[marker_id]
+		if is_instance_valid(area):
+			area.queue_free()
+	_markers.clear()
+	_near = ""
+
+
 func _add_floor(at: Vector2, size: Vector2) -> void:
 	var body := StaticBody2D.new()
 	body.position = at
@@ -212,6 +278,7 @@ func _physics_process(delta: float) -> void:
 		walker.request_jump()
 	figure.drive(walker.velocity, walker.is_on_floor(), delta)
 	catch_fall(_view)
+	_update_markers()
 
 
 func _unhandled_input(event: InputEvent) -> void:
